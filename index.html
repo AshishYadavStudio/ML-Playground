@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ML Playground — Learn Machine Learning Visually</title>
+  <meta name="description" content="26 interactive lessons that teach machine learning and deep learning visually — from linear regression to transformers and LLMs. Drag, train, and explore live demos in your browser. Free, no installs." />
+  <meta property="og:title" content="ML Playground — Learn Machine Learning Visually" />
+  <meta property="og:description" content="Interactive visual lessons from your first model to ChatGPT-style LLMs. Train real models in your browser." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css?v=2" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
+</head>
+<body>
+  <div id="read-progress"></div>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="brand">
+        <span class="brand-icon">🧠</span>
+        <div>
+          <h1>ML Playground</h1>
+          <p>Learn ML &amp; DL visually</p>
+        </div>
+      </div>
+      <nav id="nav"></nav>
+      <div class="sidebar-footer">
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+        <p id="progress-text">0 / 0 lessons completed</p>
+      </div>
+    </aside>
+    <button id="menu-toggle" aria-label="Toggle menu">☰</button>
+    <main id="content"></main>
+  </div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
