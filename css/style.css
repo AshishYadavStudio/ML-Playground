@@ -538,6 +538,29 @@ table.info-table {
 .lesson-nav a span { display: block; font-size: 0.68rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
 
 .complete-row { text-align: center; margin-top: 36px; }
+.support-line { margin-top: 14px; font-size: 0.8rem; color: var(--text-dim); }
+.support-line a { color: var(--yellow); text-decoration: none; font-weight: 700; }
+.support-line a:hover { text-decoration: underline; }
+
+.coffee-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  background: #ffdd00;
+  color: #0d0c22;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 0.84rem;
+  padding: 10px 22px;
+  border-radius: 11px;
+  box-shadow: 0 6px 22px -6px rgba(255, 221, 0, 0.45);
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+.coffee-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -6px rgba(255, 221, 0, 0.55);
+}
 
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 0.77rem; color: var(--text-dim); }
 .legend .chip { display: inline-flex; align-items: center; gap: 6px; }

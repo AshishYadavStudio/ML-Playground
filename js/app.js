@@ -38,6 +38,9 @@ export const SECTIONS = [
 
 const ALL = SECTIONS.flatMap(s => s.lessons.map(l => ({ ...l, sectionName: s.name })));
 
+// Support link — shown in the footer and under each lesson.
+const COFFEE_URL = 'https://buymeacoffee.com/ashishyadavstudio';
+
 // ---- progress (localStorage) ----
 const LS_KEY = 'mlplayground-progress';
 function getProgress() {
@@ -209,6 +212,7 @@ function buildFooter() {
       h('div', { class: 'foot-brand' }, [
         h('h4', {}, '🧠 ML Playground'),
         h('p', {}, 'Machine learning explained the way brains actually learn — visually, interactively, one concept at a time. Built with zero dependencies: every demo runs live in your browser.'),
+        h('a', { class: 'coffee-btn', href: COFFEE_URL, target: '_blank', rel: 'noopener' }, ['☕', 'Buy me a coffee']),
       ]),
       h('div', { class: 'foot-links' }, [
         colLinks('Start here', [
@@ -348,7 +352,14 @@ function renderLesson(lesson) {
     doneBtn.textContent = now ? '✓ Completed — click to unmark' : 'Mark lesson as complete ✓';
     doneBtn.className = 'btn' + (now ? ' secondary' : '');
   });
-  contentEl.appendChild(h('div', { class: 'complete-row' }, doneBtn));
+  contentEl.appendChild(h('div', { class: 'complete-row' }, [
+    doneBtn,
+    h('div', { class: 'support-line' }, [
+      'Enjoying this? ',
+      h('a', { href: COFFEE_URL, target: '_blank', rel: 'noopener' }, '☕ Support the project'),
+      ' — it keeps every lesson free.',
+    ]),
+  ]));
 
   // prev / next
   const nav = h('div', { class: 'lesson-nav' });
