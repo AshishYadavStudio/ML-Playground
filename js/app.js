@@ -9,7 +9,10 @@ import overfitting from './lessons/overfitting.js';
 import metrics from './lessons/metrics.js';
 import pythonBasics from './lessons/python-basics.js';
 import numpy from './lessons/numpy.js';
+import pandas from './lessons/pandas.js';
+import dataviz from './lessons/dataviz.js';
 import mlCode from './lessons/ml-code.js';
+import { QUIZZES } from './quizzes.js';
 import logisticRegression from './lessons/logistic-regression.js';
 import knn from './lessons/knn.js';
 import svm from './lessons/svm.js';
@@ -30,7 +33,7 @@ import llms from './lessons/llms.js';
 
 export const SECTIONS = [
   { name: '🌱 Foundations', short: 'Foundations', lessons: [intro, dataFeatures, linearRegression, gradientDescent, overfitting, metrics] },
-  { name: '🐍 Python for ML', short: 'Python for ML', lessons: [pythonBasics, numpy, mlCode] },
+  { name: '🐍 Python for ML', short: 'Python for ML', lessons: [pythonBasics, numpy, pandas, dataviz, mlCode] },
   { name: '📊 Classical ML', short: 'Classical ML', lessons: [logisticRegression, knn, svm, naiveBayes, decisionTrees, kmeans, pca] },
   { name: '🧠 Deep Learning', short: 'Deep Learning', lessons: [neuralNetworks, activations, backprop, optimizers] },
   { name: '🚀 Advanced', short: 'Advanced & GenAI', lessons: [cnn, rnn, transformers, embeddings, generative, llms] },
@@ -201,6 +204,52 @@ function startHeroAnimation(canvas) {
   onLeave(() => { alive = false; cancelAnimationFrame(raf); ro.disconnect(); });
 }
 
+// ---- "Check your understanding" quiz ----
+function buildQuiz(lessonId) {
+  const qs = QUIZZES[lessonId];
+  if (!qs || !qs.length) return null;
+  let answeredCount = 0, correctCount = 0;
+  const scoreEl = h('div', { class: 'quiz-score' }, `Answer all ${qs.length} to check your understanding`);
+
+  const wrap = h('div', { class: 'quiz' }, [
+    h('div', { class: 'quiz-head' }, [
+      h('h3', {}, '🧪 Check your understanding'),
+      scoreEl,
+    ]),
+  ]);
+
+  qs.forEach((item, qi) => {
+    let answered = false;
+    const why = h('div', { class: 'quiz-why' }, item.why);
+    const optEls = [];
+    const opts = h('div', { class: 'quiz-opts' }, item.opts.map((opt, oi) => {
+      const btn = h('button', { class: 'quiz-opt' }, opt);
+      btn.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        answeredCount++;
+        if (oi === item.correct) { correctCount++; btn.classList.add('correct'); }
+        else { btn.classList.add('wrong'); optEls[item.correct].classList.add('correct'); }
+        optEls.forEach(b => b.classList.add('locked'));
+        why.classList.add('show');
+        scoreEl.textContent = answeredCount < qs.length
+          ? `${answeredCount} / ${qs.length} answered`
+          : (correctCount === qs.length
+            ? `🎉 ${correctCount} / ${qs.length} — perfect! Ready for the next lesson.`
+            : `${correctCount} / ${qs.length} correct — reread the highlighted explanations, or replay the demo above.`);
+      });
+      optEls.push(btn);
+      return btn;
+    }));
+    wrap.appendChild(h('div', { class: 'quiz-q' }, [
+      h('div', { class: 'quiz-question' }, `${qi + 1}. ${item.q}`),
+      opts,
+      why,
+    ]));
+  });
+  return wrap;
+}
+
 // ---- footer ----
 function buildFooter() {
   const colLinks = (title, links) => h('div', { class: 'foot-col' }, [
@@ -253,7 +302,7 @@ function renderHome() {
   const hero = h('div', { class: 'hero' }, [
     heroCanvas,
     h('div', { class: 'hero-inner' }, [
-      h('div', { class: 'hero-badge' }, [h('span', { class: 'pulse-dot' }), '26 interactive lessons · 35+ live demos · 100% free']),
+      h('div', { class: 'hero-badge' }, [h('span', { class: 'pulse-dot' }), '28 interactive lessons · 40+ live demos · 100% free']),
       h('h2', { html: 'See machine learning.<br><span class="grad-text">Actually understand it.</span>' }),
       h('p', { class: 'hero-sub' }, 'From your first regression line to the transformers inside ChatGPT and Claude — every concept is a living visualization you can drag, tune, and train right in your browser. No math prerequisites. No installs. No fluff.'),
       h('div', { class: 'hero-cta' }, [
@@ -261,8 +310,8 @@ function renderHome() {
         h('a', { class: 'cta-ghost', href: '#/llms' }, ['🤖 How ChatGPT works']),
       ]),
       h('div', { class: 'hero-stats' }, [
-        h('div', { class: 'hero-stat' }, [h('b', {}, '26'), h('span', {}, 'visual lessons')]),
-        h('div', { class: 'hero-stat' }, [h('b', {}, '35+'), h('span', {}, 'interactive demos')]),
+        h('div', { class: 'hero-stat' }, [h('b', {}, '28'), h('span', {}, 'visual lessons')]),
+        h('div', { class: 'hero-stat' }, [h('b', {}, '40+'), h('span', {}, 'interactive demos')]),
         h('div', { class: 'hero-stat' }, [h('b', {}, '5'), h('span', {}, 'skill levels')]),
         h('div', { class: 'hero-stat' }, [h('b', {}, '0'), h('span', {}, 'installs needed')]),
       ]),
@@ -342,6 +391,10 @@ function renderLesson(lesson) {
 
   // reveal-on-scroll for demo panels & headings
   body.querySelectorAll('.demo').forEach(d => reveal(d));
+
+  // quiz
+  const quiz = buildQuiz(lesson.id);
+  if (quiz) contentEl.appendChild(reveal(quiz));
 
   // mark-complete button
   const doneBtn = h('button', { class: 'btn' + (progress[lesson.id] ? ' secondary' : '') },

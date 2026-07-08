@@ -12,7 +12,7 @@ python serve.py 8317
 
 then open http://localhost:8317. (`serve.py` is a stdlib-only static server with caching disabled so edits show up immediately; ES modules are blocked on `file://`, so a server is required.)
 
-## Curriculum (26 interactive lessons)
+## Curriculum (28 interactive lessons)
 
 **🌱 Foundations**
 1. **What is Machine Learning?** — race a perceptron: draw your own separating line vs. the machine's learned one
@@ -25,10 +25,12 @@ then open http://localhost:8317. (`serve.py` is a stdlib-only static server with
 **🐍 Python for ML**
 7. **Python Essentials** — step through code line by line with a live variable panel and console (4 programs)
 8. **NumPy & Vectorization** — a real in-browser speed race (loop vs vectorized, 5M ops) + broadcasting visualizer
-9. **From Concepts to Code** — annotated scikit-learn workflow and PyTorch training loop with an animated pipeline
+9. **pandas: Data Wrangling** — interactive DataFrame filter explorer + animated groupby (split → apply → combine)
+10. **Data Visualization** — Anscombe's quartet, a chart-type chooser, and the histogram bin-width trap
+11. **From Concepts to Code** — annotated scikit-learn workflow and PyTorch training loop with an animated pipeline
 
 **📊 Classical ML**
-10. **Logistic Regression** — sigmoid explorer + a decision boundary trained live with cross-entropy
+12. **Logistic Regression** — sigmoid explorer + a decision boundary trained live with cross-entropy
 11. **K-Nearest Neighbors** — drag the mystery point, tune k, toggle the full decision map
 12. **Support Vector Machines** — draggable points with live max-margin retraining + animated kernel trick lift
 13. **Naive Bayes** — build a spam email word by word; evidence bars and a verdict gauge update live
@@ -37,13 +39,13 @@ then open http://localhost:8317. (`serve.py` is a stdlib-only static server with
 16. **PCA & Dimensionality Reduction** — rotate the projection axis by hand, then watch it snap to PC1
 
 **🧠 Deep Learning**
-17. **Neural Networks** — a full playground: 5 datasets (moons/circle/XOR/spiral/blobs), configurable layers, live in-browser training with decision-surface heatmap
+19. **Neural Networks** — a full playground: 5 datasets (moons/circle/XOR/spiral/blobs), configurable layers, live in-browser training with decision-surface heatmap
 18. **Activation Functions** — function/derivative explorer (sigmoid → GELU) + vanishing-gradient visualizer
 19. **Backpropagation** — step through forward and backward passes number-by-number on a tiny network
 20. **Optimizers** — SGD vs Momentum vs RMSProp vs Adam racing on a curved-valley loss surface
 
 **🚀 Advanced**
-21. **Convolutional Networks** — draw on a pixel grid, slide edge/blur/sharpen kernels, hover feature-map outputs
+23. **Convolutional Networks** — draw on a pixel grid, slide edge/blur/sharpen kernels, hover feature-map outputs
 22. **Recurrent Networks & Memory** — watch a hidden state read a sentence word by word; LSTM gates
 23. **Attention & Transformers** — interactive attention-matrix explorer with pronoun-resolution examples
 24. **Embeddings & Vector Spaces** — word map with nearest-neighbor search and king−man+woman=queen arithmetic
@@ -52,6 +54,7 @@ then open http://localhost:8317. (`serve.py` is a stdlib-only static server with
 
 ## Features
 
+- **"Check your understanding" quiz** on every lesson — 3 questions with instant feedback and explanations
 - Progress tracking (mark lessons complete; stored in `localStorage`)
 - Fully responsive (sidebar collapses on mobile; canvases resize)
 - Zero dependencies — the tiny neural-net engine, datasets, and all visualizations are hand-rolled in `js/utils.js`

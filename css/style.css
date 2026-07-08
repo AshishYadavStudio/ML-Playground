@@ -537,6 +537,62 @@ table.info-table {
 }
 .lesson-nav a span { display: block; font-size: 0.68rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
 
+/* ============ Quiz ============ */
+.quiz {
+  background: linear-gradient(160deg, rgba(16, 20, 36, 0.95), rgba(11, 14, 23, 0.95));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin: 40px 0 8px;
+  box-shadow: var(--shadow-lg);
+}
+.quiz-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.quiz-head h3 { font-family: var(--font-display); font-size: 1.15rem; }
+.quiz-score { font-size: 0.8rem; color: var(--text-dim); font-weight: 600; }
+.quiz-q { margin-top: 20px; }
+.quiz-question { font-weight: 600; margin-bottom: 10px; color: var(--text); font-size: 0.94rem; }
+.quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opt {
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  color: #c3cde0;
+  padding: 11px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 0.87rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.quiz-opt:hover:not(.locked) { border-color: var(--accent); background: var(--bg-hover); transform: translateX(3px); }
+.quiz-opt.locked { cursor: default; opacity: 0.75; }
+.quiz-opt.correct {
+  background: rgba(74, 222, 128, 0.12) !important;
+  border-color: var(--green) !important;
+  color: var(--green);
+  font-weight: 700;
+  opacity: 1;
+}
+.quiz-opt.correct::after { content: "  ✓"; }
+.quiz-opt.wrong {
+  background: rgba(248, 113, 113, 0.10) !important;
+  border-color: var(--red) !important;
+  color: var(--red);
+  opacity: 1;
+}
+.quiz-opt.wrong::after { content: "  ✗"; }
+.quiz-why {
+  display: none;
+  margin-top: 10px;
+  font-size: 0.84rem;
+  color: var(--text-dim);
+  background: rgba(109, 141, 255, 0.06);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+.quiz-why.show { display: block; animation: pageIn 0.3s both; }
+
 .complete-row { text-align: center; margin-top: 36px; }
 .support-line { margin-top: 14px; font-size: 0.8rem; color: var(--text-dim); }
 .support-line a { color: var(--yellow); text-decoration: none; font-weight: 700; }
