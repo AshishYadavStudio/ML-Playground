@@ -50,6 +50,125 @@ const ALL = SECTIONS.flatMap(s => s.lessons.map(l => ({ ...l, sectionName: s.nam
 // Support link — shown in the footer and under each lesson.
 const COFFEE_URL = 'https://buymeacoffee.com/ashishyadavstudio';
 
+// ---- concept cross-linking ----
+// Distinctive concept phrases → the lesson that explains them. The first mention
+// of each concept in a lesson's prose becomes a clickable link to its full lesson.
+// [term, lessonId, caseSensitive?]. Acronyms are case-sensitive to avoid false hits.
+const CONCEPTS = [
+  ['supervised learning', 'intro'],
+  ['unsupervised learning', 'kmeans'],
+  ['reinforcement learning', 'llms'],
+  ['linear regression', 'linear-regression'],
+  ['logistic regression', 'logistic-regression'],
+  ['gradient descent', 'gradient-descent'],
+  ['backpropagation', 'backprop'],
+  ['overfitting', 'overfitting'],
+  ['overfit', 'overfitting'],
+  ['regularization', 'overfitting'],
+  ['cross-entropy', 'logistic-regression'],
+  ['activation function', 'activations'],
+  ['neural network', 'neural-networks'],
+  ['decision tree', 'decision-trees'],
+  ['random forest', 'decision-trees'],
+  ['support vector machine', 'svm'],
+  ['naive bayes', 'naive-bayes'],
+  ['principal component analysis', 'pca'],
+  ['k-means', 'kmeans'],
+  ['k-nearest neighbors', 'knn'],
+  ['nearest neighbor', 'knn'],
+  ['convolutional', 'cnn'],
+  ['convolution', 'cnn'],
+  ['recurrent', 'rnn'],
+  ['self-attention', 'transformers'],
+  ['attention', 'transformers'],
+  ['transformer', 'transformers'],
+  ['embedding', 'embeddings'],
+  ['diffusion', 'generative'],
+  ['autoencoder', 'generative'],
+  ['vectorization', 'numpy'],
+  ['broadcasting', 'numpy'],
+  ['dataframe', 'pandas'],
+  ['confusion matrix', 'metrics'],
+  ['feature scaling', 'data-features'],
+  ['standardization', 'data-features'],
+  ['sigmoid', 'activations'],
+  ['softmax', 'activations'],
+  ['momentum', 'optimizers'],
+  ['comprehension', 'python-advanced'],
+  // case-sensitive acronyms / proper names
+  ['SVM', 'svm', true],
+  ['CNN', 'cnn', true],
+  ['RNN', 'rnn', true],
+  ['LSTM', 'rnn', true],
+  ['KNN', 'knn', true],
+  ['PCA', 'pca', true],
+  ['GAN', 'generative', true],
+  ['LLM', 'llms', true],
+  ['ReLU', 'activations', true],
+  ['MSE', 'linear-regression', true],
+  ['AUC', 'metrics', true],
+  ['ROC', 'metrics', true],
+  ['NumPy', 'numpy', true],
+  ['Adam', 'optimizers', true],
+  ['SGD', 'optimizers', true],
+];
+
+const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const CONCEPT_TERMS = CONCEPTS
+  .map(([term, id, cs]) => ({
+    term, id, cs: !!cs,
+    re: new RegExp('\\b' + escapeRe(term) + (cs ? '(s)?' : '(s|es)?') + '\\b', cs ? '' : 'i'),
+  }))
+  .sort((a, b) => b.term.length - a.term.length);
+
+// tags/classes whose text should never be auto-linked
+const SKIP_TAGS = new Set(['A', 'CODE', 'PRE', 'BUTTON', 'SELECT', 'INPUT', 'TEXTAREA', 'H1', 'H2', 'H3', 'H4']);
+const SKIP_CLASSES = ['demo', 'code-block', 'formula', 'callout-title', 'demo-title', 'demo-hint', 'code-output', 'quiz'];
+
+function isLinkable(node, root) {
+  for (let el = node.parentNode; el && el !== root; el = el.parentNode) {
+    if (el.nodeType !== 1) continue;
+    if (SKIP_TAGS.has(el.tagName)) return false;
+    for (const c of SKIP_CLASSES) if (el.classList && el.classList.contains(c)) return false;
+  }
+  return true;
+}
+
+function collectTextNodes(root) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  let n;
+  while ((n = walker.nextNode())) if (n.nodeValue.trim().length > 2 && isLinkable(n, root)) nodes.push(n);
+  return nodes;
+}
+
+/** Wrap the first mention of each distinctive concept in a link to its lesson. */
+function crossLinkConcepts(root, currentId) {
+  const usedTargets = new Set([currentId]); // never self-link; one link per destination
+  for (const t of CONCEPT_TERMS) {
+    if (usedTargets.has(t.id)) continue;
+    for (const node of collectTextNodes(root)) {
+      const m = t.re.exec(node.nodeValue);
+      if (!m) continue;
+      const matched = m[0];
+      const before = node.nodeValue.slice(0, m.index);
+      const after = node.nodeValue.slice(m.index + matched.length);
+      const a = document.createElement('a');
+      a.href = '#/' + t.id;
+      a.className = 'concept-link';
+      a.textContent = matched;
+      a.title = 'Open lesson: ' + matched;
+      const frag = document.createDocumentFragment();
+      if (before) frag.appendChild(document.createTextNode(before));
+      frag.appendChild(a);
+      if (after) frag.appendChild(document.createTextNode(after));
+      node.parentNode.replaceChild(frag, node);
+      usedTargets.add(t.id);
+      break;
+    }
+  }
+}
+
 // ---- progress (localStorage) ----
 const LS_KEY = 'mlplayground-progress';
 function getProgress() {
@@ -395,6 +514,9 @@ function renderLesson(lesson) {
   contentEl.appendChild(body);
   lesson.render(body);
 
+  // turn concept mentions into links to their full lessons
+  crossLinkConcepts(body, lesson.id);
+
   // reveal-on-scroll for demo panels & headings
   body.querySelectorAll('.demo').forEach(d => reveal(d));
 
@@ -450,6 +572,25 @@ function route() {
   if (lesson) renderLesson(lesson);
   else { location.hash = '#/home'; }
   updateReadProgress();
+}
+
+// ---- theme toggle (light "study mode" ⇄ dark "focus mode") ----
+const THEME_KEY = 'mlplayground-theme';
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem(THEME_KEY, t); } catch { /* ignore */ }
+  const label = document.querySelector('#theme-toggle .tt-label');
+  const icon = document.querySelector('#theme-toggle .tt-icon');
+  if (label) label.textContent = t === 'light' ? 'Light mode' : 'Dark mode';
+  if (icon) icon.textContent = t === 'light' ? '☀️' : '🌙';
+}
+const themeBtn = document.getElementById('theme-toggle');
+if (themeBtn) {
+  themeBtn.addEventListener('click', () => {
+    const now = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    applyTheme(now);
+  });
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
 }
 
 window.addEventListener('hashchange', route);

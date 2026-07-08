@@ -8,10 +8,19 @@
   <meta property="og:title" content="ML Playground — Learn Machine Learning Visually" />
   <meta property="og:description" content="Interactive visual lessons from your first model to ChatGPT-style LLMs. Train real models in your browser." />
   <meta property="og:type" content="website" />
+  <script>
+    // Apply saved theme before first paint to avoid a flash of the wrong theme.
+    (function () {
+      try {
+        var t = localStorage.getItem('mlplayground-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=5" />
+  <link rel="stylesheet" href="css/style.css?v=7" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
 </head>
 <body>
@@ -27,6 +36,11 @@
       </div>
       <nav id="nav"></nav>
       <div class="sidebar-footer">
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle light and dark theme">
+          <span class="tt-icon">🎨</span>
+          <span class="tt-label">Theme</span>
+          <span class="tt-track" style="margin-left:auto"><span class="tt-thumb"></span></span>
+        </button>
         <div id="progress-bar"><div id="progress-fill"></div></div>
         <p id="progress-text">0 / 0 lessons completed</p>
       </div>
