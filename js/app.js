@@ -7,6 +7,12 @@ import linearRegression from './lessons/linear-regression.js';
 import gradientDescent from './lessons/gradient-descent.js';
 import overfitting from './lessons/overfitting.js';
 import metrics from './lessons/metrics.js';
+import pythonIntro from './lessons/python-intro.js';
+import pythonVariables from './lessons/python-variables.js';
+import pythonCollections from './lessons/python-collections.js';
+import pythonControl from './lessons/python-control.js';
+import pythonFunctions from './lessons/python-functions.js';
+import pythonAdvanced from './lessons/python-advanced.js';
 import pythonBasics from './lessons/python-basics.js';
 import numpy from './lessons/numpy.js';
 import pandas from './lessons/pandas.js';
@@ -33,7 +39,7 @@ import llms from './lessons/llms.js';
 
 export const SECTIONS = [
   { name: '🌱 Foundations', short: 'Foundations', lessons: [intro, dataFeatures, linearRegression, gradientDescent, overfitting, metrics] },
-  { name: '🐍 Python for ML', short: 'Python for ML', lessons: [pythonBasics, numpy, pandas, dataviz, mlCode] },
+  { name: '🐍 Python for ML', short: 'Python for ML', lessons: [pythonIntro, pythonVariables, pythonCollections, pythonControl, pythonFunctions, pythonBasics, pythonAdvanced, numpy, pandas, dataviz, mlCode] },
   { name: '📊 Classical ML', short: 'Classical ML', lessons: [logisticRegression, knn, svm, naiveBayes, decisionTrees, kmeans, pca] },
   { name: '🧠 Deep Learning', short: 'Deep Learning', lessons: [neuralNetworks, activations, backprop, optimizers] },
   { name: '🚀 Advanced', short: 'Advanced & GenAI', lessons: [cnn, rnn, transformers, embeddings, generative, llms] },
@@ -302,7 +308,7 @@ function renderHome() {
   const hero = h('div', { class: 'hero' }, [
     heroCanvas,
     h('div', { class: 'hero-inner' }, [
-      h('div', { class: 'hero-badge' }, [h('span', { class: 'pulse-dot' }), '28 interactive lessons · 40+ live demos · 100% free']),
+      h('div', { class: 'hero-badge' }, [h('span', { class: 'pulse-dot' }), '34 interactive lessons · 45+ live demos · 100% free']),
       h('h2', { html: 'See machine learning.<br><span class="grad-text">Actually understand it.</span>' }),
       h('p', { class: 'hero-sub' }, 'From your first regression line to the transformers inside ChatGPT and Claude — every concept is a living visualization you can drag, tune, and train right in your browser. No math prerequisites. No installs. No fluff.'),
       h('div', { class: 'hero-cta' }, [
@@ -310,8 +316,8 @@ function renderHome() {
         h('a', { class: 'cta-ghost', href: '#/llms' }, ['🤖 How ChatGPT works']),
       ]),
       h('div', { class: 'hero-stats' }, [
-        h('div', { class: 'hero-stat' }, [h('b', {}, '28'), h('span', {}, 'visual lessons')]),
-        h('div', { class: 'hero-stat' }, [h('b', {}, '40+'), h('span', {}, 'interactive demos')]),
+        h('div', { class: 'hero-stat' }, [h('b', {}, '34'), h('span', {}, 'visual lessons')]),
+        h('div', { class: 'hero-stat' }, [h('b', {}, '45+'), h('span', {}, 'interactive demos')]),
         h('div', { class: 'hero-stat' }, [h('b', {}, '5'), h('span', {}, 'skill levels')]),
         h('div', { class: 'hero-stat' }, [h('b', {}, '0'), h('span', {}, 'installs needed')]),
       ]),

@@ -31,6 +31,38 @@ export function html(markup) {
 }
 
 /**
+ * Syntax-highlighted Python code block with optional title and output.
+ * pyCode('x = 1\nprint(x)', { title: 'demo.py', output: '1' })
+ */
+export function pyCode(code, opts = {}) {
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const highlight = line => {
+    let s = esc(line);
+    // comments first (protect from other rules)
+    const cm = s.match(/(#.*)$/);
+    let comment = '';
+    if (cm) { comment = cm[1]; s = s.slice(0, s.length - comment.length); }
+    s = s
+      .replace(/(&quot;[^&]*?&quot;|&#39;[^&]*?&#39;|"[^"]*"|'[^']*')/g, '<span class="py-str">$1</span>')
+      .replace(/(f)(<span class="py-str">)/g, '<span class="py-kw">$1</span>$2')
+      .replace(/\b(def|class|return|if|elif|else|for|while|in|not|and|or|import|from|as|with|try|except|finally|raise|lambda|yield|pass|break|continue|global|None|True|False|is|del|assert)\b/g, '<span class="py-kw">$1</span>')
+      .replace(/\b(print|len|range|type|int|float|str|bool|list|dict|set|tuple|input|open|enumerate|zip|sum|min|max|sorted|abs|round|isinstance|super|__init__|self)\b/g, '<span class="py-fn">$1</span>')
+      .replace(/\b(\d+\.?\d*)\b/g, '<span class="py-num">$1</span>');
+    if (comment) s += '<span class="py-com">' + comment + '</span>';
+    return s;
+  };
+  const lines = code.split('\n');
+  const box = document.createElement('div');
+  box.className = 'code-block';
+  box.innerHTML = `
+    ${opts.title ? `<div class="code-title"><span class="code-dots"><i></i><i></i><i></i></span>${esc(opts.title)}</div>` : ''}
+    <pre class="code-body">${lines.map((l, i) => `<span class="code-ln">${i + 1}</span>${highlight(l) || ' '}`).join('\n')}</pre>
+    ${opts.output != null ? `<div class="code-output"><span class="code-out-label">▸ output</span>\n${esc(opts.output)}</div>` : ''}
+  `;
+  return box;
+}
+
+/**
  * Create a hi-DPI canvas that fills its container width at a fixed aspect.
  * Returns { canvas, ctx, W, H, onResize } where W/H are CSS-pixel dims.
  * The ctx is pre-scaled so you draw in CSS pixels.

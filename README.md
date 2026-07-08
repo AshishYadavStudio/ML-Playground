@@ -12,7 +12,7 @@ python serve.py 8317
 
 then open http://localhost:8317. (`serve.py` is a stdlib-only static server with caching disabled so edits show up immediately; ES modules are blocked on `file://`, so a server is required.)
 
-## Curriculum (28 interactive lessons)
+## Curriculum (34 interactive lessons)
 
 **🌱 Foundations**
 1. **What is Machine Learning?** — race a perceptron: draw your own separating line vs. the machine's learned one
@@ -22,15 +22,21 @@ then open http://localhost:8317. (`serve.py` is a stdlib-only static server with
 5. **Overfitting & Regularization** — polynomial degree slider with live train/test error curves + ridge λ
 6. **Evaluation Metrics** — drag a decision threshold; confusion matrix, precision/recall, and ROC/AUC update live
 
-**🐍 Python for ML**
-7. **Python Essentials** — step through code line by line with a live variable panel and console (4 programs)
-8. **NumPy & Vectorization** — a real in-browser speed race (loop vs vectorized, 5M ops) + broadcasting visualizer
-9. **pandas: Data Wrangling** — interactive DataFrame filter explorer + animated groupby (split → apply → combine)
-10. **Data Visualization** — Anscombe's quartet, a chart-type chooser, and the histogram bin-width trap
-11. **From Concepts to Code** — annotated scikit-learn workflow and PyTorch training loop with an animated pipeline
+**🐍 Python for ML** (a complete Python course, zero to advanced)
+7. **Python: Intro & Setup** — what/why Python, installation on every OS, pip, venv, and an interactive terminal simulator
+8. **Variables & Data Types** — int/float/str/bool/None, f-strings, operators, casting, with a live type inspector
+9. **Lists, Dicts & Collections** — the four containers + an interactive slicing machine (start:stop:step)
+10. **Conditions & Loops** — if/elif/else, for, while, break/continue with an animated control-flow tracer
+11. **Functions & Scope** — args, kwargs, defaults, lambda, recursion with a live call-stack visualizer
+12. **Step-Through Practice** — trace four real programs line by line with a live variable panel and console
+13. **Advanced Python** — comprehensions (interactive builder), classes/OOP, exceptions, files, generators, decorators
+14. **NumPy & Vectorization** — a real in-browser speed race (loop vs vectorized, 5M ops) + broadcasting visualizer
+15. **pandas: Data Wrangling** — interactive DataFrame filter explorer + animated groupby (split → apply → combine)
+16. **Data Visualization** — Anscombe's quartet, a chart-type chooser, and the histogram bin-width trap
+17. **From Concepts to Code** — annotated scikit-learn workflow and PyTorch training loop with an animated pipeline
 
 **📊 Classical ML**
-12. **Logistic Regression** — sigmoid explorer + a decision boundary trained live with cross-entropy
+18. **Logistic Regression** — sigmoid explorer + a decision boundary trained live with cross-entropy
 11. **K-Nearest Neighbors** — drag the mystery point, tune k, toggle the full decision map
 12. **Support Vector Machines** — draggable points with live max-margin retraining + animated kernel trick lift
 13. **Naive Bayes** — build a spam email word by word; evidence bars and a verdict gauge update live
@@ -39,13 +45,13 @@ then open http://localhost:8317. (`serve.py` is a stdlib-only static server with
 16. **PCA & Dimensionality Reduction** — rotate the projection axis by hand, then watch it snap to PC1
 
 **🧠 Deep Learning**
-19. **Neural Networks** — a full playground: 5 datasets (moons/circle/XOR/spiral/blobs), configurable layers, live in-browser training with decision-surface heatmap
+25. **Neural Networks** — a full playground: 5 datasets (moons/circle/XOR/spiral/blobs), configurable layers, live in-browser training with decision-surface heatmap
 18. **Activation Functions** — function/derivative explorer (sigmoid → GELU) + vanishing-gradient visualizer
 19. **Backpropagation** — step through forward and backward passes number-by-number on a tiny network
 20. **Optimizers** — SGD vs Momentum vs RMSProp vs Adam racing on a curved-valley loss surface
 
 **🚀 Advanced**
-23. **Convolutional Networks** — draw on a pixel grid, slide edge/blur/sharpen kernels, hover feature-map outputs
+29. **Convolutional Networks** — draw on a pixel grid, slide edge/blur/sharpen kernels, hover feature-map outputs
 22. **Recurrent Networks & Memory** — watch a hidden state read a sentence word by word; LSTM gates
 23. **Attention & Transformers** — interactive attention-matrix explorer with pronoun-resolution examples
 24. **Embeddings & Vector Spaces** — word map with nearest-neighbor search and king−man+woman=queen arithmetic

@@ -100,10 +100,10 @@ const PROGRAMS = {
 
 export default {
   id: 'python-basics',
-  emoji: '🐍',
-  title: 'Python Essentials',
+  emoji: '🎬',
+  title: 'Step-Through Practice',
   level: 'Beginner',
-  blurb: 'The language of ML, animated: step through code line by line and watch variables change.',
+  blurb: 'Consolidate everything so far: trace four real programs line by line and predict each step.',
 
   render(root) {
     root.appendChild(html(`

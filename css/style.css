@@ -537,6 +537,68 @@ table.info-table {
 }
 .lesson-nav a span { display: block; font-size: 0.68rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
 
+/* ============ Code blocks ============ */
+.code-block {
+  background: #070a12;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin: 16px 0;
+  overflow: hidden;
+}
+.code-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(18, 23, 41, 0.6);
+}
+.code-dots { display: inline-flex; gap: 5px; }
+.code-dots i { width: 9px; height: 9px; border-radius: 50%; background: #2c3557; }
+.code-dots i:first-child { background: #f8717155; }
+.code-dots i:nth-child(2) { background: #fbbf2455; }
+.code-dots i:nth-child(3) { background: #4ade8055; }
+.code-body {
+  margin: 0;
+  padding: 13px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.83rem;
+  line-height: 1.7;
+  color: #dbe4f5;
+  overflow-x: auto;
+}
+.code-ln {
+  display: inline-block;
+  width: 2.1em;
+  color: #3a4262;
+  user-select: none;
+}
+.py-kw { color: #c792ea; }
+.py-fn { color: #82aaff; }
+.py-str { color: #7cd9c8; }
+.py-num { color: #f7b96d; }
+.py-com { color: #546084; font-style: italic; }
+.code-output {
+  border-top: 1px dashed var(--border);
+  padding: 10px 16px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: #9ae6b4;
+  white-space: pre-wrap;
+  background: rgba(74, 222, 128, 0.03);
+}
+.code-out-label {
+  display: block;
+  font-size: 0.66rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+}
+
 /* ============ Quiz ============ */
 .quiz {
   background: linear-gradient(160deg, rgba(16, 20, 36, 0.95), rgba(11, 14, 23, 0.95));

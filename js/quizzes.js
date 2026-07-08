@@ -32,6 +32,36 @@ export const QUIZZES = {
     { q: 'For cancer screening, missing a sick patient is the costly error. Optimize…', opts: ['Precision (raise the threshold)', 'Recall (lower the threshold)', 'Accuracy'], correct: 1, why: 'Lowering the threshold catches more true positives at the cost of more false alarms — the right trade for screening.' },
     { q: 'AUC is useful because it…', opts: ['Depends on the perfect threshold', 'Summarizes model quality across all thresholds', 'Only works for balanced data'], correct: 1, why: 'The ROC curve sweeps every threshold; its area gives one threshold-independent number (1.0 = perfect, 0.5 = coin flip).' },
   ],
+  'python-intro': [
+    { q: 'The #1 Windows installation mistake is…', opts: ['Downloading the wrong color installer', 'Forgetting to tick "Add python.exe to PATH"', 'Installing an editor first'], correct: 1, why: 'Without PATH, the terminal answers "python is not recognized". Re-running the installer with the box ticked fixes it.' },
+    { q: 'pip is…', opts: ['A Python game', 'The package installer that downloads libraries like NumPy from PyPI', 'A code editor'], correct: 1, why: 'pip install numpy is how all 500,000+ community packages arrive on your machine.' },
+    { q: 'A virtual environment (venv) exists so that…', opts: ['Python runs faster', 'Each project gets isolated packages that can\'t clash with other projects', 'Your code is encrypted'], correct: 1, why: 'Project A can use numpy 1.x and project B numpy 2.x without ever fighting.' },
+  ],
+  'python-variables': [
+    { q: 'In x = 5, the = sign means…', opts: ['"Equals", as in math', '"Store": compute the right side, attach the name on the left', '"Approximately"'], correct: 1, why: 'That\'s why x = x + 1 makes sense: compute x+1, then re-point the name x at the result.' },
+    { q: '"42" + "1" gives…', opts: ['43', '"421" — both are strings, so + concatenates', 'An error'], correct: 1, why: 'Quoted values are text. Cast first: int("42") + 1 → 43.' },
+    { q: 'Why is 0.1 + 0.2 == 0.3 False?', opts: ['Python has a bug', 'Floats are binary approximations; the sum is 0.30000000000000004', 'The == operator is broken'], correct: 1, why: 'Compare floats with a tolerance: abs(a − b) < 1e-9. In ML everything is floats — this matters.' },
+  ],
+  'python-collections': [
+    { q: 'letters[1:4] returns items at indices…', opts: ['1, 2, 3, 4', '1, 2, 3 — the stop index is excluded', '2, 3, 4'], correct: 1, why: 'Start included, stop excluded. That\'s why lst[:n] gives exactly n items.' },
+    { q: 'lst[::-1] is the classic trick for…', opts: ['Sorting a list', 'Reversing a list', 'Emptying a list'], correct: 1, why: 'Step −1 walks the whole list backwards.' },
+    { q: 'After b = a (where a is a list), b.append(9)…', opts: ['Changes only b', 'Changes a too — both names point at the same list', 'Raises an error'], correct: 1, why: 'Assignment copies the reference, not the list. Use b = a.copy() for an independent copy.' },
+  ],
+  'python-control': [
+    { q: 'In an if/elif/elif/else chain…', opts: ['Every true branch runs', 'Only the FIRST true branch runs; the rest are skipped', 'The else always runs'], correct: 1, why: 'Checked top to bottom, first match wins — order your conditions accordingly.' },
+    { q: 'break vs continue:', opts: ['break skips one item; continue ends the loop', 'break ends the whole loop; continue skips to the next item', 'They are synonyms'], correct: 1, why: 'In the tracer, break on 0 meant 5 was never visited; continue on −2 just skipped it.' },
+    { q: 'Choose while over for when…', opts: ['You know when to stop but not how many iterations (e.g. "until converged")', 'You have a list to walk through', 'You want speed'], correct: 0, why: 'for = known collection/count; while = unknown count, known stopping condition.' },
+  ],
+  'python-functions': [
+    { q: 'A function with no return statement returns…', opts: ['0', 'None', 'Its last computed value'], correct: 1, why: 'None is Python\'s "no value". Forgetting a return is a classic silent bug.' },
+    { q: 'In def train(data, epochs=10), the =10 means…', opts: ['epochs must equal 10', 'epochs is optional and defaults to 10 if not passed', 'epochs is a global'], correct: 1, why: 'Keyword arguments with defaults are why 30-parameter library functions stay usable.' },
+    { q: 'During recursion, each call gets…', opts: ['Its own frame of local variables on the call stack', 'Shared variables with all other calls', 'A new copy of Python'], correct: 0, why: 'You watched factorial(4)\'s frames stack up and pop off — each n lived in its own frame.' },
+  ],
+  'python-advanced': [
+    { q: '[x * 2 for x in nums if x > 5] is…', opts: ['A dict', 'A list comprehension: filter nums by x > 5, then double the survivors', 'A syntax error'], correct: 1, why: 'Expression + loop + optional condition, in one readable line.' },
+    { q: 'In a class, self refers to…', opts: ['The class name', 'This particular instance — its own private data', 'The parent class'], correct: 1, why: 'Two Perceptron() objects each carry their own self.w — data travels with the object.' },
+    { q: 'A generator (yield) is ideal for huge datasets because…', opts: ['It compresses the data', 'It produces one item at a time on demand — nothing is stored in memory', 'It runs on the GPU'], correct: 1, why: 'Streaming 100 GB through 8 GB of RAM: exactly what PyTorch\'s DataLoader does.' },
+  ],
   'python-basics': [
     { q: 'In Python, code blocks (loop bodies, functions) are defined by…', opts: ['Curly braces { }', 'Indentation', 'Semicolons'], correct: 1, why: 'The visual structure is the logic — that\'s why Python reads like pseudocode.' },
     { q: 'counts.get(w, 0) returns…', opts: ['Always 0', 'The count for w, or 0 if w isn\'t in the dict yet', 'An error if w is missing'], correct: 1, why: 'The second argument is the default — the trick that makes one-line counting work.' },
