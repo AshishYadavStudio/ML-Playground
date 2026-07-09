@@ -7,6 +7,21 @@ export const QUIZZES = {
     { q: 'In the demo, the points\' (x, y) positions were the…', opts: ['Labels', 'Features', 'Parameters'], correct: 1, why: 'Features are the inputs describing each example; the color (class) was the label; the line\'s slope/position were the parameters.' },
     { q: 'The core training recipe of almost all ML is…', opts: ['Guess → measure error → adjust → repeat', 'Memorize every example exactly', 'Ask a human to write better rules'], correct: 0, why: 'The machine starts with a random guess, measures how wrong it is (loss), and repeatedly nudges parameters to be less wrong.' },
   ],
+  'supervised-learning': [
+    { q: 'What defines supervised learning?', opts: ['It needs a fast computer', 'It learns from examples where the correct answer (label) is known', 'It has no training phase'], correct: 1, why: 'A "teacher" provides the right y for each x; the model learns the mapping f(x) ≈ y.' },
+    { q: 'Predicting a house\'s price is a… task; predicting spam-or-not is a… task.', opts: ['classification / regression', 'regression / classification', 'both are clustering'], correct: 1, why: 'Regression predicts a continuous number (price); classification predicts a category (spam vs not).' },
+    { q: 'The biggest practical bottleneck of supervised learning is…', opts: ['Slow prediction', 'Getting enough correctly-labeled data', 'Too many algorithms'], correct: 1, why: 'Labeling (a doctor marking tumors, humans rating answers) is slow and costly — which is why unsupervised and RL matter.' },
+  ],
+  'unsupervised-learning': [
+    { q: 'Unsupervised learning works with data that has…', opts: ['Labels for every example', 'No labels at all — just raw observations', 'Only numeric features'], correct: 1, why: 'It discovers structure (groups, patterns, oddballs) without anyone providing the answers.' },
+    { q: 'Grouping customers into segments with no predefined categories is…', opts: ['Classification', 'Clustering', 'Regression'], correct: 1, why: 'Clustering finds natural groupings by similarity — K-Means, DBSCAN, hierarchical.' },
+    { q: 'Why is unsupervised learning harder to evaluate than supervised?', opts: ['It runs slower', 'With no labels there is no simple "accuracy" — results need human judgment', 'It uses more memory'], correct: 1, why: 'Is 3 clusters better than 4? It depends on your goal, so interpretation is required.' },
+  ],
+  'reinforcement-learning': [
+    { q: 'A reinforcement-learning agent learns from…', opts: ['Labeled examples', 'Rewards received by trial and error in an environment', 'Clustering raw data'], correct: 1, why: 'Act → get reward + new state → update strategy → repeat. No dataset of answers.' },
+    { q: 'The "explore vs exploit" dilemma is about…', opts: ['CPU vs GPU', 'Trying new actions to discover rewards vs. using the best-known action', 'Training vs test sets'], correct: 1, why: 'Explore too little and you never find the goal; exploit too little and you never cash in on what you learned. ε balances them.' },
+    { q: 'The discount factor γ controls…', opts: ['The learning speed', 'How much future rewards matter vs. immediate ones', 'The number of actions'], correct: 1, why: 'A high γ makes the agent plan ahead, which is why value "flows backward" from the goal across the map.' },
+  ],
   'data-features': [
     { q: 'Why do we scale features before training?', opts: ['To make the dataset smaller', 'So no feature dominates just because its raw numbers are bigger', 'To remove outliers automatically'], correct: 1, why: 'Income (20,000–200,000) would otherwise drown out age (20–70) in any distance- or gradient-based method.' },
     { q: 'When should you split off the test set?', opts: ['After training, to save time', 'Before doing anything else — even before fitting the scaler', 'Only if the dataset is large'], correct: 1, why: 'Anything learned from test data — even a scaling mean — leaks information and inflates your score.' },

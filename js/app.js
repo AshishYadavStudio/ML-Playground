@@ -2,6 +2,9 @@
 import { h } from './utils.js';
 
 import intro from './lessons/intro.js';
+import supervisedLearning from './lessons/supervised-learning.js';
+import unsupervisedLearning from './lessons/unsupervised-learning.js';
+import reinforcementLearning from './lessons/reinforcement-learning.js';
 import dataFeatures from './lessons/data-features.js';
 import linearRegression from './lessons/linear-regression.js';
 import gradientDescent from './lessons/gradient-descent.js';
@@ -38,7 +41,7 @@ import generative from './lessons/generative.js';
 import llms from './lessons/llms.js';
 
 export const SECTIONS = [
-  { name: '🌱 Foundations', short: 'Foundations', lessons: [intro, dataFeatures, linearRegression, gradientDescent, overfitting, metrics] },
+  { name: '🌱 Foundations', short: 'Foundations', lessons: [intro, supervisedLearning, unsupervisedLearning, reinforcementLearning, dataFeatures, linearRegression, gradientDescent, overfitting, metrics] },
   { name: '🐍 Python for ML', short: 'Python for ML', lessons: [pythonIntro, pythonVariables, pythonCollections, pythonControl, pythonFunctions, pythonBasics, pythonAdvanced, numpy, pandas, dataviz, mlCode] },
   { name: '📊 Classical ML', short: 'Classical ML', lessons: [logisticRegression, knn, svm, naiveBayes, decisionTrees, kmeans, pca] },
   { name: '🧠 Deep Learning', short: 'Deep Learning', lessons: [neuralNetworks, activations, backprop, optimizers] },
@@ -47,17 +50,20 @@ export const SECTIONS = [
 
 const ALL = SECTIONS.flatMap(s => s.lessons.map(l => ({ ...l, sectionName: s.name })));
 
-// Support link — shown in the footer and under each lesson.
-const COFFEE_URL = 'https://buymeacoffee.com/ashishyadavstudio';
-
 // ---- concept cross-linking ----
 // Distinctive concept phrases → the lesson that explains them. The first mention
 // of each concept in a lesson's prose becomes a clickable link to its full lesson.
 // [term, lessonId, caseSensitive?]. Acronyms are case-sensitive to avoid false hits.
 const CONCEPTS = [
-  ['supervised learning', 'intro'],
-  ['unsupervised learning', 'kmeans'],
-  ['reinforcement learning', 'llms'],
+  ['supervised learning', 'supervised-learning'],
+  ['unsupervised learning', 'unsupervised-learning'],
+  ['reinforcement learning', 'reinforcement-learning'],
+  ['self-supervised', 'llms'],
+  ['clustering', 'unsupervised-learning'],
+  ['anomaly detection', 'unsupervised-learning'],
+  ['classification', 'supervised-learning'],
+  ['q-learning', 'reinforcement-learning'],
+  ['RLHF', 'reinforcement-learning', true],
   ['linear regression', 'linear-regression'],
   ['logistic regression', 'logistic-regression'],
   ['gradient descent', 'gradient-descent'],
@@ -386,7 +392,6 @@ function buildFooter() {
       h('div', { class: 'foot-brand' }, [
         h('h4', {}, '🧠 ML Playground'),
         h('p', {}, 'Machine learning explained the way brains actually learn — visually, interactively, one concept at a time. Built with zero dependencies: every demo runs live in your browser.'),
-        h('a', { class: 'coffee-btn', href: COFFEE_URL, target: '_blank', rel: 'noopener' }, ['☕', 'Buy me a coffee']),
       ]),
       h('div', { class: 'foot-links' }, [
         colLinks('Start here', [
@@ -427,7 +432,7 @@ function renderHome() {
   const hero = h('div', { class: 'hero' }, [
     heroCanvas,
     h('div', { class: 'hero-inner' }, [
-      h('div', { class: 'hero-badge' }, [h('span', { class: 'pulse-dot' }), '34 interactive lessons · 45+ live demos · 100% free']),
+      h('div', { class: 'hero-badge' }, [h('span', { class: 'pulse-dot' }), '37 interactive lessons · 48+ live demos · 100% free']),
       h('h2', { html: 'See machine learning.<br><span class="grad-text">Actually understand it.</span>' }),
       h('p', { class: 'hero-sub' }, 'From your first regression line to the transformers inside ChatGPT and Claude — every concept is a living visualization you can drag, tune, and train right in your browser. No math prerequisites. No installs. No fluff.'),
       h('div', { class: 'hero-cta' }, [
@@ -435,8 +440,8 @@ function renderHome() {
         h('a', { class: 'cta-ghost', href: '#/llms' }, ['🤖 How ChatGPT works']),
       ]),
       h('div', { class: 'hero-stats' }, [
-        h('div', { class: 'hero-stat' }, [h('b', {}, '34'), h('span', {}, 'visual lessons')]),
-        h('div', { class: 'hero-stat' }, [h('b', {}, '45+'), h('span', {}, 'interactive demos')]),
+        h('div', { class: 'hero-stat' }, [h('b', {}, '37'), h('span', {}, 'visual lessons')]),
+        h('div', { class: 'hero-stat' }, [h('b', {}, '48+'), h('span', {}, 'interactive demos')]),
         h('div', { class: 'hero-stat' }, [h('b', {}, '5'), h('span', {}, 'skill levels')]),
         h('div', { class: 'hero-stat' }, [h('b', {}, '0'), h('span', {}, 'installs needed')]),
       ]),
@@ -533,14 +538,7 @@ function renderLesson(lesson) {
     doneBtn.textContent = now ? '✓ Completed — click to unmark' : 'Mark lesson as complete ✓';
     doneBtn.className = 'btn' + (now ? ' secondary' : '');
   });
-  contentEl.appendChild(h('div', { class: 'complete-row' }, [
-    doneBtn,
-    h('div', { class: 'support-line' }, [
-      'Enjoying this? ',
-      h('a', { href: COFFEE_URL, target: '_blank', rel: 'noopener' }, '☕ Support the project'),
-      ' — it keeps every lesson free.',
-    ]),
-  ]));
+  contentEl.appendChild(h('div', { class: 'complete-row' }, doneBtn));
 
   // prev / next
   const nav = h('div', { class: 'lesson-nav' });

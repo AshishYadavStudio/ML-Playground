@@ -12,10 +12,13 @@ python serve.py 8317
 
 then open http://localhost:8317. (`serve.py` is a stdlib-only static server with caching disabled so edits show up immediately; ES modules are blocked on `file://`, so a server is required.)
 
-## Curriculum (34 interactive lessons)
+## Curriculum (37 interactive lessons)
 
 **🌱 Foundations**
 1. **What is Machine Learning?** — race a perceptron: draw your own separating line vs. the machine's learned one
+    - **Supervised Learning** — classification vs regression, hover to predict a new labeled example
+    - **Unsupervised Learning** — watch clusters emerge from unlabeled data + an anomaly-detection demo
+    - **Reinforcement Learning** — a live Q-learning grid-world agent that learns a policy from rewards
 2. **Data, Features & Splits** — feature scaling toggle, interactive train/test split
 3. **Linear Regression** — drag the line handles to minimize MSE, then watch gradient descent fit it
 4. **Gradient Descent** — drop a ball on a loss curve; crank the learning rate until it diverges
