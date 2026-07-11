@@ -22,6 +22,7 @@ import pandas from './lessons/pandas.js';
 import dataviz from './lessons/dataviz.js';
 import mlCode from './lessons/ml-code.js';
 import { QUIZZES } from './quizzes.js';
+import { EXAMPLES } from './examples.js';
 import logisticRegression from './lessons/logistic-regression.js';
 import knn from './lessons/knn.js';
 import svm from './lessons/svm.js';
@@ -335,6 +336,30 @@ function startHeroAnimation(canvas) {
   onLeave(() => { alive = false; cancelAnimationFrame(raf); ro.disconnect(); });
 }
 
+// ---- Real-world examples block ----
+function buildExamples(lessonId) {
+  const exs = EXAMPLES[lessonId];
+  if (!exs || !exs.length) return null;
+  const wrap = h('div', { class: 'examples' }, [
+    h('div', { class: 'examples-head' }, [
+      h('span', { class: 'examples-badge' }, '🌍 In the real world'),
+      h('h3', {}, 'How this shows up in everyday life'),
+    ]),
+    h('div', { class: 'examples-grid' }, exs.map(ex => h('div', { class: 'example-card' }, [
+      h('div', { class: 'example-icon' }, ex.icon),
+      h('div', { class: 'example-body' }, [
+        h('h4', {}, ex.title),
+        h('p', { class: 'example-story', html: ex.story }),
+        h('div', { class: 'example-connect' }, [
+          h('span', { class: 'connect-arrow' }, '↳ '),
+          ex.connection,
+        ]),
+      ]),
+    ]))),
+  ]);
+  return wrap;
+}
+
 // ---- "Check your understanding" quiz ----
 function buildQuiz(lessonId) {
   const qs = QUIZZES[lessonId];
@@ -524,6 +549,10 @@ function renderLesson(lesson) {
 
   // reveal-on-scroll for demo panels & headings
   body.querySelectorAll('.demo').forEach(d => reveal(d));
+
+  // real-world examples
+  const examples = buildExamples(lesson.id);
+  if (examples) contentEl.appendChild(reveal(examples));
 
   // quiz
   const quiz = buildQuiz(lesson.id);
