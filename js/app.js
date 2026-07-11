@@ -23,7 +23,7 @@ import dataviz from './lessons/dataviz.js';
 import mlCode from './lessons/ml-code.js';
 import { QUIZZES } from './quizzes.js';
 import { EXAMPLES } from './examples.js';
-import { GISCUS } from './config.js';
+import { GISCUS, NEWSLETTER } from './config.js';
 import logisticRegression from './lessons/logistic-regression.js';
 import knn from './lessons/knn.js';
 import svm from './lessons/svm.js';
@@ -462,6 +462,59 @@ function buildQuiz(lessonId) {
   return wrap;
 }
 
+// ---- Newsletter signup ----
+function buildNewsletter() {
+  const configured = NEWSLETTER.endpoint && !NEWSLETTER.endpoint.startsWith('REPLACE_');
+  const status = h('div', { class: 'nl-status' }, '');
+  const emailInput = h('input', {
+    type: 'email', name: 'email', required: '', placeholder: 'you@example.com', class: 'nl-input',
+  });
+  const btn = h('button', { type: 'submit', class: 'nl-submit' }, configured ? 'Subscribe →' : 'Coming soon');
+  if (!configured) btn.disabled = true;
+
+  const form = h('form', { class: 'nl-form', novalidate: '' }, [emailInput, btn]);
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!configured) return;
+    const email = emailInput.value.trim();
+    if (!email || !email.includes('@')) { status.textContent = 'Enter a valid email address.'; status.className = 'nl-status err'; return; }
+    btn.disabled = true; btn.textContent = 'Subscribing…';
+    try {
+      const res = await fetch(NEWSLETTER.endpoint, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'ml-playground-footer' }),
+      });
+      if (res.ok) {
+        status.textContent = '🎉 You\'re in! Check your inbox for a confirmation.';
+        status.className = 'nl-status ok';
+        emailInput.value = '';
+        btn.textContent = '✓ Subscribed';
+        if (window.gtag) window.gtag('event', 'newsletter_signup', { source: 'footer' });
+      } else {
+        status.textContent = 'Something went wrong — please try again.';
+        status.className = 'nl-status err';
+        btn.disabled = false; btn.textContent = 'Subscribe →';
+      }
+    } catch {
+      status.textContent = 'Network error — please try again.';
+      status.className = 'nl-status err';
+      btn.disabled = false; btn.textContent = 'Subscribe →';
+    }
+  });
+
+  return h('div', { class: 'newsletter' + (configured ? '' : ' newsletter-pending') }, [
+    h('div', { class: 'nl-icon' }, '📬'),
+    h('div', { class: 'nl-body' }, [
+      h('h4', {}, NEWSLETTER.headline),
+      h('p', {}, configured ? NEWSLETTER.subtext : 'Weekly newsletter is being set up. Bookmark the site — every lesson is already free.'),
+      form,
+      status,
+    ]),
+  ]);
+}
+
 // ---- footer ----
 function buildFooter() {
   const colLinks = (title, links) => h('div', { class: 'foot-col' }, [
@@ -493,9 +546,10 @@ function buildFooter() {
         ]),
       ]),
     ]),
+    buildNewsletter(),
     h('div', { class: 'foot-bottom' }, [
-      h('span', {}, '26 interactive lessons · beginner → expert · free forever'),
-      h('span', {}, 'No frameworks, no tracking, no installs — just learning.'),
+      h('span', {}, '37 interactive lessons · beginner → expert · free forever'),
+      h('span', {}, 'No frameworks, no installs, no fluff — just learning.'),
     ]),
   ]);
 }

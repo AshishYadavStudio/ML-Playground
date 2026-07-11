@@ -766,6 +766,82 @@ table.info-table {
 }
 .quiz-why.show { display: block; animation: pageIn 0.3s both; }
 
+/* ============ Newsletter signup ============ */
+.newsletter {
+  margin-top: 30px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, rgba(109, 141, 255, 0.09), rgba(183, 140, 255, 0.06));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  position: relative;
+  overflow: hidden;
+}
+.newsletter::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(109, 141, 255, 0.5), transparent 40%, transparent 60%, rgba(183, 140, 255, 0.45));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.newsletter.newsletter-pending { opacity: 0.9; }
+.nl-icon {
+  width: 46px; height: 46px;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  border-radius: 12px;
+  background: var(--grad-soft);
+  border: 1px solid rgba(109, 141, 255, 0.3);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.nl-body { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.nl-body h4 { font-family: var(--font-display); font-size: 1rem; margin-bottom: 4px; color: var(--text); letter-spacing: -0.01em; }
+.nl-body p { font-size: 0.82rem; color: var(--text-dim); margin: 0 0 12px !important; }
+.nl-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.nl-input {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.nl-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(109, 141, 255, 0.18); }
+.nl-submit {
+  background: var(--grad);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 18px -4px rgba(109, 141, 255, 0.55);
+  transition: transform 0.13s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+.nl-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px -4px rgba(109, 141, 255, 0.65); }
+.nl-submit:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.nl-status { margin-top: 8px; font-size: 0.78rem; min-height: 1em; }
+.nl-status.ok { color: var(--green); }
+.nl-status.err { color: var(--red); }
+
 /* ============ Comments section (Giscus) ============ */
 .comments {
   background: linear-gradient(135deg, rgba(79, 214, 197, 0.06), rgba(109, 141, 255, 0.05));

@@ -22,3 +22,18 @@ export const GISCUS = {
   category: 'General',
   categoryId: 'DIC_kwDOTQtXaM4DA-IR',
 };
+
+// ============ Newsletter signup (Formspree) ============
+// Setup — 5 minutes, one-time:
+// 1. Go to https://formspree.io → sign up (free tier: 50 submissions/month)
+// 2. Create a new form named "ML Playground newsletter"
+// 3. Copy the form endpoint (looks like https://formspree.io/f/xyzabcde)
+// 4. Paste it into `endpoint` below and push
+//
+// Until then, the signup box shows a friendly "Coming soon" state so
+// visitors still see the offer.
+export const NEWSLETTER = {
+  endpoint: 'REPLACE_WITH_FORMSPREE_URL',   // e.g. https://formspree.io/f/xyzabcde
+  headline: 'Get one visual ML concept per week',
+  subtext: 'A short, hand-picked demo or insight every Sunday. No spam, unsubscribe anytime.',
+};
