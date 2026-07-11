@@ -640,6 +640,20 @@ function renderLesson(lesson) {
   contentEl.appendChild(buildFooter());
 }
 
+// ---- Google Analytics: per-route pageviews ----
+// Each lesson id becomes its own "page" in GA so you can see which lessons
+// actually get read, how long people stay, and where they drop off.
+function trackPageView(lesson) {
+  if (typeof window.gtag !== 'function') return;
+  const id = location.hash.replace('#/', '') || 'home';
+  const title = lesson ? ('ML Playground · ' + lesson.title) : 'ML Playground · Curriculum';
+  window.gtag('event', 'page_view', {
+    page_title: title,
+    page_location: location.href,
+    page_path: '/' + id,
+  });
+}
+
 // ---- router ----
 function route() {
   cleanups.forEach(f => { try { f(); } catch { /* ignore */ } });
@@ -654,9 +668,9 @@ function route() {
 
   const id = location.hash.replace('#/', '') || 'home';
   renderNav();
-  if (id === 'home') { renderHome(); updateReadProgress(); return; }
+  if (id === 'home') { renderHome(); updateReadProgress(); trackPageView(null); return; }
   const lesson = ALL.find(l => l.id === id);
-  if (lesson) renderLesson(lesson);
+  if (lesson) { renderLesson(lesson); trackPageView(lesson); }
   else { location.hash = '#/home'; }
   updateReadProgress();
 }
