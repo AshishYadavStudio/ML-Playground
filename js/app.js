@@ -23,6 +23,7 @@ import dataviz from './lessons/dataviz.js';
 import mlCode from './lessons/ml-code.js';
 import { QUIZZES } from './quizzes.js';
 import { EXAMPLES } from './examples.js';
+import { GISCUS } from './config.js';
 import logisticRegression from './lessons/logistic-regression.js';
 import knn from './lessons/knn.js';
 import svm from './lessons/svm.js';
@@ -360,6 +361,61 @@ function buildExamples(lessonId) {
   return wrap;
 }
 
+// ---- Comments (Giscus → GitHub Discussions) ----
+function buildComments(lessonId) {
+  const configured = GISCUS.repoId && !GISCUS.repoId.startsWith('REPLACE_')
+    && GISCUS.categoryId && !GISCUS.categoryId.startsWith('REPLACE_');
+
+  const wrap = h('div', { class: 'comments' }, [
+    h('div', { class: 'comments-head' }, [
+      h('span', { class: 'comments-badge' }, '💬 Discussion & feedback'),
+      h('h3', {}, 'Questions, corrections, or ideas?'),
+      h('p', { class: 'comments-sub' }, configured
+        ? 'Comments are stored as GitHub Discussions in this project\'s repo — one thread per lesson. Sign in with GitHub to post; no other account needed.'
+        : 'Discussion is being set up. In the meantime, you can share feedback by opening an issue on GitHub.'),
+    ]),
+    h('div', { class: 'comments-body', id: 'giscus-mount' }),
+  ]);
+
+  const mount = wrap.querySelector('#giscus-mount');
+  if (!configured) {
+    mount.appendChild(h('a', {
+      class: 'comments-fallback',
+      href: 'https://github.com/' + GISCUS.repo + '/issues/new?title=Feedback+on+lesson%3A+' + encodeURIComponent(lessonId) + '&labels=feedback',
+      target: '_blank', rel: 'noopener',
+    }, ['📮 Send feedback via GitHub Issue', h('span', { class: 'arrow' }, '→')]));
+    return wrap;
+  }
+
+  // Inject Giscus loader script — one thread per lesson id
+  const s = document.createElement('script');
+  s.src = 'https://giscus.app/client.js';
+  s.setAttribute('data-repo', GISCUS.repo);
+  s.setAttribute('data-repo-id', GISCUS.repoId);
+  s.setAttribute('data-category', GISCUS.category);
+  s.setAttribute('data-category-id', GISCUS.categoryId);
+  s.setAttribute('data-mapping', 'specific');
+  s.setAttribute('data-term', 'lesson:' + lessonId);
+  s.setAttribute('data-strict', '0');
+  s.setAttribute('data-reactions-enabled', '1');
+  s.setAttribute('data-emit-metadata', '0');
+  s.setAttribute('data-input-position', 'top');
+  s.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') || 'light');
+  s.setAttribute('data-lang', 'en');
+  s.setAttribute('data-loading', 'lazy');
+  s.crossOrigin = 'anonymous';
+  s.async = true;
+  mount.appendChild(s);
+  return wrap;
+}
+
+function syncCommentsTheme(theme) {
+  const frame = document.querySelector('iframe.giscus-frame');
+  if (frame && frame.contentWindow) {
+    frame.contentWindow.postMessage({ giscus: { setConfig: { theme } } }, 'https://giscus.app');
+  }
+}
+
 // ---- "Check your understanding" quiz ----
 function buildQuiz(lessonId) {
   const qs = QUIZZES[lessonId];
@@ -558,6 +614,10 @@ function renderLesson(lesson) {
   const quiz = buildQuiz(lesson.id);
   if (quiz) contentEl.appendChild(reveal(quiz));
 
+  // comments (per-lesson Giscus thread)
+  const comments = buildComments(lesson.id);
+  if (comments) contentEl.appendChild(reveal(comments));
+
   // mark-complete button
   const doneBtn = h('button', { class: 'btn' + (progress[lesson.id] ? ' secondary' : '') },
     progress[lesson.id] ? '✓ Completed — click to unmark' : 'Mark lesson as complete ✓');
@@ -610,6 +670,7 @@ function applyTheme(t) {
   const icon = document.querySelector('#theme-toggle .tt-icon');
   if (label) label.textContent = t === 'light' ? 'Light mode' : 'Dark mode';
   if (icon) icon.textContent = t === 'light' ? '☀️' : '🌙';
+  syncCommentsTheme(t);
 }
 const themeBtn = document.getElementById('theme-toggle');
 if (themeBtn) {
