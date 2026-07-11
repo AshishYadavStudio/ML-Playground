@@ -18,7 +18,7 @@
 
 export const GISCUS = {
   repo: 'AshishYadavStudio/ML-Playground',
-  repoId: 'REPLACE_WITH_REPO_ID',
+  repoId: 'R_kgDOTQtXaA',
   category: 'General',
-  categoryId: 'REPLACE_WITH_CATEGORY_ID',
+  categoryId: 'DIC_kwDOTQtXaM4DA-IR',
 };
