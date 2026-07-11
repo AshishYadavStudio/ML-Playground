@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>👁️ Convolutional Networks — ML Playground</title>
+  <meta name="description" content="How machines see: draw a picture, slide a filter over it, watch feature maps light up." />
+  <meta name="author" content="Ashish Yadav" />
+  <link rel="canonical" href="https://ashishyadavstudio.github.io/ML-Playground/cnn/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="ML Playground" />
+  <meta property="og:url" content="https://ashishyadavstudio.github.io/ML-Playground/cnn/" />
+  <meta property="og:title" content="👁️ Convolutional Networks — Learn ML Visually" />
+  <meta property="og:description" content="How machines see: draw a picture, slide a filter over it, watch feature maps light up." />
+  <meta property="og:image" content="https://ashishyadavstudio.github.io/ML-Playground/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="👁️ Convolutional Networks — Learn ML Visually" />
+  <meta name="twitter:description" content="How machines see: draw a picture, slide a filter over it, watch feature maps light up." />
+  <meta name="twitter:image" content="https://ashishyadavstudio.github.io/ML-Playground/og-image.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    "name": "Convolutional Networks",
+    "description": "How machines see: draw a picture, slide a filter over it, watch feature maps light up.",
+    "url": "https://ashishyadavstudio.github.io/ML-Playground/cnn/",
+    "image": "https://ashishyadavstudio.github.io/ML-Playground/og-image.png",
+    "inLanguage": "en",
+    "isAccessibleForFree": true,
+    "learningResourceType": "Interactive Lesson",
+    "educationalLevel": "Advanced",
+    "isPartOf": {
+      "@type": "Course",
+      "name": "ML Playground",
+      "url": "https://ashishyadavstudio.github.io/ML-Playground/"
+    },
+    "author": { "@type": "Person", "name": "Ashish Yadav" }
+  }
+  </script>
+
+  <script>
+    // The router in app.js reads this to know which lesson to render on
+    // a fresh page load at /lesson-id/.
+    window.__initialLesson = "cnn";
+    (function () {
+      try {
+        var t = localStorage.getItem('mlplayground-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+    })();
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BNNG588WK9"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-BNNG588WK9', { send_page_view: false });
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css?v=11" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
+</head>
+<body>
+  <div id="read-progress"></div>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="brand">
+        <span class="brand-icon">🧠</span>
+        <div>
+          <h1>ML Playground</h1>
+          <p>Learn ML &amp; DL visually</p>
+        </div>
+      </div>
+      <nav id="nav"></nav>
+      <div class="sidebar-footer">
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle light and dark theme">
+          <span class="tt-icon">🎨</span>
+          <span class="tt-label">Theme</span>
+          <span class="tt-track" style="margin-left:auto"><span class="tt-thumb"></span></span>
+        </button>
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+        <p id="progress-text">0 / 0 lessons completed</p>
+      </div>
+    </aside>
+    <button id="menu-toggle" aria-label="Toggle menu">☰</button>
+    <main id="content">
+      <!-- Static crawlable content for SEO — replaced by the SPA once JS loads. -->
+      <noscript>
+        <div class="lesson-header">
+          <div class="lesson-breadcrumb">🚀 Advanced</div>
+          <h2>👁️ Convolutional Networks</h2>
+        </div>
+        <div class="lesson-body">
+          <p>How machines see: draw a picture, slide a filter over it, watch feature maps light up.</p>
+          <p><strong>This lesson is fully interactive.</strong> Please enable JavaScript to see the live demos, diagrams and quiz.</p>
+        </div>
+      </noscript>
+    </main>
+  </div>
+  <script type="module" src="../js/app.js"></script>
+</body>
+</html>

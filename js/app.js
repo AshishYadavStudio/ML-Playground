@@ -52,6 +52,61 @@ export const SECTIONS = [
 
 const ALL = SECTIONS.flatMap(s => s.lessons.map(l => ({ ...l, sectionName: s.name })));
 
+// ---- URL model: real paths (SEO-friendly) with hash-URL backwards compat ----
+// Production: /ML-Playground/<lesson-id>/   Localhost dev: /<lesson-id>/
+const BASE_PATH = (function () {
+  const p = location.pathname;
+  if (p.startsWith('/ML-Playground/') || p === '/ML-Playground') return '/ML-Playground';
+  return '';
+})();
+const lessonUrl = id => id === 'home' ? BASE_PATH + '/' : BASE_PATH + '/' + id + '/';
+const ALL_IDS = new Set(ALL.map(l => l.id));
+function currentLessonId() {
+  // 1) initial-page marker (set by generated <lesson>/index.html)
+  if (window.__initialLesson && ALL_IDS.has(window.__initialLesson)) {
+    const id = window.__initialLesson;
+    window.__initialLesson = null; // consume once
+    return id;
+  }
+  // 2) legacy hash URL — redirect to real path
+  if (location.hash.startsWith('#/')) {
+    const id = location.hash.slice(2);
+    if (id && id !== 'home' && ALL_IDS.has(id)) {
+      history.replaceState(null, '', lessonUrl(id));
+      return id;
+    }
+    if (id === 'home' || id === '') {
+      history.replaceState(null, '', lessonUrl('home'));
+      return 'home';
+    }
+  }
+  // 3) real path
+  let p = location.pathname;
+  if (BASE_PATH && p.startsWith(BASE_PATH)) p = p.slice(BASE_PATH.length);
+  p = p.replace(/^\/+|\/+$/g, '');
+  if (!p || p === 'index.html') return 'home';
+  return ALL_IDS.has(p) ? p : 'home';
+}
+// Read the currently-displayed lesson id (without mutating history — used by renderNav).
+function currentPathId() {
+  let p = location.pathname;
+  if (BASE_PATH && p.startsWith(BASE_PATH)) p = p.slice(BASE_PATH.length);
+  p = p.replace(/^\/+|\/+$/g, '');
+  if (location.hash.startsWith('#/')) {
+    const h = location.hash.slice(2);
+    if (h && ALL_IDS.has(h)) return h;
+    if (h === 'home' || h === '') return 'home';
+  }
+  if (!p || p === 'index.html') return 'home';
+  return ALL_IDS.has(p) ? p : 'home';
+}
+function navigateTo(id, replace = false) {
+  const url = lessonUrl(id);
+  if (replace) history.replaceState(null, '', url);
+  else history.pushState(null, '', url);
+  route();
+}
+
 // ---- concept cross-linking ----
 // Distinctive concept phrases → the lesson that explains them. The first mention
 // of each concept in a lesson's prose becomes a clickable link to its full lesson.
@@ -162,7 +217,7 @@ function crossLinkConcepts(root, currentId) {
       const before = node.nodeValue.slice(0, m.index);
       const after = node.nodeValue.slice(m.index + matched.length);
       const a = document.createElement('a');
-      a.href = '#/' + t.id;
+      a.href = lessonUrl(t.id);
       a.className = 'concept-link';
       a.textContent = matched;
       a.title = 'Open lesson: ' + matched;
@@ -201,11 +256,11 @@ const readProgress = document.getElementById('read-progress');
 
 function renderNav() {
   const progress = getProgress();
-  const current = location.hash.replace('#/', '') || 'home';
+  const current = currentPathId();
   navEl.innerHTML = '';
   navEl.appendChild(h('a', {
     class: 'nav-link' + (current === 'home' ? ' active' : ''),
-    href: '#/home',
+    href: lessonUrl('home'),
   }, [h('span', { class: 'nav-emoji' }, '🏠'), 'Home / Curriculum']));
 
   for (const sec of SECTIONS) {
@@ -215,7 +270,7 @@ function renderNav() {
     for (const l of sec.lessons) {
       box.appendChild(h('a', {
         class: 'nav-link' + (current === l.id ? ' active' : '') + (progress[l.id] ? ' done' : ''),
-        href: '#/' + l.id,
+        href: lessonUrl(l.id),
       }, [h('span', { class: 'nav-emoji' }, l.emoji), l.title, h('span', { class: 'check' }, '✓')]));
     }
     navEl.appendChild(box);
@@ -529,20 +584,20 @@ function buildFooter() {
       ]),
       h('div', { class: 'foot-links' }, [
         colLinks('Start here', [
-          ['What is ML?', '#/intro'],
-          ['Python Essentials', '#/python-basics'],
-          ['Linear Regression', '#/linear-regression'],
+          ['What is ML?', lessonUrl('intro')],
+          ['Python Essentials', lessonUrl('python-basics')],
+          ['Linear Regression', lessonUrl('linear-regression')],
         ]),
         colLinks('Most popular', [
-          ['Neural Net Playground', '#/neural-networks'],
-          ['How LLMs Work', '#/llms'],
-          ['Transformers', '#/transformers'],
-          ['Generative AI', '#/generative'],
+          ['Neural Net Playground', lessonUrl('neural-networks')],
+          ['How LLMs Work', lessonUrl('llms')],
+          ['Transformers', lessonUrl('transformers')],
+          ['Generative AI', lessonUrl('generative')],
         ]),
         colLinks('Reference', [
-          ['Full curriculum', '#/home'],
-          ['Evaluation Metrics', '#/metrics'],
-          ['Optimizers', '#/optimizers'],
+          ['Full curriculum', lessonUrl('home')],
+          ['Evaluation Metrics', lessonUrl('metrics')],
+          ['Optimizers', lessonUrl('optimizers')],
         ]),
       ]),
     ]),
@@ -571,8 +626,8 @@ function renderHome() {
       h('h2', { html: 'See machine learning.<br><span class="grad-text">Actually understand it.</span>' }),
       h('p', { class: 'hero-sub' }, 'From your first regression line to the transformers inside ChatGPT and Claude — every concept is a living visualization you can drag, tune, and train right in your browser. No math prerequisites. No installs. No fluff.'),
       h('div', { class: 'hero-cta' }, [
-        h('a', { class: 'cta-primary', href: '#/intro' }, ['Start learning free', h('span', {}, '→')]),
-        h('a', { class: 'cta-ghost', href: '#/llms' }, ['🤖 How ChatGPT works']),
+        h('a', { class: 'cta-primary', href: lessonUrl('intro') }, ['Start learning free', h('span', {}, '→')]),
+        h('a', { class: 'cta-ghost', href: lessonUrl('llms') }, ['🤖 How ChatGPT works']),
       ]),
       h('div', { class: 'hero-stats' }, [
         h('div', { class: 'hero-stat' }, [h('b', {}, '37'), h('span', {}, 'visual lessons')]),
@@ -609,7 +664,7 @@ function renderHome() {
     const grid = h('div', { class: 'lesson-grid' });
     sec.lessons.forEach((l, li) => {
       lessonNo++;
-      grid.appendChild(reveal(h('a', { class: 'lesson-card', href: '#/' + l.id }, [
+      grid.appendChild(reveal(h('a', { class: 'lesson-card', href: lessonUrl(l.id) }, [
         h('div', { class: 'lc-top' }, [
           h('div', { class: 'lc-emoji' }, l.emoji),
           h('span', { class: 'lc-num' }, String(lessonNo).padStart(2, '0')),
@@ -687,9 +742,9 @@ function renderLesson(lesson) {
   const nav = h('div', { class: 'lesson-nav' });
   const prev = ALL[idx - 1], next = ALL[idx + 1];
   nav.appendChild(prev
-    ? h('a', { href: '#/' + prev.id }, [h('span', {}, '← Previous'), prev.emoji + ' ' + prev.title])
-    : h('a', { href: '#/home' }, [h('span', {}, '← Back to'), '🏠 Curriculum']));
-  if (next) nav.appendChild(h('a', { href: '#/' + next.id, style: { textAlign: 'right' } }, [h('span', {}, 'Next →'), next.emoji + ' ' + next.title]));
+    ? h('a', { href: lessonUrl(prev.id) }, [h('span', {}, '← Previous'), prev.emoji + ' ' + prev.title])
+    : h('a', { href: lessonUrl('home') }, [h('span', {}, '← Back to'), '🏠 Curriculum']));
+  if (next) nav.appendChild(h('a', { href: lessonUrl(next.id), style: { textAlign: 'right' } }, [h('span', {}, 'Next →'), next.emoji + ' ' + next.title]));
   contentEl.appendChild(nav);
   contentEl.appendChild(buildFooter());
 }
@@ -699,7 +754,7 @@ function renderLesson(lesson) {
 // actually get read, how long people stay, and where they drop off.
 function trackPageView(lesson) {
   if (typeof window.gtag !== 'function') return;
-  const id = location.hash.replace('#/', '') || 'home';
+  const id = lesson ? lesson.id : 'home';
   const title = lesson ? ('ML Playground · ' + lesson.title) : 'ML Playground · Curriculum';
   window.gtag('event', 'page_view', {
     page_title: title,
@@ -720,12 +775,12 @@ function route() {
   void contentEl.offsetHeight;
   contentEl.style.animation = '';
 
-  const id = location.hash.replace('#/', '') || 'home';
+  const id = currentLessonId();
   renderNav();
   if (id === 'home') { renderHome(); updateReadProgress(); trackPageView(null); return; }
   const lesson = ALL.find(l => l.id === id);
   if (lesson) { renderLesson(lesson); trackPageView(lesson); }
-  else { location.hash = '#/home'; }
+  else { navigateTo('home', true); }
   updateReadProgress();
 }
 
@@ -749,6 +804,28 @@ if (themeBtn) {
   applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
 }
 
+// Path-based navigation:
+// - popstate fires on back/forward button
+// - hashchange still fires for legacy #/ URLs (redirected inside route)
+// - clicks on internal <a href="/foo/"> links are intercepted for SPA nav
+window.addEventListener('popstate', route);
 window.addEventListener('hashchange', route);
+document.addEventListener('click', e => {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const a = e.target.closest && e.target.closest('a');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  if (!href || href.startsWith('http') || href.startsWith('mailto:') || a.target === '_blank' || a.hasAttribute('download')) return;
+  // must be an in-app path (starts with base + /) — everything else falls through
+  if (!href.startsWith(BASE_PATH + '/') && !href.startsWith('/')) return;
+  // extract lesson id from path
+  let p = href.split('#')[0].split('?')[0];
+  if (BASE_PATH && p.startsWith(BASE_PATH)) p = p.slice(BASE_PATH.length);
+  p = p.replace(/^\/+|\/+$/g, '');
+  const id = !p || p === 'index.html' ? 'home' : p;
+  if (id !== 'home' && !ALL_IDS.has(id)) return; // unknown → let browser handle
+  e.preventDefault();
+  navigateTo(id);
+});
 document.getElementById('menu-toggle').addEventListener('click', () => sidebar.classList.toggle('open'));
 route();
