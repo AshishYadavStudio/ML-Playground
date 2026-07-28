@@ -180,5 +180,19 @@ export default {
         <li>In very high dimensions, true local minima are surprisingly rare — flat saddle regions are the bigger enemy.</li>
       </ul></div>
     `));
+
+    // --- 3D loss surface (Three.js loaded from CDN on demand) ---
+    let alive3d = true;
+    onLeave(() => { alive3d = false; });
+
+    root.appendChild(html(`
+      <h3>Now in 3D: a real loss landscape</h3>
+      <p>The curve above has one parameter — you can only go left or right. Real models have <strong>thousands of parameters</strong>, and even with just <em>two</em> the loss becomes a surface with valleys, ridges, and <strong>saddle points</strong>.</p>
+      <p><strong>Try it:</strong> drag to orbit, click the surface to drop the ball, and add <em>momentum</em> — watch it curve through valleys instead of zig-zagging.</p>
+    `));
+
+    import('../gd3d.js').then(m => { if (alive3d) m.default(root); }).catch(() => {
+      if (alive3d) root.appendChild(html('<p style="color:#8b96a8;text-align:center;padding:20px 0">3D visualization requires internet for the Three.js engine. The 2D demo above works offline.</p>'));
+    });
   },
 };
