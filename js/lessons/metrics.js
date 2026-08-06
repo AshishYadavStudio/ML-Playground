@@ -154,6 +154,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Confusion Matrix Blitz</div>
+        Classify 12 messages rapid-fire, then compute precision, recall and F1 from your own confusion matrix. <a href="../games/confusion-matrix-blitz/" style="color:var(--accent);font-weight:700;">Play Confusion Matrix Blitz →</a>
+      </div>
+
       <h3>Why accuracy alone lies</h3>
       <p>Suppose only 1% of patients are sick. A model that predicts <em>"healthy" for everyone</em> is 99% accurate — and 100% useless. With imbalanced classes, always look at precision and recall.</p>
       <h3>Which metric should you care about?</h3>

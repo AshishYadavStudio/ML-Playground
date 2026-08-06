@@ -175,6 +175,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Cluster Quest</div>
+        Place centroids by eye to group unlabeled points, then see how close your eye got to real K-Means. <a href="../games/cluster-quest/" style="color:var(--accent);font-weight:700;">Play Cluster Quest →</a>
+      </div>
+
       <h3>Things you can discover in the demo</h3>
       <ul>
         <li><strong>Local optima:</strong> re-randomize a few times — sometimes two centroids land in one blob and split it, while another blob gets swallowed whole. Same data, different answer! Real implementations run many random restarts (or use the smarter <em>k-means++</em> initialization) and keep the lowest-inertia result.</li>

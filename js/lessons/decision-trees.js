@@ -148,6 +148,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Decision Tree: 20 Questions</div>
+        Pick the splits yourself — classify a dataset perfectly with the shallowest tree you can build. <a href="../games/decision-tree-20-questions/" style="color:var(--accent);font-weight:700;">Play Decision Tree: 20 Questions →</a>
+      </div>
+
       <h3>Reading the trade-offs</h3>
       <ul>
         <li>The first 2–3 splits capture the real XOR structure — huge accuracy jumps.</li>

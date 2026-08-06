@@ -144,6 +144,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Rotate to Compress</div>
+        Rotate the axis by hand across three fresh point clouds and race the true principal component for maximum captured variance. <a href="../games/rotate-to-compress/" style="color:var(--accent);font-weight:700;">Play Rotate to Compress →</a>
+      </div>
+
       <h3>What just happened</h3>
       <ul>
         <li>PC1 captures ~90% of this data's variance — keeping <strong>1 number instead of 2</strong> per point loses almost nothing. Real use: 784-pixel digit images → 50 PCA components with ~95% variance kept.</li>

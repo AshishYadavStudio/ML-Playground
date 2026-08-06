@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>💡 Attention Spotlight — ML Playground Games</title>
+<meta name="description" content="Guess which word a transformer's self-attention would focus on to resolve meaning. A hands-on game for transformers and attention." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💡</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../transformers/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">💡</div>
+      <h1>Attention <span class="grad-text">Spotlight</span></h1>
+      <p>A pronoun's meaning depends entirely on context. Guess which word the highlighted pronoun refers to — exactly the job self-attention does inside every transformer, word by word.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🚀 Advanced</span>
+        <span class="game-badge">~2 min</span>
+        <span class="game-badge">Concept: Attention · Transformers</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="round-title">Sentence 1 of 6</div>
+      <div class="demo-hint">Which word does the highlighted pronoun point to?</div>
+      <div id="sentence" style="font-size:1.15rem; line-height:1.9; padding:18px 4px;"></div>
+      <div class="game-choice-row" id="choices"></div>
+      <div id="bars" style="margin-top:20px;"></div>
+      <div class="controls" id="controls"></div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 The trick</div>
+      Notice how changing just <em>one word</em> (big → small, feared → advocated) completely flips which word gets the most attention. That's context-dependence — the whole reason self-attention beats fixed word embeddings.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../transformers/">📖 Review the Transformers lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, button, statRow } from '../../js/utils.js';
+
+const SENTENCES = [
+  { words: ['The', 'trophy', "didn't", 'fit', 'in', 'the', 'suitcase', 'because', 'it', 'was', 'too', 'big', '.'],
+    query: 8, options: ['trophy', 'suitcase'], answer: 'trophy',
+    weights: { trophy: 0.58, suitcase: 0.22, big: 0.1, fit: 0.06 } },
+  { words: ['The', 'trophy', "didn't", 'fit', 'in', 'the', 'suitcase', 'because', 'it', 'was', 'too', 'small', '.'],
+    query: 8, options: ['trophy', 'suitcase'], answer: 'suitcase',
+    weights: { suitcase: 0.6, trophy: 0.2, small: 0.11, fit: 0.05 } },
+  { words: ['The', 'city', 'council', 'refused', 'the', 'demonstrators', 'a', 'permit', 'because', 'they', 'feared', 'violence', '.'],
+    query: 9, options: ['council', 'demonstrators'], answer: 'council',
+    weights: { council: 0.55, demonstrators: 0.22, feared: 0.13, refused: 0.06 } },
+  { words: ['The', 'city', 'council', 'refused', 'the', 'demonstrators', 'a', 'permit', 'because', 'they', 'advocated', 'violence', '.'],
+    query: 9, options: ['council', 'demonstrators'], answer: 'demonstrators',
+    weights: { demonstrators: 0.56, council: 0.21, advocated: 0.14, refused: 0.05 } },
+  { words: ['The', 'envelope', "wouldn't", 'hold', 'the', 'letter', 'because', 'it', 'was', 'too', 'big', '.'],
+    query: 7, options: ['envelope', 'letter'], answer: 'letter',
+    weights: { letter: 0.57, envelope: 0.23, big: 0.11, hold: 0.05 } },
+  { words: ['The', 'envelope', "wouldn't", 'hold', 'the', 'letter', 'because', 'it', 'was', 'too', 'small', '.'],
+    query: 7, options: ['envelope', 'letter'], answer: 'envelope',
+    weights: { envelope: 0.59, letter: 0.21, small: 0.12, hold: 0.05 } },
+];
+
+let round = 0, scores = [], answered = false;
+
+const stats = statRow(['Correct', 'Round']);
+document.getElementById('stats').replaceWith(stats.el);
+
+const controls = document.getElementById('controls');
+const nextBtn = button('Next sentence →', () => nextRound(), true);
+nextBtn.disabled = true;
+controls.appendChild(nextBtn);
+
+const sentenceEl = document.getElementById('sentence');
+const choicesEl = document.getElementById('choices');
+const barsEl = document.getElementById('bars');
+const outcomeEl = document.getElementById('outcome');
+const roundTitle = document.getElementById('round-title');
+
+function renderSentence(s) {
+  sentenceEl.innerHTML = '';
+  s.words.forEach((w, i) => {
+    const span = h('span', { style: { marginRight: '6px' } }, w);
+    if (i === s.query) {
+      span.style.background = 'rgba(227,179,65,0.25)';
+      span.style.border = '1px solid rgba(227,179,65,0.6)';
+      span.style.borderRadius = '6px';
+      span.style.padding = '2px 8px';
+      span.style.fontWeight = '800';
+      span.style.color = 'var(--text)';
+    }
+    sentenceEl.appendChild(span);
+  });
+}
+
+function genRound() {
+  const s = SENTENCES[round];
+  answered = false;
+  renderSentence(s);
+  choicesEl.innerHTML = '';
+  s.options.forEach(opt => {
+    const b = h('button', { class: 'game-choice' }, opt);
+    b.addEventListener('click', () => guess(opt, b));
+    choicesEl.appendChild(b);
+  });
+  barsEl.innerHTML = '';
+  outcomeEl.innerHTML = '';
+  nextBtn.disabled = true;
+  stats.set('Round', `${round + 1} / ${SENTENCES.length}`);
+}
+
+function showBars(s) {
+  barsEl.innerHTML = '';
+  barsEl.appendChild(h('div', { style: { fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '8px', fontWeight: '700', letterSpacing: '0.04em', textTransform: 'uppercase' } }, `Simulated attention from "${s.words[s.query]}"`));
+  const entries = Object.entries(s.weights).sort((a, b) => b[1] - a[1]);
+  entries.forEach(([word, w]) => {
+    const isAnswer = word === s.answer;
+    barsEl.appendChild(h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' } }, [
+      h('span', { style: { width: '90px', fontSize: '0.85rem', fontWeight: isAnswer ? '800' : '500', color: isAnswer ? 'var(--green)' : 'var(--text-body)' } }, word),
+      h('div', { style: { flex: '1', height: '10px', background: 'var(--bg-card)', borderRadius: '6px', overflow: 'hidden' } }, [
+        h('div', { style: { width: (w * 100) + '%', height: '100%', background: isAnswer ? 'var(--green)' : 'var(--accent)', borderRadius: '6px' } }),
+      ]),
+      h('span', { style: { fontSize: '0.76rem', fontFamily: 'var(--font-mono)', color: 'var(--text-dim)', width: '38px' } }, Math.round(w * 100) + '%'),
+    ]));
+  });
+}
+
+function guess(opt, btn) {
+  if (answered) return;
+  answered = true;
+  const s = SENTENCES[round];
+  const correct = opt === s.answer;
+  choicesEl.querySelectorAll('button').forEach(b => {
+    b.disabled = true;
+    if (b.textContent === s.answer) b.classList.add('correct');
+    else if (b === btn) b.classList.add('wrong');
+  });
+  scores.push(correct ? 1 : 0);
+  showBars(s);
+  outcomeEl.appendChild(h('div', { class: 'callout ' + (correct ? 'callout-tip' : 'callout-warn') }, [
+    h('div', { class: 'callout-title' }, correct ? '✅ Correct!' : `Actually "${s.answer}"`),
+    `A real transformer would spread most of its attention weight onto "${s.answer}" here — the disambiguating word makes all the difference.`,
+  ]));
+  nextBtn.disabled = false;
+  if (round === SENTENCES.length - 1) nextBtn.textContent = '🏆 See final score';
+}
+
+function nextRound() {
+  if (round === SENTENCES.length - 1) { showScorecard(); return; }
+  round++;
+  roundTitle.textContent = `Sentence ${round + 1} of ${SENTENCES.length}`;
+  genRound();
+}
+
+function showScorecard() {
+  const correctCount = scores.reduce((a, b) => a + b, 0);
+  let verdict;
+  if (correctCount === SENTENCES.length) verdict = '🏆 Perfect — you resolve context as sharply as a trained transformer.';
+  else if (correctCount >= 4) verdict = '🎉 Strong grasp of context-dependent meaning.';
+  else verdict = '🐢 These are deliberately tricky — the same pronoun points to a different word depending on a single disambiguating word.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  document.getElementById('scorecard-wrap').appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Score'),
+    h('div', { class: 'go-score' }, correctCount + ' / ' + SENTENCES.length),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [button('🔁 Play again', () => location.reload())]),
+  ]));
+}
+
+genRound();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('attention-spotlight');
+</script>
+</body>
+</html>

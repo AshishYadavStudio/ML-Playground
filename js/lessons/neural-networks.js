@@ -124,6 +124,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Neuron Wiring: Solve XOR</div>
+        Hand-tune all 9 weights of a tiny network until it solves XOR — a problem no single straight boundary can ever separate. <a href="../games/neuron-wiring/" style="color:var(--accent);font-weight:700;">Play Neuron Wiring →</a>
+      </div>
+
       <h3>Experiments worth running</h3>
       <ul>
         <li><strong>Spiral with 1 layer × 2 neurons:</strong> stuck — not enough capacity to fold the space. <em>Underfitting live.</em></li>

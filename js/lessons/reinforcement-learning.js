@@ -217,6 +217,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: GridWorld Quest</div>
+        Steer an agent through a reward grid yourself with the arrow keys, then unleash a Q-learning agent and see who plans better. <a href="../games/gridworld-quest/" style="color:var(--accent);font-weight:700;">Play GridWorld Quest →</a>
+      </div>
+
       <h3>What actually happened: Q-learning</h3>
       <p>The agent stores a table of <strong>Q-values</strong> — <code>Q(state, action)</code> = "how good is taking this action here?" Every step, it nudges that estimate toward the reward it got plus the value of where it landed:</p>
       <div class="formula">Q(s,a) ← Q(s,a) + α·[ r + γ·max Q(s',a') − Q(s,a) ]</div>

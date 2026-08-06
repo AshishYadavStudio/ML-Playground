@@ -165,6 +165,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Gradient Descent Golf</div>
+        Turn this into a game — pick the learning rate for five different loss curves and try to beat par. <a href="../games/gradient-descent-golf/" style="color:var(--accent);font-weight:700;">Play Gradient Descent Golf →</a>
+      </div>
+
       <h3>Three regimes of the learning rate</h3>
       <div class="cards">
         <div class="card"><div class="card-icon">🐢</div><h4>Too small (η ≈ 0.01)</h4><p>Converges, but takes forever. In deep learning this wastes GPU-days and can get stuck on plateaus.</p></div>

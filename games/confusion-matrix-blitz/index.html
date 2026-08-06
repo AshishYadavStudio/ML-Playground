@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🚨 Confusion Matrix Blitz — ML Playground Games</title>
+<meta name="description" content="Classify rapid-fire, then compute precision, recall and F1 from your own results. A hands-on game for evaluation metrics." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚨</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../metrics/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">🚨</div>
+      <h1>Confusion Matrix <span class="grad-text">Blitz</span></h1>
+      <p>12 messages, one call each: spam or not spam. Then we build a confusion matrix from <em>your</em> answers — and you compute precision, recall and F1 from it yourself.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🌱 Beginner</span>
+        <span class="game-badge">~2 min</span>
+        <span class="game-badge">Concept: Evaluation Metrics</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="phase-title">Message 1 of 12</div>
+      <div class="demo-hint" id="hint">Classify as fast as you can.</div>
+      <div id="blitz-area"></div>
+      <div id="matrix-area"></div>
+      <div id="quiz-area"></div>
+      <div class="controls" id="controls"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 Positive class = Spam</div>
+      <b>Precision</b> = of everything you flagged as spam, how much really was. <b>Recall</b> = of all the real spam, how much you caught. <b>F1</b> balances the two.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../metrics/">📖 Review the Evaluation Metrics lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, button } from '../../js/utils.js';
+
+const ITEMS = [
+  { text: "You've been selected to win $1000 — click here now!!!", spam: true },
+  { text: 'Reminder: your dentist appointment is tomorrow at 10am.', spam: false },
+  { text: 'URGENT: verify your account or it will be suspended today.', spam: true },
+  { text: "Here's the quarterly report you asked for.", spam: false },
+  { text: 'Congratulations! You are our lucky winner — claim your prize.', spam: true },
+  { text: 'Can we reschedule our call to Thursday?', spam: false },
+  { text: "Limited time offer — 90% off, act now before it's gone!", spam: true },
+  { text: "Attached is the invoice for last month's services.", spam: false },
+  { text: 'Your package could not be delivered — confirm your address here.', spam: true },
+  { text: 'Happy birthday! Hope you have a wonderful day.', spam: false },
+  { text: 'Make $5000 a week working from home, no experience needed!', spam: true },
+  { text: "Notes from today's team meeting are in the shared folder.", spam: false },
+];
+
+let idx = 0, answers = [];
+const phaseTitle = document.getElementById('phase-title');
+const hint = document.getElementById('hint');
+const blitzArea = document.getElementById('blitz-area');
+const matrixArea = document.getElementById('matrix-area');
+const quizArea = document.getElementById('quiz-area');
+const controls = document.getElementById('controls');
+
+function renderBlitz() {
+  const it = ITEMS[idx];
+  phaseTitle.textContent = `Message ${idx + 1} of ${ITEMS.length}`;
+  blitzArea.innerHTML = '';
+  blitzArea.appendChild(h('div', { class: 'callout callout-info', style: { fontSize: '1rem' } }, it.text));
+  const row = h('div', { class: 'game-choice-row' }, [
+    (() => { const b = h('button', { class: 'game-choice' }, '🚨 Spam'); b.addEventListener('click', () => answer(true)); return b; })(),
+    (() => { const b = h('button', { class: 'game-choice' }, '✅ Not spam'); b.addEventListener('click', () => answer(false)); return b; })(),
+  ]);
+  blitzArea.appendChild(row);
+}
+
+function answer(predictedSpam) {
+  answers.push({ predicted: predictedSpam, actual: ITEMS[idx].spam });
+  idx++;
+  if (idx < ITEMS.length) renderBlitz();
+  else showMatrix();
+}
+
+function showMatrix() {
+  let tp = 0, fp = 0, tn = 0, fn = 0;
+  for (const a of answers) {
+    if (a.predicted && a.actual) tp++;
+    else if (a.predicted && !a.actual) fp++;
+    else if (!a.predicted && !a.actual) tn++;
+    else fn++;
+  }
+  const acc = Math.round((tp + tn) / answers.length * 100);
+  phaseTitle.textContent = 'Your confusion matrix';
+  hint.textContent = `${acc}% of your calls were correct.`;
+  blitzArea.innerHTML = '';
+  matrixArea.innerHTML = '';
+  matrixArea.appendChild(h('div', { style: { overflowX: 'auto' } }, [
+    h('table', { class: 'info-table' }, [
+      h('tr', {}, [h('th', {}, ''), h('th', {}, 'Predicted spam'), h('th', {}, 'Predicted not-spam')]),
+      h('tr', {}, [h('th', {}, 'Actually spam'), h('td', {}, `TP = ${tp}`), h('td', {}, `FN = ${fn}`)]),
+      h('tr', {}, [h('th', {}, 'Actually not-spam'), h('td', {}, `FP = ${fp}`), h('td', {}, `TN = ${tn}`)]),
+    ]),
+  ]));
+  controls.innerHTML = '';
+  const cont = button('Compute your metrics →', () => showQuiz(tp, fp, tn, fn));
+  controls.appendChild(cont);
+}
+
+function pct(v) { return Math.round(v * 100); }
+function makeOptions(correct) {
+  const c = pct(correct);
+  const cand = new Set([c]);
+  const offsets = [12, -12, 22, -22, 33, -33];
+  for (const o of offsets) { const v = Math.max(0, Math.min(100, c + o)); if (v !== c) cand.add(v); if (cand.size >= 4) break; }
+  const opts = [...cand].slice(0, 4).sort(() => Math.random() - 0.5);
+  return { opts, correctIdx: opts.indexOf(c) };
+}
+
+function showQuiz(tp, fp, tn, fn) {
+  matrixArea.querySelectorAll('button').forEach(b => {});
+  controls.innerHTML = '';
+  phaseTitle.textContent = 'Now: compute your metrics';
+  hint.textContent = 'Based on the matrix above.';
+  const precision = tp / Math.max(tp + fp, 1e-9);
+  const recall = tp / Math.max(tp + fn, 1e-9);
+  const f1 = 2 * precision * recall / Math.max(precision + recall, 1e-9);
+
+  const questions = [
+    { label: 'Precision = TP / (TP + FP)', value: precision },
+    { label: 'Recall = TP / (TP + FN)', value: recall },
+    { label: 'F1 = 2·Precision·Recall / (Precision + Recall)', value: f1 },
+  ];
+  let quizCorrect = 0, answeredCount = 0;
+  quizArea.innerHTML = '';
+  questions.forEach(q => {
+    const { opts, correctIdx } = makeOptions(q.value);
+    const optsWrap = h('div', { class: 'quiz-opts' });
+    const btns = opts.map((o, i) => {
+      const b = h('button', { class: 'quiz-opt' }, o + '%');
+      b.addEventListener('click', () => {
+        if (b.disabled) return;
+        answeredCount++;
+        btns.forEach(x => x.classList.add('locked'));
+        if (i === correctIdx) { b.classList.add('correct'); quizCorrect++; }
+        else { b.classList.add('wrong'); btns[correctIdx].classList.add('correct'); }
+        if (answeredCount === questions.length) finish(tp, fp, tn, fn, quizCorrect);
+      });
+      optsWrap.appendChild(b);
+      return b;
+    });
+    quizArea.appendChild(h('div', { class: 'quiz-q' }, [h('div', { class: 'quiz-question' }, q.label), optsWrap]));
+  });
+}
+
+function finish(tp, fp, tn, fn, quizCorrect) {
+  const blitzAcc = Math.round((tp + tn) / answers.length * 100);
+  const overall = Math.round(blitzAcc * 0.6 + (quizCorrect / 3) * 100 * 0.4);
+  let verdict;
+  if (overall >= 90) verdict = '🏆 You classify AND calculate — a true metrics pro.';
+  else if (overall >= 70) verdict = '🎉 Solid grasp of precision, recall and F1.';
+  else verdict = '🐢 Revisit the formulas — they only need the four numbers from your own matrix.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  document.getElementById('scorecard-wrap').appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Score'),
+    h('div', { class: 'go-score' }, overall + '%'),
+    h('div', { class: 'game-pill-row', style: { justifyContent: 'center' } }, [
+      h('span', { class: 'game-pill' }, ['Classification accuracy', h('b', {}, blitzAcc + '%')]),
+      h('span', { class: 'game-pill' }, ['Metric quiz', h('b', {}, quizCorrect + ' / 3')]),
+    ]),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [button('🔁 Play again', () => location.reload())]),
+  ]));
+}
+
+renderBlitz();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('confusion-matrix-blitz');
+</script>
+</body>
+</html>

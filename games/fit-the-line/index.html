@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>📈 Fit the Line — ML Playground Games</title>
+<meta name="description" content="Drag a line to minimize error against a noisy scatter. A hands-on game for linear regression and least squares." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../linear-regression/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">📈</div>
+      <h1>Fit <span class="grad-text">the Line</span></h1>
+      <p>Drag the two white handles to tilt and shift the line. Get it as close as you can to the scatter, then lock it in and see how you stack up against the real least-squares fit.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🌱 Beginner</span>
+        <span class="game-badge">~2 min</span>
+        <span class="game-badge">Concept: Linear Regression</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="round-title">Round 1 of 3</div>
+      <div class="demo-hint">Drag the handles at either end of the line. Lower error is better.</div>
+      <canvas id="cv"></canvas>
+      <div class="controls" id="controls"></div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 How scoring works</div>
+      Your score is how close your <b>sum of squared errors</b> gets to the mathematically optimal line (the one linear regression would compute exactly). 100% means you found the perfect fit by eye.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../linear-regression/">📖 Review the Linear Regression lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, makeCanvas, button, statRow, clamp } from '../../js/utils.js';
+
+const ROUNDS = 3;
+const XMIN = -1.3, XMAX = 1.3, YMIN = -3, YMAX = 3;
+const HX_L = -1.05, HX_R = 1.05;
+
+let round = 0;
+let scores = [];
+let points = [];
+let hL = { x: HX_L, y: 0 }, hR = { x: HX_R, y: 0 };
+let dragging = null;
+let locked = false;
+
+const cv = makeCanvas(360);
+document.getElementById('cv').replaceWith(cv.canvas);
+cv.canvas.style.cursor = 'grab';
+
+const stats = statRow(['Your error (SSE)', 'Best possible', 'Match %', 'Round']);
+document.getElementById('stats').replaceWith(stats.el);
+
+const controls = document.getElementById('controls');
+const lockBtn = button('🔒 Lock it in', () => lockIn());
+const nextBtn = button('Next round →', () => nextRound(), true);
+nextBtn.disabled = true;
+controls.appendChild(lockBtn);
+controls.appendChild(nextBtn);
+
+const outcomeEl = document.getElementById('outcome');
+const roundTitle = document.getElementById('round-title');
+
+function toX(x) { return 30 + (x - XMIN) / (XMAX - XMIN) * (cv.W - 60); }
+function toY(y) { return 20 + (1 - (y - YMIN) / (YMAX - YMIN)) * (cv.H - 40); }
+function fromX(px) { return XMIN + (px - 30) / (cv.W - 60) * (XMAX - XMIN); }
+function fromY(py) { return YMIN + (1 - (py - 20) / (cv.H - 40)) * (YMAX - YMIN); }
+
+function genRound() {
+  const trueM = (Math.random() * 2 - 1) * 1.3;
+  const trueB = (Math.random() * 2 - 1) * 0.5;
+  const noise = 0.3 + Math.random() * 0.25;
+  points = [];
+  for (let i = 0; i < 20; i++) {
+    const x = -1 + Math.random() * 2;
+    let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random();
+    const gauss = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    points.push({ x, y: trueM * x + trueB + gauss * noise });
+  }
+  hL = { x: HX_L, y: 0 };
+  hR = { x: HX_R, y: 0 };
+  locked = false;
+  lockBtn.disabled = false;
+  nextBtn.disabled = true;
+  outcomeEl.innerHTML = '';
+  stats.set('Your error (SSE)', '—');
+  stats.set('Best possible', '—');
+  stats.set('Match %', '—');
+  stats.set('Round', `${round + 1} / ${ROUNDS}`);
+  draw();
+}
+
+function lineAt(x) {
+  const m = (hR.y - hL.y) / (hR.x - hL.x);
+  const b = hL.y - m * hL.x;
+  return m * x + b;
+}
+
+function sse() {
+  let s = 0;
+  for (const p of points) { const e = lineAt(p.x) - p.y; s += e * e; }
+  return s;
+}
+
+function optimalFit() {
+  const n = points.length;
+  let sx = 0, sy = 0, sxy = 0, sxx = 0;
+  for (const p of points) { sx += p.x; sy += p.y; sxy += p.x * p.y; sxx += p.x * p.x; }
+  const m = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+  const b = (sy - m * sx) / n;
+  let s = 0;
+  for (const p of points) { const e = m * p.x + b - p.y; s += e * e; }
+  return { m, b, sse: s };
+}
+
+function draw() {
+  const { ctx, W, H } = cv;
+  ctx.clearRect(0, 0, W, H);
+  // axes
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(toX(XMIN), toY(0)); ctx.lineTo(toX(XMAX), toY(0)); ctx.stroke();
+  // points
+  for (const p of points) {
+    ctx.beginPath();
+    ctx.arc(toX(p.x), toY(p.y), 5, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(88,166,255,0.85)';
+    ctx.fill();
+  }
+  // optimal line (only after lock)
+  if (locked) {
+    const opt = optimalFit();
+    ctx.strokeStyle = 'rgba(74,222,128,0.85)'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+    ctx.beginPath();
+    ctx.moveTo(toX(XMIN), toY(opt.m * XMIN + opt.b));
+    ctx.lineTo(toX(XMAX), toY(opt.m * XMAX + opt.b));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  // your line
+  ctx.strokeStyle = '#e3b341'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(toX(XMIN), toY(lineAt(XMIN)));
+  ctx.lineTo(toX(XMAX), toY(lineAt(XMAX)));
+  ctx.stroke();
+  // handles
+  for (const h_ of [hL, hR]) {
+    ctx.beginPath();
+    ctx.arc(toX(h_.x), toY(h_.y), 8, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.strokeStyle = '#e3b341'; ctx.lineWidth = 2; ctx.stroke();
+  }
+  if (!locked) stats.set('Your error (SSE)', sse().toFixed(2));
+}
+cv.onResize(draw);
+
+cv.canvas.addEventListener('pointerdown', e => {
+  if (locked) return;
+  const rect = cv.canvas.getBoundingClientRect();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  const dL = Math.hypot(px - toX(hL.x), py - toY(hL.y));
+  const dR = Math.hypot(px - toX(hR.x), py - toY(hR.y));
+  if (dL < 22 && dL <= dR) dragging = 'L';
+  else if (dR < 22) dragging = 'R';
+  if (dragging) cv.canvas.style.cursor = 'grabbing';
+});
+window.addEventListener('pointermove', e => {
+  if (!dragging || locked) return;
+  const rect = cv.canvas.getBoundingClientRect();
+  const py = e.clientY - rect.top;
+  const y = clamp(fromY(py), YMIN, YMAX);
+  if (dragging === 'L') hL.y = y; else hR.y = y;
+  draw();
+});
+window.addEventListener('pointerup', () => { dragging = null; cv.canvas.style.cursor = 'grab'; });
+
+function lockIn() {
+  if (locked) return;
+  locked = true;
+  lockBtn.disabled = true;
+  const yourSSE = sse();
+  const opt = optimalFit();
+  const match = Math.max(0, Math.min(100, Math.round(100 * opt.sse / Math.max(yourSSE, 1e-6))));
+  scores.push(match);
+  stats.set('Your error (SSE)', yourSSE.toFixed(2));
+  stats.set('Best possible', opt.sse.toFixed(2));
+  stats.set('Match %', match + '%');
+  draw();
+  let msg, cls;
+  if (match >= 92) { msg = `🎯 ${match}% match — you found the fit almost exactly.`; cls = 'callout-tip'; }
+  else if (match >= 70) { msg = `✅ ${match}% match — solid eyeballing.`; cls = 'callout-tip'; }
+  else { msg = `${match}% match — the dashed green line is the real least-squares fit. Compare the slope and intercept.`; cls = 'callout-warn'; }
+  outcomeEl.appendChild(h('div', { class: 'callout ' + cls }, [h('div', { class: 'callout-title' }, 'Result'), msg]));
+  nextBtn.disabled = false;
+  if (round === ROUNDS - 1) nextBtn.textContent = '🏆 See final score';
+}
+
+function nextRound() {
+  if (round === ROUNDS - 1) { showScorecard(); return; }
+  round++;
+  roundTitle.textContent = `Round ${round + 1} of ${ROUNDS}`;
+  genRound();
+}
+
+function showScorecard() {
+  const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  let verdict;
+  if (avg >= 90) verdict = "🏆 Regression instincts! You're eyeballing least-squares fits almost perfectly.";
+  else if (avg >= 70) verdict = '🎉 Great feel for slope and intercept.';
+  else verdict = '🐢 Keep practicing — try to balance points above and below the line evenly.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  document.getElementById('scorecard-wrap').appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Score'),
+    h('div', { class: 'go-score' }, avg + '% avg match'),
+    h('div', { class: 'game-pill-row', style: { justifyContent: 'center' } },
+      scores.map((s, i) => h('span', { class: 'game-pill' }, ['Round ' + (i + 1), h('b', {}, s + '%')]))),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [button('🔁 Play again', () => location.reload())]),
+  ]));
+}
+
+genRound();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('fit-the-line');
+</script>
+</body>
+</html>

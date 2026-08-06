@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🎯 Overfit or Not? — ML Playground Games</title>
+<meta name="description" content="Guess whether a model underfits, fits well, or overfits before seeing the test error. A hands-on game for overfitting and regularization." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../overfitting/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">🎯</div>
+      <h1>Overfit <span class="grad-text">or Not?</span></h1>
+      <p>A model was just fit to the visible training points. Only look at the curve — is it too simple, too wiggly, or just right? Lock in your guess before the hidden test points appear.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🧩 Intermediate</span>
+        <span class="game-badge">~2 min</span>
+        <span class="game-badge">Concept: Overfitting &amp; Regularization</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="round-title">Round 1 of 5</div>
+      <div class="demo-hint">Blue dots are the training data the model saw. The curve is its fit.</div>
+      <canvas id="cv"></canvas>
+      <div class="game-choice-row" id="choices"></div>
+      <div class="controls" id="controls"></div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 The tell</div>
+      A curve that ignores the data's shape is <b>underfitting</b>. One that snakes through every single point (even the noisy ones) is <b>overfitting</b> — watch what happens to it on data it's never seen.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../overfitting/">📖 Review the Overfitting lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, makeCanvas, button, statRow, clamp } from '../../js/utils.js';
+
+const ROUND_DEGREES = [1, 4, 9, 2, 8];
+const CATEGORY = d => d <= 1 ? 'under' : (d <= 5 ? 'good' : 'over');
+const LABEL = { under: '🐢 Underfitting', good: '✅ Good fit', over: '🌪️ Overfitting' };
+
+let round = 0, train = [], test = [], coefs = [], answered = false, scores = [];
+
+const XMIN = -1, XMAX = 1, YMIN = -2.2, YMAX = 2.2;
+const cv = makeCanvas(340);
+document.getElementById('cv').replaceWith(cv.canvas);
+
+const stats = statRow(['Train error', 'Test error', 'Model degree', 'Round']);
+document.getElementById('stats').replaceWith(stats.el);
+
+const choicesEl = document.getElementById('choices');
+const controls = document.getElementById('controls');
+const nextBtn = button('Next round →', () => nextRound(), true);
+nextBtn.disabled = true;
+controls.appendChild(nextBtn);
+
+const outcomeEl = document.getElementById('outcome');
+const roundTitle = document.getElementById('round-title');
+
+function trueFn(x) { return 0.5 * x * x * x - 0.4 * x + 0.15 * Math.sin(4 * x); }
+function gauss(amt) {
+  let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v) * amt;
+}
+
+function polyFit(pts, degree) {
+  const n = degree + 1;
+  const A = Array.from({ length: n }, () => new Array(n).fill(0));
+  const b = new Array(n).fill(0);
+  for (const p of pts) {
+    const powers = [1]; for (let k = 1; k < n; k++) powers.push(powers[k - 1] * p.x);
+    for (let i = 0; i < n; i++) {
+      b[i] += powers[i] * p.y;
+      for (let j = 0; j < n; j++) A[i][j] += powers[i] * powers[j];
+    }
+  }
+  for (let i = 0; i < n; i++) A[i][i] += 1e-6; // ridge for numerical stability
+  // Gaussian elimination
+  for (let col = 0; col < n; col++) {
+    let piv = col;
+    for (let r = col + 1; r < n; r++) if (Math.abs(A[r][col]) > Math.abs(A[piv][col])) piv = r;
+    [A[col], A[piv]] = [A[piv], A[col]]; [b[col], b[piv]] = [b[piv], b[col]];
+    if (Math.abs(A[col][col]) < 1e-10) continue;
+    for (let r = 0; r < n; r++) {
+      if (r === col) continue;
+      const f = A[r][col] / A[col][col];
+      for (let c2 = col; c2 < n; c2++) A[r][c2] -= f * A[col][c2];
+      b[r] -= f * b[col];
+    }
+  }
+  return A.map((row, i) => Math.abs(row[i]) > 1e-10 ? b[i] / row[i] : 0);
+}
+function polyEval(c, x) {
+  let s = 0, p = 1;
+  for (let i = 0; i < c.length; i++) { s += c[i] * p; p *= x; }
+  return s;
+}
+function mse(c, pts) {
+  let s = 0; for (const p of pts) { const e = polyEval(c, p.x) - p.y; s += e * e; }
+  return s / pts.length;
+}
+
+function toX(x) { return 30 + (x - XMIN) / (XMAX - XMIN) * (cv.W - 50); }
+function toY(y) { return 15 + (1 - (clamp(y, YMIN, YMAX) - YMIN) / (YMAX - YMIN)) * (cv.H - 35); }
+
+function genRound() {
+  train = []; test = [];
+  const noise = 0.16;
+  for (let i = 0; i < 12; i++) { const x = -1 + Math.random() * 2; train.push({ x, y: trueFn(x) + gauss(noise) }); }
+  for (let i = 0; i < 10; i++) { const x = -1 + Math.random() * 2; test.push({ x, y: trueFn(x) + gauss(noise) }); }
+  const degree = ROUND_DEGREES[round];
+  coefs = polyFit(train, degree);
+  answered = false;
+  outcomeEl.innerHTML = '';
+  nextBtn.disabled = true;
+  choicesEl.querySelectorAll('button').forEach(b => { b.disabled = false; b.className = 'game-choice'; });
+  stats.set('Train error', '—');
+  stats.set('Test error', '—');
+  stats.set('Model degree', '?');
+  stats.set('Round', `${round + 1} / ${ROUND_DEGREES.length}`);
+  draw(false);
+}
+
+function draw(showTest) {
+  const { ctx, W, H } = cv;
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(toX(XMIN), toY(0)); ctx.lineTo(toX(XMAX), toY(0)); ctx.stroke();
+  // fitted curve
+  ctx.strokeStyle = '#e3b341'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  let started = false;
+  for (let x = XMIN; x <= XMAX; x += 0.01) {
+    const y = polyEval(coefs, x);
+    const py = toY(y);
+    if (!started) { ctx.moveTo(toX(x), py); started = true; } else ctx.lineTo(toX(x), py);
+  }
+  ctx.stroke();
+  // train points
+  for (const p of train) { ctx.beginPath(); ctx.arc(toX(p.x), toY(p.y), 5, 0, 2 * Math.PI); ctx.fillStyle = '#58a6ff'; ctx.fill(); }
+  if (showTest) {
+    for (const p of test) { ctx.beginPath(); ctx.arc(toX(p.x), toY(p.y), 5, 0, 2 * Math.PI); ctx.fillStyle = '#3fb950'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.fill(); ctx.stroke(); }
+  }
+}
+cv.onResize(() => draw(answered));
+
+['under', 'good', 'over'].forEach(cat => {
+  const b = h('button', { class: 'game-choice' }, LABEL[cat]);
+  b.addEventListener('click', () => guess(cat, b));
+  choicesEl.appendChild(b);
+});
+
+function guess(cat, btn) {
+  if (answered) return;
+  answered = true;
+  const degree = ROUND_DEGREES[round];
+  const correct = CATEGORY(degree);
+  choicesEl.querySelectorAll('button').forEach(b => { b.disabled = true; });
+  btn.classList.add(cat === correct ? 'correct' : 'wrong');
+  if (cat !== correct) [...choicesEl.children].find((_, i) => ['under','good','over'][i] === correct) && choicesEl.children[['under','good','over'].indexOf(correct)].classList.add('correct');
+  const trainMSE = mse(coefs, train), testMSE = mse(coefs, test);
+  stats.set('Train error', trainMSE.toFixed(3));
+  stats.set('Test error', testMSE.toFixed(3));
+  stats.set('Model degree', String(degree));
+  draw(true);
+  const right = cat === correct;
+  if (right) scores.push(1); else scores.push(0);
+  const gapMsg = testMSE > trainMSE * 1.6
+    ? `Test error (${testMSE.toFixed(3)}) is much higher than train error (${trainMSE.toFixed(3)}) — classic overfitting signature.`
+    : (degree <= 1 ? `Both errors are high and close together — the model is too simple to capture the curve.` : `Train and test error are close and both low — a well-generalizing fit.`);
+  outcomeEl.appendChild(h('div', { class: 'callout ' + (right ? 'callout-tip' : 'callout-warn') }, [
+    h('div', { class: 'callout-title' }, right ? '✅ Correct!' : `It was actually: ${LABEL[correct]}`),
+    `This model used a degree-${degree} polynomial. ${gapMsg}`,
+  ]));
+  nextBtn.disabled = false;
+  if (round === ROUND_DEGREES.length - 1) nextBtn.textContent = '🏆 See final score';
+}
+
+function nextRound() {
+  if (round === ROUND_DEGREES.length - 1) { showScorecard(); return; }
+  round++;
+  roundTitle.textContent = `Round ${round + 1} of ${ROUND_DEGREES.length}`;
+  genRound();
+}
+
+function showScorecard() {
+  const correctCount = scores.reduce((a, b) => a + b, 0);
+  let verdict;
+  if (correctCount === ROUND_DEGREES.length) verdict = '🏆 Perfect eye for the bias-variance tradeoff!';
+  else if (correctCount >= 3) verdict = '🎉 Good instincts for spotting overfitting.';
+  else verdict = '🐢 Reread the lesson\'s U-shaped error curve — the gap between train and test error is the real tell.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  document.getElementById('scorecard-wrap').appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Score'),
+    h('div', { class: 'go-score' }, correctCount + ' / ' + ROUND_DEGREES.length),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [button('🔁 Play again', () => location.reload())]),
+  ]));
+}
+
+genRound();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('overfit-or-not');
+</script>
+</body>
+</html>

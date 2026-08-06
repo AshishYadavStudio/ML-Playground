@@ -234,6 +234,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Draw the Boundary</div>
+        Drag a line to separate two classes by hand and score on accuracy and margin — how close can you get to the widest-margin separator an SVM would find? <a href="../games/draw-the-boundary/" style="color:var(--accent);font-weight:700;">Play Draw the Boundary →</a>
+      </div>
+
       <h3>Common kernels</h3>
       <table class="info-table">
         <tr><th>Kernel</th><th>Implicit feature space</th><th>Boundary shapes</th></tr>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🌀 Rotate to Compress — ML Playground Games</title>
+<meta name="description" content="Rotate an axis by hand to capture the most variance in a point cloud — race the true principal component. A hands-on game for PCA." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌀</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../pca/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">🌀</div>
+      <h1>Rotate <span class="grad-text">to Compress</span></h1>
+      <p>Drag anywhere on the cloud to spin the yellow axis. Every point gets squashed onto it — your job is to find the angle that keeps the projected points as spread out as possible.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🧩 Intermediate</span>
+        <span class="game-badge">~2 min</span>
+        <span class="game-badge">Concept: PCA</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="round-title">Round 1 of 3</div>
+      <div class="demo-hint">Drag to rotate the axis. The thin lines show each point collapsing onto it.</div>
+      <canvas id="cv"></canvas>
+      <div class="controls" id="controls"></div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 What this IS</div>
+      This axis <em>is</em> the first principal component search — PCA finds the direction of maximum variance so you can compress N dimensions down to fewer while losing as little information as possible.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../pca/">📖 Review the PCA lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, makeCanvas, button, statRow } from '../../js/utils.js';
+
+const ROUNDS = 3;
+let round = 0, points = [], angle = 0, dragging = false, locked = false, scores = [];
+
+const cv = makeCanvas(360);
+document.getElementById('cv').replaceWith(cv.canvas);
+cv.canvas.style.cursor = 'grab';
+
+const stats = statRow(['Variance captured', 'Best possible', 'Match %', 'Round']);
+document.getElementById('stats').replaceWith(stats.el);
+
+const controls = document.getElementById('controls');
+const lockBtn = button('🔒 Lock it in', () => lockIn());
+const nextBtn = button('Next round →', () => nextRound(), true);
+nextBtn.disabled = true;
+controls.appendChild(lockBtn);
+controls.appendChild(nextBtn);
+
+const outcomeEl = document.getElementById('outcome');
+const roundTitle = document.getElementById('round-title');
+
+let scaleFactor = 1;
+function cx() { return cv.W / 2; }
+function cy() { return cv.H / 2; }
+function toPx(x, y) { return { x: cx() + x * scaleFactor, y: cy() - y * scaleFactor }; }
+
+function gauss() {
+  let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function genRound() {
+  const sx = 0.55 + Math.random() * 0.15;
+  const sy = 0.08 + Math.random() * 0.1;
+  const trueAngle = Math.random() * Math.PI;
+  const ct = Math.cos(trueAngle), st = Math.sin(trueAngle);
+  points = [];
+  for (let i = 0; i < 40; i++) {
+    const px = gauss() * sx, py = gauss() * sy;
+    points.push({ x: px * ct - py * st, y: px * st + py * ct });
+  }
+  angle = Math.random() * Math.PI;
+  locked = false;
+  lockBtn.disabled = false;
+  nextBtn.disabled = true;
+  outcomeEl.innerHTML = '';
+  stats.set('Variance captured', '—');
+  stats.set('Best possible', '—');
+  stats.set('Match %', '—');
+  stats.set('Round', `${round + 1} / ${ROUNDS}`);
+  draw();
+}
+
+function covariance() {
+  let mx = 0, my = 0;
+  for (const p of points) { mx += p.x; my += p.y; }
+  mx /= points.length; my /= points.length;
+  let cxx = 0, cyy = 0, cxy = 0;
+  for (const p of points) { const dx = p.x - mx, dy = p.y - my; cxx += dx * dx; cyy += dy * dy; cxy += dx * dy; }
+  cxx /= points.length; cyy /= points.length; cxy /= points.length;
+  return { cxx, cyy, cxy };
+}
+function varianceAt(theta) {
+  const u = { x: Math.cos(theta), y: Math.sin(theta) };
+  let s = 0;
+  for (const p of points) { const proj = p.x * u.x + p.y * u.y; s += proj * proj; }
+  return s / points.length;
+}
+function bestAngleAndVar() {
+  const { cxx, cyy, cxy } = covariance();
+  const theta = 0.5 * Math.atan2(2 * cxy, cxx - cyy);
+  const lambda = (cxx + cyy) / 2 + Math.sqrt(((cxx - cyy) / 2) ** 2 + cxy * cxy);
+  return { theta, lambda };
+}
+
+function draw() {
+  const { ctx, W, H } = cv;
+  ctx.clearRect(0, 0, W, H);
+  scaleFactor = (Math.min(W, H) - 50) / 2 / 1.1;
+  const u = { x: Math.cos(angle), y: Math.sin(angle) };
+  // projection ticks
+  ctx.strokeStyle = 'rgba(227,179,65,0.35)'; ctx.lineWidth = 1;
+  for (const p of points) {
+    const proj = p.x * u.x + p.y * u.y;
+    const projPt = { x: proj * u.x, y: proj * u.y };
+    const a = toPx(p.x, p.y), b = toPx(projPt.x, projPt.y);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  // reference axis after lock
+  if (locked) {
+    const { theta } = bestAngleAndVar();
+    const p1 = toPx(Math.cos(theta) * 1.4, Math.sin(theta) * 1.4);
+    const p2 = toPx(-Math.cos(theta) * 1.4, -Math.sin(theta) * 1.4);
+    ctx.strokeStyle = 'rgba(74,222,128,0.85)'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // your axis
+  const p1 = toPx(Math.cos(angle) * 1.4, Math.sin(angle) * 1.4);
+  const p2 = toPx(-Math.cos(angle) * 1.4, -Math.sin(angle) * 1.4);
+  ctx.strokeStyle = '#e3b341'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+  // points
+  for (const p of points) {
+    const px = toPx(p.x, p.y);
+    ctx.beginPath(); ctx.arc(px.x, px.y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(88,166,255,0.85)'; ctx.fill();
+  }
+  if (!locked) stats.set('Variance captured', varianceAt(angle).toFixed(4));
+}
+cv.onResize(draw);
+
+function angleFromEvent(e) {
+  const rect = cv.canvas.getBoundingClientRect();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  return Math.atan2(-(py - cy()), px - cx());
+}
+cv.canvas.addEventListener('pointerdown', e => { if (!locked) { dragging = true; angle = angleFromEvent(e); draw(); cv.canvas.style.cursor = 'grabbing'; } });
+window.addEventListener('pointermove', e => { if (dragging && !locked) { angle = angleFromEvent(e); draw(); } });
+window.addEventListener('pointerup', () => { dragging = false; cv.canvas.style.cursor = 'grab'; });
+
+function lockIn() {
+  if (locked) return;
+  locked = true;
+  lockBtn.disabled = true;
+  const yourVar = varianceAt(angle);
+  const { lambda } = bestAngleAndVar();
+  const match = Math.max(0, Math.min(100, Math.round(100 * yourVar / lambda)));
+  scores.push(match);
+  stats.set('Variance captured', yourVar.toFixed(4));
+  stats.set('Best possible', lambda.toFixed(4));
+  stats.set('Match %', match + '%');
+  draw();
+  let msg, cls;
+  if (match >= 95) { msg = `🎯 ${match}% — you found the principal component almost exactly.`; cls = 'callout-tip'; }
+  else if (match >= 75) { msg = `✅ ${match}% match. The dashed green line is the true first principal component.`; cls = 'callout-tip'; }
+  else { msg = `${match}% match — the dashed green line is the direction of maximum spread. Notice how it runs along the "long way" of the cloud.`; cls = 'callout-warn'; }
+  outcomeEl.appendChild(h('div', { class: 'callout ' + cls }, [h('div', { class: 'callout-title' }, 'Result'), msg]));
+  nextBtn.disabled = false;
+  if (round === ROUNDS - 1) nextBtn.textContent = '🏆 See final score';
+}
+
+function nextRound() {
+  if (round === ROUNDS - 1) { showScorecard(); return; }
+  round++;
+  roundTitle.textContent = `Round ${round + 1} of ${ROUNDS}`;
+  genRound();
+}
+
+function showScorecard() {
+  const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  let verdict;
+  if (avg >= 92) verdict = '🏆 Eigen-vision! You spot directions of maximum variance instinctively.';
+  else if (avg >= 70) verdict = '🎉 Good feel for the "long axis" of a point cloud.';
+  else verdict = '🐢 Try aligning the axis with the longest visual stretch of the cloud, not just through the middle.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  document.getElementById('scorecard-wrap').appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Score'),
+    h('div', { class: 'go-score' }, avg + '% avg match'),
+    h('div', { class: 'game-pill-row', style: { justifyContent: 'center' } },
+      scores.map((s, i) => h('span', { class: 'game-pill' }, ['Round ' + (i + 1), h('b', {}, s + '%')]))),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [button('🔁 Play again', () => location.reload())]),
+  ]));
+}
+
+genRound();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('rotate-to-compress');
+</script>
+</body>
+</html>

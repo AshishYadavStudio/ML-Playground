@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🧠 Neuron Wiring: Solve XOR — ML Playground Games</title>
+<meta name="description" content="Hand-tune the weights of a tiny neural network until it solves XOR — a problem a single line can never separate. A hands-on game for neural networks, backprop and activations." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../neural-networks/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">🧠</div>
+      <h1>Neuron Wiring: <span class="grad-text">Solve XOR</span></h1>
+      <p>Four points, two classes, no straight line can separate them. Hand-tune all 9 weights of this tiny 2-hidden-neuron network until the heatmap correctly colors all four corners.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🚀 Advanced</span>
+        <span class="game-badge">~4 min</span>
+        <span class="game-badge">Concept: Neural Networks · Backprop · Activations</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title">Live decision boundary</div>
+      <div class="demo-hint">🟠 = class 0, 🔵 = class 1. The four dots are the XOR training points — get every dot's color to match its ring.</div>
+      <canvas id="cv"></canvas>
+      <div id="sliders" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px 18px; margin-top:18px;"></div>
+      <div class="controls" id="controls"></div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 Why one layer isn't enough</div>
+      A single-layer network can only draw one straight boundary. XOR needs <b>two</b> — this network gets there by combining an "OR-ish" neuron and an "AND-ish" neuron in its hidden layer, exactly the trick behind why deep networks stack layers.
+    </div>
+
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../neural-networks/">📖 Neural Networks lesson</a> &nbsp;·&nbsp; <a href="../../backprop/">📖 Backprop lesson</a> &nbsp;·&nbsp; <a href="../../activations/">📖 Activations lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, makeCanvas, makeScale, paintHeatmap, drawGrid, drawPoint, slider, button, statRow, CLASS_COLORS } from '../../js/utils.js';
+
+const DATA = [
+  { x1: -1, x2: -1, y: 0 }, { x1: 1, x2: 1, y: 0 },
+  { x1: 1, x2: -1, y: 1 }, { x1: -1, x2: 1, y: 1 },
+];
+const HINT = { w11: 6, w12: 6, b1: 6, w21: 6, w22: 6, b2: -6, wo1: 6, wo2: -6, bo: -6 };
+
+let W = { w11: 1, w12: -1, b1: 0, w21: -1, w22: 1, b2: 0, wo1: 1, wo2: 1, bo: 0 };
+let solved = false, startTime = Date.now(), bestTime = null, attempts = 1;
+
+const cv = makeCanvas(340);
+document.getElementById('cv').replaceWith(cv.canvas);
+const scale = makeScale(cv, 20);
+
+const stats = statRow(['Correct', 'Time', 'Best time', 'Attempt']);
+document.getElementById('stats').replaceWith(stats.el);
+
+const slidersEl = document.getElementById('sliders');
+const fields = [
+  ['w11', 'x1 → h1'], ['w12', 'x2 → h1'], ['b1', 'h1 bias'],
+  ['w21', 'x1 → h2'], ['w22', 'x2 → h2'], ['b2', 'h2 bias'],
+  ['wo1', 'h1 → out'], ['wo2', 'h2 → out'], ['bo', 'out bias'],
+];
+const sliderRefs = {};
+fields.forEach(([key, label]) => {
+  const s = slider(label, { min: -8, max: 8, step: 0.1, value: W[key], fmt: v => v.toFixed(1) }, v => { W[key] = v; update(); });
+  sliderRefs[key] = s;
+  slidersEl.appendChild(s.el);
+});
+
+const controls = document.getElementById('controls');
+controls.appendChild(button('🎲 Randomize', () => randomize()));
+controls.appendChild(button('↺ Reset to zero', () => resetZero(), true));
+controls.appendChild(button('💡 Hint: reveal solution', () => applyHint(), true));
+
+const outcomeEl = document.getElementById('outcome');
+
+function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+function forward(x1, x2) {
+  const h1 = Math.tanh(W.w11 * x1 + W.w12 * x2 + W.b1);
+  const h2 = Math.tanh(W.w21 * x1 + W.w22 * x2 + W.b2);
+  const out = sigmoid(W.wo1 * h1 + W.wo2 * h2 + W.bo);
+  return out;
+}
+
+function draw() {
+  const { ctx } = cv;
+  ctx.clearRect(0, 0, cv.W, cv.H);
+  drawGrid(cv, scale);
+  paintHeatmap(cv, scale, (x, y) => forward(x, y));
+  for (const p of DATA) {
+    drawPoint(ctx, scale.toX(p.x1), scale.toY(p.x2), CLASS_COLORS[p.y], 8);
+    ctx.beginPath();
+    ctx.arc(scale.toX(p.x1), scale.toY(p.x2), 11, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+}
+cv.onResize(draw);
+
+function update() {
+  let correct = 0;
+  for (const p of DATA) { const pred = forward(p.x1, p.x2) > 0.5 ? 1 : 0; if (pred === p.y) correct++; }
+  stats.set('Correct', correct + ' / 4');
+  draw();
+  if (correct === 4 && !solved) {
+    solved = true;
+    const elapsed = ((Date.now() - startTime) / 1000);
+    if (bestTime === null || elapsed < bestTime) bestTime = elapsed;
+    stats.set('Time', elapsed.toFixed(1) + 's');
+    stats.set('Best time', bestTime.toFixed(1) + 's');
+    const stars = elapsed < 30 ? '🌟🌟🌟' : elapsed < 90 ? '🌟🌟' : '🌟';
+    outcomeEl.innerHTML = '';
+    outcomeEl.appendChild(h('div', { class: 'callout callout-tip' }, [
+      h('div', { class: 'callout-title' }, `${stars} Solved! XOR is no longer a problem for this network.`),
+      `${elapsed.toFixed(1)}s. Notice how it took a combination of two hidden neurons — no single straight boundary could ever do this. `,
+      h('a', { href: '#', style: { color: 'var(--accent)', fontWeight: '700' }, onclick: e => { e.preventDefault(); randomize(); } }, 'Scramble and try to beat your time →'),
+    ]));
+  } else if (correct < 4) {
+    solved = false;
+  }
+}
+
+function tick() {
+  if (!solved) stats.set('Time', ((Date.now() - startTime) / 1000).toFixed(1) + 's');
+  requestAnimationFrame(tick);
+}
+
+function setAll(vals) {
+  W = { ...vals };
+  fields.forEach(([key]) => sliderRefs[key].set(W[key]));
+  update();
+}
+
+function randomize() {
+  attempts++;
+  stats.set('Attempt', String(attempts));
+  setAll({
+    w11: (Math.random() * 2 - 1) * 4, w12: (Math.random() * 2 - 1) * 4, b1: (Math.random() * 2 - 1) * 2,
+    w21: (Math.random() * 2 - 1) * 4, w22: (Math.random() * 2 - 1) * 4, b2: (Math.random() * 2 - 1) * 2,
+    wo1: (Math.random() * 2 - 1) * 4, wo2: (Math.random() * 2 - 1) * 4, bo: (Math.random() * 2 - 1) * 2,
+  });
+  solved = false;
+  startTime = Date.now();
+  outcomeEl.innerHTML = '';
+}
+function resetZero() {
+  setAll({ w11: 0, w12: 0, b1: 0, w21: 0, w22: 0, b2: 0, wo1: 0, wo2: 0, bo: 0 });
+  solved = false; startTime = Date.now(); outcomeEl.innerHTML = '';
+}
+function applyHint() { setAll(HINT); }
+
+stats.set('Attempt', '1');
+stats.set('Best time', '—');
+update();
+tick();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('neuron-wiring');
+</script>
+</body>
+</html>

@@ -710,6 +710,68 @@ table.info-table {
 }
 .example-connect .connect-arrow { color: var(--orange); font-weight: 800; margin-right: 4px; }
 
+/* ============ Games highlight (homepage) ============ */
+.games-highlight {
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.08), rgba(109, 141, 255, 0.06));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin: 46px 0 10px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+.games-highlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.5), transparent 40%, transparent 60%, rgba(109, 141, 255, 0.4));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.games-highlight-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.games-highlight-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pink);
+  background: rgba(244, 114, 182, 0.13);
+  border: 1px solid rgba(244, 114, 182, 0.35);
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+.games-highlight-head h3 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.games-highlight-head p { font-size: 0.85rem; color: var(--text-dim); margin: 4px 0 0; max-width: 480px; }
+.games-highlight-all {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+.games-highlight-all:hover { text-decoration: underline; }
+
 /* ============ Quiz ============ */
 .quiz {
   background: var(--bg-panel);

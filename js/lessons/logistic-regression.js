@@ -149,6 +149,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Draw the Boundary</div>
+        Drag a line to separate two classes by hand and score on accuracy and margin — how close can you get to the widest-margin separator? <a href="../games/draw-the-boundary/" style="color:var(--accent);font-weight:700;">Play Draw the Boundary →</a>
+      </div>
+
       <h3>The catch — and the cliffhanger</h3>
       <p>Logistic regression can only ever draw a <strong>straight</strong> boundary. Feed it a dataset where the classes wrap around each other (circles, spirals, XOR) and it's stuck at ~50% no matter how long you train. Fixing that limitation is exactly why <strong>neural networks</strong> exist — they learn to warp the space until a straight cut works. You'll see it happen in the Deep Learning section.</p>
       <div class="callout callout-info"><div class="callout-title">📌 Takeaways</div>

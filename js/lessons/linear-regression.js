@@ -150,6 +150,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Fit the Line</div>
+        Drag a line to minimize error against a fresh noisy scatter, then see how close you got to the real least-squares fit. <a href="../games/fit-the-line/" style="color:var(--accent);font-weight:700;">Play Fit the Line →</a>
+      </div>
+
       <h3>What did gradient descent just do?</h3>
       <p>It computed which direction to nudge <code>w</code> and <code>b</code> so the MSE decreases fastest — the <strong>gradient</strong> — and took a small step that way, repeatedly. You'll dissect exactly how in the next lesson.</p>
       <p>For plain linear regression there's even a closed-form solution (the <em>normal equation</em>), but gradient descent is the method that scales up to neural networks with billions of parameters, so it's the one worth internalizing.</p>

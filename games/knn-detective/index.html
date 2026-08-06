@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🔍 KNN Detective — ML Playground Games</title>
+<meta name="description" content="Guess the class of a mystery point before K-Nearest Neighbors reveals its verdict. A hands-on game for the KNN algorithm." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../knn/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">🔍</div>
+      <h1>KNN <span class="grad-text">Detective</span></h1>
+      <p>A gray ⭐ has appeared with no label. Before any algorithm runs, guess its class by eye. Then explore how changing <b>K</b> changes the neighborhood — and the verdict.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🌱 Beginner</span>
+        <span class="game-badge">~2 min</span>
+        <span class="game-badge">Concept: K-Nearest Neighbors</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="round-title">Case 1 of 5</div>
+      <div class="demo-hint" id="hint">Which class does the mystery point belong to?</div>
+      <canvas id="cv"></canvas>
+      <div class="game-choice-row" id="choices"></div>
+      <div class="controls" id="controls" style="display:none"></div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 How scoring works</div>
+      You're scored on your <b>blind guess</b>, made before seeing any neighbor lines — exactly the intuition K-Nearest Neighbors tries to formalize mathematically.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../knn/">📖 Review the K-Nearest Neighbors lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, makeCanvas, slider, button, statRow, clamp } from '../../js/utils.js';
+
+const ROUNDS = 5;
+const COLORS = ['#f0883e', '#58a6ff'];
+const NAMES = ['🟠 Orange', '🔵 Blue'];
+
+let round = 0, points = [], mystery = null, trueLabel = 0, phase = 'guess', K = 5, scores = [];
+
+const cv = makeCanvas(340);
+document.getElementById('cv').replaceWith(cv.canvas);
+
+const stats = statRow(['Blind guess', 'KNN says (K)', 'True label', 'Score']);
+document.getElementById('stats').replaceWith(stats.el);
+
+const choicesEl = document.getElementById('choices');
+const controls = document.getElementById('controls');
+let kSlider;
+const nextBtn = button('Next case →', () => nextRound(), true);
+nextBtn.disabled = true;
+
+const outcomeEl = document.getElementById('outcome');
+const roundTitle = document.getElementById('round-title');
+const hint = document.getElementById('hint');
+
+function toX(x) { return 20 + (x + 1) / 2 * (cv.W - 40); }
+function toY(y) { return 20 + (1 - (y + 1) / 2) * (cv.H - 40); }
+
+function gauss(amt) {
+  let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v) * amt;
+}
+
+function genRound() {
+  const spread = 0.55 + Math.random() * 0.25;
+  const angle = Math.random() * Math.PI;
+  const centers = [
+    { x: Math.cos(angle) * spread * -0.5, y: Math.sin(angle) * spread * -0.5 },
+    { x: Math.cos(angle) * spread * 0.5, y: Math.sin(angle) * spread * 0.5 },
+  ];
+  points = [];
+  centers.forEach((c, label) => {
+    for (let i = 0; i < 14; i++) points.push({ x: clamp(c.x + gauss(0.28), -0.95, 0.95), y: clamp(c.y + gauss(0.28), -0.95, 0.95), label });
+  });
+  trueLabel = round % 2 === 0 ? (Math.random() < 0.5 ? 0 : 1) : 1 - (points[0].label);
+  trueLabel = Math.random() < 0.5 ? 0 : 1;
+  const c = centers[trueLabel];
+  mystery = { x: clamp(c.x + gauss(0.3), -0.9, 0.9), y: clamp(c.y + gauss(0.3), -0.9, 0.9) };
+
+  phase = 'guess';
+  K = 5;
+  choicesEl.style.display = 'flex';
+  controls.style.display = 'none';
+  choicesEl.querySelectorAll('button').forEach(b => { b.disabled = false; b.className = 'game-choice'; });
+  outcomeEl.innerHTML = '';
+  nextBtn.disabled = true;
+  hint.textContent = 'Which class does the mystery point belong to?';
+  stats.set('Blind guess', '—');
+  stats.set('KNN says (K)', '—');
+  stats.set('True label', '?');
+  draw();
+}
+
+function neighbors(k) {
+  return points.map(p => ({ p, d: Math.hypot(p.x - mystery.x, p.y - mystery.y) }))
+    .sort((a, b) => a.d - b.d).slice(0, k);
+}
+
+function draw() {
+  const { ctx, W, H } = cv;
+  ctx.clearRect(0, 0, W, H);
+  if (phase === 'explore') {
+    const nb = neighbors(K);
+    ctx.strokeStyle = 'rgba(227,179,65,0.55)'; ctx.lineWidth = 1.5;
+    nb.forEach(({ p }) => { ctx.beginPath(); ctx.moveTo(toX(mystery.x), toY(mystery.y)); ctx.lineTo(toX(p.x), toY(p.y)); ctx.stroke(); });
+  }
+  for (const p of points) {
+    ctx.beginPath();
+    ctx.arc(toX(p.x), toY(p.y), 6, 0, 2 * Math.PI);
+    ctx.fillStyle = COLORS[p.label];
+    ctx.globalAlpha = phase === 'explore' && neighbors(K).some(n => n.p === p) ? 1 : 0.55;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    if (phase === 'explore' && neighbors(K).some(n => n.p === p)) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke(); }
+  }
+  // mystery star
+  const mx = toX(mystery.x), my = toY(mystery.y);
+  ctx.save();
+  ctx.translate(mx, my);
+  ctx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a1 = -Math.PI / 2 + i * (2 * Math.PI / 5);
+    const a2 = a1 + Math.PI / 5;
+    ctx.lineTo(Math.cos(a1) * 11, Math.sin(a1) * 11);
+    ctx.lineTo(Math.cos(a2) * 4.5, Math.sin(a2) * 4.5);
+  }
+  ctx.closePath();
+  ctx.fillStyle = phase === 'guess' ? '#c3cde0' : COLORS[trueLabel];
+  ctx.fill();
+  ctx.strokeStyle = '#0d1117'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.restore();
+}
+cv.onResize(draw);
+
+['0', '1'].forEach(lbl => {
+  const label = parseInt(lbl);
+  const b = h('button', { class: 'game-choice' }, NAMES[label]);
+  b.addEventListener('click', () => guess(label));
+  choicesEl.appendChild(b);
+});
+
+function guess(label) {
+  if (phase !== 'guess') return;
+  const correct = label === trueLabel;
+  choicesEl.querySelectorAll('button').forEach((b, i) => {
+    b.disabled = true;
+    if (i === label) b.classList.add(correct ? 'correct' : 'wrong');
+    if (i === trueLabel && !correct) b.classList.add('correct');
+  });
+  scores.push(correct ? 1 : 0);
+  stats.set('Blind guess', NAMES[label]);
+  stats.set('True label', NAMES[trueLabel]);
+  phase = 'explore';
+  choicesEl.style.display = 'none';
+  controls.style.display = 'flex';
+  controls.innerHTML = '';
+  kSlider = slider('Explore K', { min: 1, max: 15, step: 2, value: 5, fmt: v => String(v) }, v => { K = v; updateKnnStat(); draw(); });
+  controls.appendChild(kSlider.el);
+  controls.appendChild(nextBtn);
+  hint.textContent = 'Drag K to see which neighbors vote, and how the verdict can flip.';
+  updateKnnStat();
+  draw();
+  outcomeEl.appendChild(h('div', { class: 'callout ' + (correct ? 'callout-tip' : 'callout-warn') }, [
+    h('div', { class: 'callout-title' }, correct ? '✅ Correct!' : `Actually ${NAMES[trueLabel]}`),
+    correct ? 'Nice eye — now see if K-Nearest Neighbors agrees at different K.' : 'Close call — explore the K slider below to see why.',
+  ]));
+  nextBtn.disabled = false;
+  if (round === ROUNDS - 1) nextBtn.textContent = '🏆 See final score';
+}
+
+function updateKnnStat() {
+  const nb = neighbors(K);
+  const votes = [0, 0];
+  nb.forEach(({ p }) => votes[p.label]++);
+  const winner = votes[0] >= votes[1] ? 0 : 1;
+  stats.set('KNN says (K)', `${NAMES[winner]} (K=${K}, ${votes[winner]}/${K})`);
+}
+
+function nextRound() {
+  if (round === ROUNDS - 1) { showScorecard(); return; }
+  round++;
+  roundTitle.textContent = `Case ${round + 1} of ${ROUNDS}`;
+  genRound();
+}
+
+function showScorecard() {
+  const correctCount = scores.reduce((a, b) => a + b, 0);
+  let verdict;
+  if (correctCount === ROUNDS) verdict = '🏆 Perfect detective work — your intuition IS K-Nearest Neighbors.';
+  else if (correctCount >= 3) verdict = '🎉 Solid spatial reasoning.';
+  else verdict = '🐢 Tricky overlapping cases — that\'s exactly where choosing K well matters most.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  document.getElementById('scorecard-wrap').appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Score'),
+    h('div', { class: 'go-score' }, correctCount + ' / ' + ROUNDS),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [button('🔁 Play again', () => location.reload())]),
+  ]));
+}
+
+genRound();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('knn-detective');
+</script>
+</body>
+</html>

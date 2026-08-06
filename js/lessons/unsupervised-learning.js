@@ -164,6 +164,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Cluster Quest</div>
+        Place centroids by eye to group unlabeled points, then see how close your eye got to real K-Means. <a href="../games/cluster-quest/" style="color:var(--accent);font-weight:700;">Play Cluster Quest →</a>
+      </div>
+
       <h3>3 · Dimensionality reduction: simplify</h3>
       <p>The third job squeezes data with hundreds of features down to two or three — keeping the important variation so you can <em>see</em> it. That's a whole lesson of its own: see <strong>PCA &amp; Dimensionality Reduction</strong> in the Python/Classical track.</p>
 

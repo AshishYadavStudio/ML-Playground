@@ -118,6 +118,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: KNN Detective</div>
+        Guess a mystery point's class by eye before K-Nearest Neighbors reveals its verdict — then tune K and watch the answer shift. <a href="../games/knn-detective/" style="color:var(--accent);font-weight:700;">Play KNN Detective →</a>
+      </div>
+
       <h3>The role of k — bias vs variance again</h3>
       <ul>
         <li><strong>k = 1:</strong> every training point rules its own little kingdom. Zero training error, extremely jagged boundary, very sensitive to noise — classic <em>overfitting</em>.</li>

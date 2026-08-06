@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>⛳ Gradient Descent Golf — ML Playground Games</title>
+<meta name="description" content="Pick the right learning rate to sink the ball in as few strokes as possible. A hands-on game for gradient descent and optimizers." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛳</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../gradient-descent/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">⛳</div>
+      <h1>Gradient Descent <span class="grad-text">Golf</span></h1>
+      <p>Five holes, one club: the <strong>learning rate</strong>. Pick it wisely — too small and you'll be putting forever, too large and the ball flies off the green. Lowest total strokes wins.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🌱 Beginner</span>
+        <span class="game-badge">~3 min</span>
+        <span class="game-badge">Concept: Gradient Descent</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="hole-title">Hole 1 of 5</div>
+      <div class="demo-hint" id="hole-hint">Drag the slider to set your learning rate η, then putt.</div>
+      <canvas id="cv"></canvas>
+      <div class="controls" id="controls"></div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 How scoring works</div>
+      Each hole has a <b>par</b> — the strokes an expert would take with a well-tuned learning rate. Converge fast without overshooting to beat par. Fly off the edge of the green and it's a 5-stroke penalty. Wander forever with too small a step and you'll run out the clock.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../gradient-descent/">📖 Review the Gradient Descent lesson</a> &nbsp;·&nbsp; <a href="../../optimizers/">📖 Optimizers lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, makeCanvas, slider, button, statRow, clamp } from '../../js/utils.js';
+
+const HOLES = [
+  { name: 'The Bowl', f: x => 0.3*x*x, fp: x => 0.6*x, start: 2.5, xr: [-3.2, 3.2], par: 8, lrMax: 1.4, lrDefault: 0.2 },
+  { name: 'The Wobble', f: x => 0.25*x*x + 0.3*Math.sin(3*x), fp: x => 0.5*x + 0.9*Math.cos(3*x), start: 2.7, xr: [-3.2, 3.2], par: 14, lrMax: 1.0, lrDefault: 0.15 },
+  { name: 'Twin Valleys', f: x => 0.28*x*x + 0.5*Math.sin(2.2*x+1.2) + 0.65 + 0.15*Math.cos(4*x), fp: x => 0.56*x + 1.1*Math.cos(2.2*x+1.2) - 0.6*Math.sin(4*x), start: 2.4, xr: [-3, 3], par: 16, lrMax: 1.0, lrDefault: 0.12 },
+  { name: 'The Steep Ravine', f: x => 1.4*x*x, fp: x => 2.8*x, start: 1.8, xr: [-2.2, 2.2], par: 10, lrMax: 0.75, lrDefault: 0.08 },
+  { name: 'The Flatlands', f: x => 0.05*x*x + 0.02*Math.sin(5*x), fp: x => 0.1*x + 0.1*Math.cos(5*x), start: 2.9, xr: [-3.2, 3.2], par: 20, lrMax: 3.5, lrDefault: 0.5 },
+];
+
+let holeIdx = 0;
+let scores = [];
+let lr = HOLES[0].lrDefault;
+let ballX = HOLES[0].start;
+let trail = [];
+let animating = false;
+let resolved = false;
+
+const cv = makeCanvas(340);
+document.getElementById('cv').replaceWith(cv.canvas);
+
+const controls = document.getElementById('controls');
+const statsEl = document.getElementById('stats');
+const outcomeEl = document.getElementById('outcome');
+const holeTitle = document.getElementById('hole-title');
+const holeHint = document.getElementById('hole-hint');
+
+const stats = statRow(['Learning rate η', 'Strokes', 'Par', 'Round total']);
+statsEl.replaceWith(stats.el);
+
+const lrS = slider('Learning rate η', { min: 0.005, max: 1.4, step: 0.005, value: HOLES[0].lrDefault, fmt: v => v.toFixed(3) }, v => { lr = v; stats.set('Learning rate η', v.toFixed(3)); });
+const puttBtn = button('⛳ Putt', () => putt());
+const nextBtn = button('Next hole →', () => nextHole(), true);
+nextBtn.disabled = true;
+controls.appendChild(lrS.el);
+controls.appendChild(puttBtn);
+controls.appendChild(nextBtn);
+
+function toPxFns(hole) {
+  const [XMIN, XMAX] = hole.xr;
+  let yMin = Infinity, yMax = -Infinity;
+  for (let x = XMIN; x <= XMAX; x += 0.01) { const y = hole.f(x); yMin = Math.min(yMin, y); yMax = Math.max(yMax, y); }
+  const yPad = (yMax - yMin) * 0.18 || 0.2;
+  const toPx = x => 30 + (x - XMIN) / (XMAX - XMIN) * (cv.W - 60);
+  const toPy = y => 20 + (1 - (y - (yMin - yPad)) / ((yMax + yPad) - (yMin - yPad))) * (cv.H - 60);
+  return { XMIN, XMAX, toPx, toPy };
+}
+
+function draw() {
+  const hole = HOLES[holeIdx];
+  const { XMIN, XMAX, toPx, toPy } = toPxFns(hole);
+  const { ctx, W, H } = cv;
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = '#58a6ff';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let x = XMIN; x <= XMAX; x += 0.02) {
+    const px = toPx(x), py = toPy(hole.f(x));
+    x === XMIN ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  // trail
+  ctx.fillStyle = 'rgba(227,179,65,0.55)';
+  for (const t of trail) { ctx.beginPath(); ctx.arc(toPx(t), toPy(hole.f(t)), 4, 0, 2*Math.PI); ctx.fill(); }
+  // flag at the minimum found so far (visual target) — draw flag at x=0-ish local min via sampling
+  // ball
+  const y0 = hole.f(ballX);
+  ctx.beginPath();
+  ctx.arc(toPx(ballX), toPy(y0), 9, 0, 2*Math.PI);
+  const grad = ctx.createRadialGradient(toPx(ballX)-3, toPy(y0)-3, 1, toPx(ballX), toPy(y0), 9);
+  grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#dfe6f0');
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = '#0d1117'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = '#8b96a8'; ctx.font = '12px Segoe UI';
+  ctx.fillText('parameter θ →', W - 110, H - 10);
+  ctx.fillText('loss L(θ)', 8, 16);
+}
+cv.onResize(draw);
+
+function simulate(hole, lrVal) {
+  let x = hole.start;
+  const traj = [x];
+  const [XMIN, XMAX] = hole.xr;
+  const margin = (XMAX - XMIN) * 0.6;
+  let diverged = false;
+  const MAX_STEPS = 400;
+  let converged = false;
+  for (let i = 0; i < MAX_STEPS; i++) {
+    const g = hole.fp(x);
+    if (Math.abs(g) < 0.012) { converged = true; break; }
+    x = x - lrVal * g;
+    traj.push(x);
+    if (x < XMIN - margin || x > XMAX + margin || !isFinite(x)) { diverged = true; break; }
+  }
+  return { traj, diverged, converged, strokes: traj.length - 1 };
+}
+
+function putt() {
+  if (animating || resolved) return;
+  animating = true;
+  puttBtn.disabled = true;
+  lrS.input.disabled = true;
+  outcomeEl.innerHTML = '';
+  const hole = HOLES[holeIdx];
+  const sim = simulate(hole, lr);
+  trail = [];
+  const frames = Math.min(90, Math.max(14, sim.traj.length));
+  let f = 0;
+  function step() {
+    const idx = Math.min(sim.traj.length - 1, Math.round(f / frames * (sim.traj.length - 1)));
+    ballX = sim.traj[idx];
+    if (idx > 0 && trail[trail.length - 1] !== sim.traj[idx - 1]) trail.push(sim.traj[idx - 1]);
+    draw();
+    f++;
+    if (f <= frames) {
+      requestAnimationFrame(() => setTimeout(step, 16));
+    } else {
+      ballX = sim.traj[sim.traj.length - 1];
+      draw();
+      finishHole(hole, sim);
+    }
+  }
+  step();
+}
+
+function finishHole(hole, sim) {
+  animating = false;
+  resolved = true;
+  let strokes = sim.strokes;
+  let msg, cls;
+  if (sim.diverged) {
+    strokes = hole.par + 5;
+    msg = '💥 Off the green! The ball diverged — that learning rate was too hot. <b>+5 penalty strokes.</b>';
+    cls = 'callout-warn';
+  } else if (!sim.converged) {
+    strokes = 40;
+    msg = '🐌 Still rolling after 400 steps — way too small a learning rate. <b>40 strokes.</b>';
+    cls = 'callout-warn';
+  } else if (strokes <= hole.par - 3) {
+    msg = `🦅 Eagle! ${strokes} strokes — beautifully tuned learning rate.`;
+    cls = 'callout-tip';
+  } else if (strokes <= hole.par) {
+    msg = `✅ ${strokes} strokes — at or under par (${hole.par}). Nicely played.`;
+    cls = 'callout-tip';
+  } else {
+    msg = `${strokes} strokes — over par (${hole.par}). Try a different learning rate next round.`;
+    cls = 'callout-warn';
+  }
+  scores.push(strokes);
+  stats.set('Strokes', String(strokes));
+  stats.set('Par', String(hole.par));
+  stats.set('Round total', scores.reduce((a,b)=>a+b,0) + ' / ' + HOLES.slice(0, scores.length).reduce((a,h)=>a+h.par,0) + ' par');
+  outcomeEl.appendChild(h('div', { class: 'callout ' + cls }, [h('div', { class: 'callout-title' }, hole.name), h('div', { html: msg })]));
+  nextBtn.disabled = false;
+  if (holeIdx === HOLES.length - 1) {
+    nextBtn.textContent = '🏆 See final scorecard';
+  }
+}
+
+function nextHole() {
+  if (holeIdx === HOLES.length - 1) { showScorecard(); return; }
+  holeIdx++;
+  resolved = false;
+  const hole = HOLES[holeIdx];
+  ballX = hole.start;
+  trail = [];
+  lr = hole.lrDefault;
+  lrS.set(hole.lrDefault);
+  holeTitle.textContent = `Hole ${holeIdx + 1} of ${HOLES.length} — ${hole.name}`;
+  puttBtn.disabled = false;
+  lrS.input.disabled = false;
+  nextBtn.disabled = true;
+  outcomeEl.innerHTML = '';
+  stats.set('Strokes', '—');
+  stats.set('Par', String(hole.par));
+  draw();
+}
+
+function showScorecard() {
+  const total = scores.reduce((a,b)=>a+b,0);
+  const totalPar = HOLES.reduce((a,h)=>a+h.par,0);
+  const diff = total - totalPar;
+  let verdict;
+  if (diff <= -6) verdict = '🏆 Tour pro! You clearly understand learning rates.';
+  else if (diff <= 0) verdict = '🎉 Under par — great intuition for tuning η.';
+  else if (diff <= 15) verdict = '🙂 Solid round. A bit more tuning and you\'ll break par.';
+  else verdict = '🐢 Rough round — replay and try smaller steps on steep holes, bigger ones on flat holes.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  const wrap = document.getElementById('scorecard-wrap');
+  wrap.appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Scorecard'),
+    h('div', { class: 'go-score' }, total + ' strokes'),
+    h('p', {}, `Course par: ${totalPar} · ${diff >= 0 ? '+' + diff : diff} vs par`),
+    h('div', { class: 'game-pill-row', style: { justifyContent: 'center' } },
+      HOLES.map((hole, i) => h('span', { class: 'game-pill' }, [hole.name, h('b', {}, scores[i])]))),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [
+      button('🔁 Play again', () => location.reload()),
+    ]),
+  ]));
+}
+
+holeTitle.textContent = `Hole 1 of ${HOLES.length} — ${HOLES[0].name}`;
+stats.set('Learning rate η', HOLES[0].lrDefault.toFixed(3));
+stats.set('Strokes', '—');
+stats.set('Par', String(HOLES[0].par));
+stats.set('Round total', '—');
+draw();
+
+// ---- more games ----
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('gradient-descent-golf');
+</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🧩 Cluster Quest — ML Playground Games</title>
+<meta name="description" content="Place centroids by eye to group scattered data, then see how close you got to real K-Means. A hands-on game for unsupervised learning." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../kmeans/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">🧩</div>
+      <h1>Cluster <span class="grad-text">Quest</span></h1>
+      <p>No labels, just dots. Click to drop centroids where you think the natural groups are, drag to fine-tune, then lock it in and see how your eye compares to real K-Means.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🌱 Beginner</span>
+        <span class="game-badge">~2 min</span>
+        <span class="game-badge">Concept: Unsupervised Learning · K-Means</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="round-title">Round 1 of 3</div>
+      <div class="demo-hint" id="hint">Click to place your centroids (drag to reposition), then lock in.</div>
+      <canvas id="cv"></canvas>
+      <div class="controls" id="controls"></div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 How scoring works</div>
+      Your score is based on <b>inertia</b> — the total squared distance from every point to its nearest centroid. Lower is better. We compare your inertia to K-Means run from several random starts.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../unsupervised-learning/">📖 Unsupervised Learning lesson</a> &nbsp;·&nbsp; <a href="../../kmeans/">📖 K-Means lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, makeCanvas, button, statRow, clamp } from '../../js/utils.js';
+
+const ROUNDS = 3;
+const COLORS = ['#f0883e', '#58a6ff', '#3fb950', '#bc8cff', '#ff7b9c'];
+
+let round = 0, K = 3, points = [], yours = [], locked = false, dragIdx = -1;
+let scores = [];
+
+const cv = makeCanvas(360);
+document.getElementById('cv').replaceWith(cv.canvas);
+cv.canvas.style.cursor = 'crosshair';
+
+const stats = statRow(['Centroids placed', 'Your inertia', 'K-Means inertia', 'Match %']);
+document.getElementById('stats').replaceWith(stats.el);
+
+const controls = document.getElementById('controls');
+const resetBtn = button('↺ Reset centroids', () => { yours = []; draw(); updatePlaced(); }, true);
+const lockBtn = button('🔒 Lock it in', () => lockIn());
+lockBtn.disabled = true;
+const nextBtn = button('Next round →', () => nextRound(), true);
+nextBtn.disabled = true;
+controls.appendChild(resetBtn);
+controls.appendChild(lockBtn);
+controls.appendChild(nextBtn);
+
+const outcomeEl = document.getElementById('outcome');
+const roundTitle = document.getElementById('round-title');
+const hint = document.getElementById('hint');
+
+function toX(x) { return 20 + (x + 1) / 2 * (cv.W - 40); }
+function toY(y) { return 20 + (1 - (y + 1) / 2) * (cv.H - 40); }
+function fromPx(px, py) { return { x: (px - 20) / (cv.W - 40) * 2 - 1, y: 1 - (py - 20) / (cv.H - 40) * 2 }; }
+
+function genRound() {
+  K = 2 + (round % 3 === 2 ? 2 : (round % 2));
+  K = [2, 3, 4][round % 3];
+  points = [];
+  const centers = [];
+  for (let i = 0; i < K; i++) {
+    const a = (i / K) * Math.PI * 2 + Math.random() * 0.6;
+    const r = 0.35 + Math.random() * 0.25;
+    centers.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+  }
+  const perCluster = Math.floor(40 / K);
+  for (const c of centers) {
+    for (let i = 0; i < perCluster; i++) {
+      let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random();
+      const g1 = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      u = 0; v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random();
+      const g2 = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      points.push({ x: clamp(c.x + g1 * 0.13, -0.97, 0.97), y: clamp(c.y + g2 * 0.13, -0.97, 0.97) });
+    }
+  }
+  yours = [];
+  locked = false;
+  lockBtn.disabled = true;
+  nextBtn.disabled = true;
+  outcomeEl.innerHTML = '';
+  stats.set('Centroids placed', `0 / ${K}`);
+  stats.set('Your inertia', '—');
+  stats.set('K-Means inertia', '—');
+  stats.set('Match %', '—');
+  stats.set('Round', undefined);
+  hint.textContent = `Click to place ${K} centroids (drag to reposition), then lock in.`;
+  draw();
+}
+
+function inertiaOf(centroids) {
+  let total = 0;
+  for (const p of points) {
+    let best = Infinity;
+    for (const c of centroids) best = Math.min(best, (p.x - c.x) ** 2 + (p.y - c.y) ** 2);
+    total += best;
+  }
+  return total;
+}
+
+function runKMeans() {
+  let best = null;
+  for (let restart = 0; restart < 6; restart++) {
+    let cents = [];
+    const used = new Set();
+    while (cents.length < K) {
+      const idx = Math.floor(Math.random() * points.length);
+      if (used.has(idx)) continue;
+      used.add(idx);
+      cents.push({ x: points[idx].x, y: points[idx].y });
+    }
+    for (let iter = 0; iter < 20; iter++) {
+      const sums = cents.map(() => ({ x: 0, y: 0, n: 0 }));
+      for (const p of points) {
+        let bi = 0, bd = Infinity;
+        cents.forEach((c, i) => { const d = (p.x - c.x) ** 2 + (p.y - c.y) ** 2; if (d < bd) { bd = d; bi = i; } });
+        sums[bi].x += p.x; sums[bi].y += p.y; sums[bi].n++;
+      }
+      cents = cents.map((c, i) => sums[i].n ? { x: sums[i].x / sums[i].n, y: sums[i].y / sums[i].n } : c);
+    }
+    const inertia = inertiaOf(cents);
+    if (!best || inertia < best.inertia) best = { cents, inertia };
+  }
+  return best;
+}
+
+function draw() {
+  const { ctx, W, H } = cv;
+  ctx.clearRect(0, 0, W, H);
+  for (const p of points) {
+    ctx.beginPath();
+    ctx.arc(toX(p.x), toY(p.y), 5, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(139,150,178,0.7)';
+    ctx.fill();
+  }
+  yours.forEach((c, i) => {
+    ctx.beginPath();
+    ctx.arc(toX(c.x), toY(c.y), 11, 0, 2 * Math.PI);
+    ctx.fillStyle = COLORS[i % COLORS.length];
+    ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#0d1117'; ctx.font = 'bold 11px Segoe UI'; ctx.textAlign = 'center';
+    ctx.fillText(String(i + 1), toX(c.x), toY(c.y) + 4);
+    ctx.textAlign = 'left';
+  });
+}
+cv.onResize(draw);
+
+function updatePlaced() {
+  stats.set('Centroids placed', `${yours.length} / ${K}`);
+  if (yours.length === K && !locked) lockBtn.disabled = false;
+  else lockBtn.disabled = true;
+}
+
+cv.canvas.addEventListener('pointerdown', e => {
+  if (locked) return;
+  const rect = cv.canvas.getBoundingClientRect();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  let nearest = -1, nd = Infinity;
+  yours.forEach((c, i) => { const d = Math.hypot(toX(c.x) - px, toY(c.y) - py); if (d < nd) { nd = d; nearest = i; } });
+  if (nearest >= 0 && nd < 22) { dragIdx = nearest; return; }
+  if (yours.length < K) {
+    yours.push(fromPx(px, py));
+    updatePlaced();
+    draw();
+  }
+});
+window.addEventListener('pointermove', e => {
+  if (dragIdx < 0 || locked) return;
+  const rect = cv.canvas.getBoundingClientRect();
+  yours[dragIdx] = fromPx(e.clientX - rect.left, e.clientY - rect.top);
+  draw();
+});
+window.addEventListener('pointerup', () => { dragIdx = -1; });
+
+function lockIn() {
+  if (locked || yours.length !== K) return;
+  locked = true;
+  lockBtn.disabled = true;
+  const yourInertia = inertiaOf(yours);
+  const km = runKMeans();
+  const match = Math.max(0, Math.min(100, Math.round(100 * km.inertia / Math.max(yourInertia, 1e-6))));
+  scores.push(match);
+  stats.set('Your inertia', yourInertia.toFixed(3));
+  stats.set('K-Means inertia', km.inertia.toFixed(3));
+  stats.set('Match %', match + '%');
+  // draw kmeans centroids as outlined rings for comparison
+  const { ctx } = cv;
+  km.cents.forEach(c => {
+    ctx.beginPath();
+    ctx.arc(toX(c.x), toY(c.y), 16, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(74,222,128,0.9)'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+    ctx.stroke(); ctx.setLineDash([]);
+  });
+  let msg, cls;
+  if (match >= 92) { msg = `🎯 ${match}% — your eye finds clusters as well as the algorithm.`; cls = 'callout-tip'; }
+  else if (match >= 70) { msg = `✅ ${match}% match. Green dashed rings show where K-Means landed.`; cls = 'callout-tip'; }
+  else { msg = `${match}% match — the dashed green rings are K-Means' picks. Notice how it balances cluster sizes.`; cls = 'callout-warn'; }
+  outcomeEl.appendChild(h('div', { class: 'callout ' + cls }, [h('div', { class: 'callout-title' }, 'Result'), msg]));
+  nextBtn.disabled = false;
+  if (round === ROUNDS - 1) nextBtn.textContent = '🏆 See final score';
+}
+
+function nextRound() {
+  if (round === ROUNDS - 1) { showScorecard(); return; }
+  round++;
+  roundTitle.textContent = `Round ${round + 1} of ${ROUNDS}`;
+  genRound();
+}
+
+function showScorecard() {
+  const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  let verdict;
+  if (avg >= 90) verdict = '🏆 You cluster like an algorithm. Seriously good spatial intuition.';
+  else if (avg >= 70) verdict = '🎉 Solid clustering instincts.';
+  else verdict = '🐢 K-Means balances distances mathematically — try centering more on dense point clumps.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  document.getElementById('scorecard-wrap').appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Score'),
+    h('div', { class: 'go-score' }, avg + '% avg match'),
+    h('div', { class: 'game-pill-row', style: { justifyContent: 'center' } },
+      scores.map((s, i) => h('span', { class: 'game-pill' }, ['Round ' + (i + 1), h('b', {}, s + '%')]))),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [button('🔁 Play again', () => location.reload())]),
+  ]));
+}
+
+genRound();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('cluster-quest');
+</script>
+</body>
+</html>

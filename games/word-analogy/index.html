@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🔤 Word Vector Analogies — ML Playground Games</title>
+<meta name="description" content="king − man + woman = ? Solve analogies by navigating a toy embedding space. A hands-on game for word embeddings." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔤</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../embeddings/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">🔤</div>
+      <h1>Word Vector <span class="grad-text">Analogies</span></h1>
+      <p>In embedding space, words are arrows, and analogies are arithmetic: <code>king − man + woman ≈ queen</code>. Solve six analogies, then watch the vectors line up on the plot.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🧩 Intermediate</span>
+        <span class="game-badge">~2 min</span>
+        <span class="game-badge">Concept: Embeddings</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="round-title">Analogy 1 of 6</div>
+      <div class="demo-hint" id="hint">Solve the vector equation.</div>
+      <div id="equation" style="font-family:var(--font-mono); font-size:1.3rem; text-align:center; padding:14px; color:var(--text);"></div>
+      <canvas id="cv"></canvas>
+      <div class="game-choice-row" id="choices"></div>
+      <div class="controls" id="controls"></div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 Why this works</div>
+      Real embedding models place words so that consistent relationships (gender, tense, capital-country…) become consistent <em>directions</em>. Subtracting and adding vectors moves you along that direction.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../embeddings/">📖 Review the Embeddings lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, makeCanvas, button, statRow } from '../../js/utils.js';
+
+const CATS = [
+  { name: 'Royalty & Gender', axes: ['♂ ← gender → ♀', 'commoner ← royalty → royal'],
+    words: { king: [-1, 1], queen: [1, 1], man: [-1, -1], woman: [1, -1] } },
+  { name: 'Animals & Age', axes: ['cat ← species → dog', 'adult ← age → baby'],
+    words: { dog: [1, -1], puppy: [1, 1], cat: [-1, -1], kitten: [-1, 1] } },
+  { name: 'Size & Degree', axes: ['small ← size → big', 'base ← degree → comparative'],
+    words: { big: [1, -1], bigger: [1, 1], small: [-1, -1], smaller: [-1, 1] } },
+];
+const ROUNDS = [
+  { cat: 0, a: 'king', b: 'man', c: 'woman', answer: 'queen' },
+  { cat: 0, a: 'queen', b: 'woman', c: 'man', answer: 'king' },
+  { cat: 1, a: 'puppy', b: 'dog', c: 'cat', answer: 'kitten' },
+  { cat: 1, a: 'kitten', b: 'cat', c: 'dog', answer: 'puppy' },
+  { cat: 2, a: 'bigger', b: 'big', c: 'small', answer: 'smaller' },
+  { cat: 2, a: 'smaller', b: 'small', c: 'big', answer: 'bigger' },
+];
+
+let round = 0, scores = [], answered = false;
+
+const cv = makeCanvas(260);
+document.getElementById('cv').replaceWith(cv.canvas);
+
+const stats = statRow(['Correct', 'Round']);
+document.getElementById('stats').replaceWith(stats.el);
+
+const controls = document.getElementById('controls');
+const nextBtn = button('Next analogy →', () => nextRound(), true);
+nextBtn.disabled = true;
+controls.appendChild(nextBtn);
+
+const equationEl = document.getElementById('equation');
+const choicesEl = document.getElementById('choices');
+const outcomeEl = document.getElementById('outcome');
+const roundTitle = document.getElementById('round-title');
+const hint = document.getElementById('hint');
+
+function toX(x) { return 40 + (x + 1.6) / 3.2 * (cv.W - 80); }
+function toY(y) { return 20 + (1 - (y + 1.6) / 3.2) * (cv.H - 40); }
+
+function genRound() {
+  const r = ROUNDS[round];
+  const cat = CATS[r.cat];
+  equationEl.textContent = `${r.a}  −  ${r.b}  +  ${r.c}  =  ?`;
+  choicesEl.innerHTML = '';
+  Object.keys(cat.words).forEach(w => {
+    const b = h('button', { class: 'game-choice' }, w);
+    b.addEventListener('click', () => guess(w, b));
+    choicesEl.appendChild(b);
+  });
+  answered = false;
+  outcomeEl.innerHTML = '';
+  nextBtn.disabled = true;
+  hint.textContent = `Category: ${cat.name}`;
+  stats.set('Round', `${round + 1} / ${ROUNDS.length}`);
+  draw(false);
+}
+
+function draw(showResult) {
+  const r = ROUNDS[round];
+  const cat = CATS[r.cat];
+  const { ctx, W, H } = cv;
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(toX(-1.6), toY(0)); ctx.lineTo(toX(1.6), toY(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(toX(0), toY(-1.6)); ctx.lineTo(toX(0), toY(1.6)); ctx.stroke();
+  for (const [w, [x, y]] of Object.entries(cat.words)) {
+    ctx.beginPath(); ctx.arc(toX(x), toY(y), 6, 0, 2 * Math.PI);
+    ctx.fillStyle = (w === r.a || w === r.b || w === r.c) ? '#e3b341' : (w === r.answer && showResult ? '#4ade80' : 'rgba(139,150,178,0.6)');
+    ctx.fill();
+    ctx.fillStyle = 'var(--text)'; ctx.font = '12px Segoe UI';
+    ctx.fillStyle = '#c3cde0';
+    ctx.fillText(w, toX(x) + 9, toY(y) + 4);
+  }
+  if (showResult) {
+    const av = cat.words[r.a], bv = cat.words[r.b], cv2 = cat.words[r.c];
+    const tx = av[0] - bv[0] + cv2[0], ty = av[1] - bv[1] + cv2[1];
+    ctx.beginPath(); ctx.arc(toX(tx), toY(ty), 8, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#4fd6c5'; ctx.lineWidth = 2; ctx.setLineDash([3, 3]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#4fd6c5'; ctx.font = 'bold 11px Segoe UI';
+    ctx.fillText('a − b + c', toX(tx) + 10, toY(ty) - 8);
+  }
+}
+cv.onResize(() => draw(answered));
+
+function guess(word, btn) {
+  if (answered) return;
+  answered = true;
+  const r = ROUNDS[round];
+  const correct = word === r.answer;
+  choicesEl.querySelectorAll('button').forEach(b => {
+    b.disabled = true;
+    if (b.textContent === r.answer) b.classList.add('correct');
+    else if (b === btn) b.classList.add('wrong');
+  });
+  scores.push(correct ? 1 : 0);
+  draw(true);
+  outcomeEl.appendChild(h('div', { class: 'callout ' + (correct ? 'callout-tip' : 'callout-warn') }, [
+    h('div', { class: 'callout-title' }, correct ? '✅ Correct!' : `Actually "${r.answer}"`),
+    `The teal dashed circle is where ${r.a} − ${r.b} + ${r.c} actually lands in vector space — right on top of "${r.answer}".`,
+  ]));
+  nextBtn.disabled = false;
+  if (round === ROUNDS.length - 1) nextBtn.textContent = '🏆 See final score';
+}
+
+function nextRound() {
+  if (round === ROUNDS.length - 1) { showScorecard(); return; }
+  round++;
+  roundTitle.textContent = `Analogy ${round + 1} of ${ROUNDS.length}`;
+  genRound();
+}
+
+function showScorecard() {
+  const correctCount = scores.reduce((a, b) => a + b, 0);
+  let verdict;
+  if (correctCount === ROUNDS.length) verdict = '🏆 Perfect — you navigate embedding space like a dot-product.';
+  else if (correctCount >= 4) verdict = '🎉 Good grip on vector analogies.';
+  else verdict = '🐢 Reread the equation as literal subtraction and addition of arrows, not just word association.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  document.getElementById('scorecard-wrap').appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Score'),
+    h('div', { class: 'go-score' }, correctCount + ' / ' + ROUNDS.length),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [button('🔁 Play again', () => location.reload())]),
+  ]));
+}
+
+genRound();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('word-analogy');
+</script>
+</body>
+</html>

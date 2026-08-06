@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🧭 GridWorld Quest — ML Playground Games</title>
+<meta name="description" content="Steer an agent through a reward grid yourself, then watch a trained Q-learning agent beat your score. A hands-on game for reinforcement learning." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../reinforcement-learning/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">🧭</div>
+      <h1>GridWorld <span class="grad-text">Quest</span></h1>
+      <p>Walk 🟡 from start to the flag 🏁 using the arrow keys. Every step costs a point, red tiles cost more, reaching the flag pays off big. Then unleash a Q-learning agent on the same grid and see who plans better.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🧩 Intermediate</span>
+        <span class="game-badge">~3 min</span>
+        <span class="game-badge">Concept: Reinforcement Learning</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="level-title">Level 1 of 2</div>
+      <div class="demo-hint">Arrow keys (or the pad below) to move. Reach the flag in as few steps as possible, avoiding red tiles.</div>
+      <canvas id="cv"></canvas>
+      <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:center; margin-top:16px;">
+        <div id="dpad" style="display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,44px); gap:6px;"></div>
+        <div class="controls" id="controls" style="margin-top:0; flex:1;"></div>
+      </div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 Reward rule</div>
+      Every move: <b>−1</b>. Landing on a red tile: <b>−5</b> more. Reaching the flag: <b>+10</b> and the level ends. Hitting a wall wastes a move. Higher total reward is better.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../reinforcement-learning/">📖 Review the Reinforcement Learning lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, makeCanvas, button, statRow } from '../../js/utils.js';
+
+const N = 6;
+const LEVELS = [
+  { start: [0, 0], goal: [5, 5], walls: [[1,1],[1,2],[1,3],[4,0]], penalties: [[3,1],[4,4]] },
+  { start: [0, 0], goal: [5, 5], walls: [[1,1],[1,2],[1,3],[3,3],[3,4],[3,5],[4,1]], penalties: [[2,4],[0,4],[5,1]] },
+];
+
+let level = 0, cfg, pos, totalReward, steps, trail, finished, showingAgent = false, scores = [];
+
+const cv = makeCanvas(360);
+document.getElementById('cv').replaceWith(cv.canvas);
+
+const stats = statRow(['Your reward', 'Your steps', 'Agent reward', 'Agent steps']);
+document.getElementById('stats').replaceWith(stats.el);
+
+const controls = document.getElementById('controls');
+const resetBtn = button('↺ Reset position', () => resetPlayer(), true);
+const aiBtn = button('🤖 Train & watch agent', () => watchAgent());
+aiBtn.disabled = false;
+const nextBtn = button('Next level →', () => nextLevel(), true);
+nextBtn.disabled = true;
+controls.appendChild(resetBtn);
+controls.appendChild(aiBtn);
+controls.appendChild(nextBtn);
+
+const dpad = document.getElementById('dpad');
+function dbtn(label, dr, dc, gridArea) {
+  const b = h('button', { class: 'btn secondary', style: { padding: '0', gridArea } }, label);
+  b.addEventListener('click', () => move(dr, dc));
+  return b;
+}
+dpad.style.gridTemplateAreas = `". up ." "left . right" ". down ."`;
+dpad.appendChild(dbtn('▲', -1, 0, 'up'));
+dpad.appendChild(dbtn('◀', 0, -1, 'left'));
+dpad.appendChild(dbtn('▶', 0, 1, 'right'));
+dpad.appendChild(dbtn('▼', 1, 0, 'down'));
+
+const outcomeEl = document.getElementById('outcome');
+const levelTitle = document.getElementById('level-title');
+
+const isWall = (r, c) => cfg.walls.some(w => w[0] === r && w[1] === c);
+const isPenalty = (r, c) => cfg.penalties.some(w => w[0] === r && w[1] === c);
+const isGoal = (r, c) => r === cfg.goal[0] && c === cfg.goal[1];
+const rewardOf = (r, c) => isGoal(r, c) ? 10 : (isPenalty(r, c) ? -5 : -1);
+
+function cell(px) { return Math.floor(px); }
+function toPx(r, c) {
+  const s = Math.min(cv.W, cv.H) / N;
+  return { x: c * s, y: r * s, s };
+}
+
+function draw(agentPath) {
+  const { ctx, W, H } = cv;
+  ctx.clearRect(0, 0, W, H);
+  const s = Math.min(W, H) / N;
+  const ox = (W - s * N) / 2;
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const x = ox + c * s, y = r * s;
+      let fill = 'rgba(18,23,41,0.6)';
+      if (isWall(r, c)) fill = '#2c3557';
+      else if (isPenalty(r, c)) fill = 'rgba(248,113,113,0.22)';
+      else if (isGoal(r, c)) fill = 'rgba(74,222,128,0.2)';
+      ctx.fillStyle = fill;
+      ctx.fillRect(x + 1, y + 1, s - 2, s - 2);
+    }
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  for (let i = 0; i <= N; i++) {
+    ctx.beginPath(); ctx.moveTo(ox, i * s); ctx.lineTo(ox + N * s, i * s); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox + i * s, 0); ctx.lineTo(ox + i * s, N * s); ctx.stroke();
+  }
+  // trail
+  ctx.fillStyle = 'rgba(227,179,65,0.5)';
+  trail.forEach(([r, c]) => { ctx.beginPath(); ctx.arc(ox + c * s + s / 2, r * s + s / 2, 4, 0, 2 * Math.PI); ctx.fill(); });
+  // agent path overlay
+  if (agentPath) {
+    ctx.strokeStyle = 'rgba(79,214,197,0.85)'; ctx.lineWidth = 3; ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    agentPath.forEach(([r, c], i) => {
+      const px = ox + c * s + s / 2, py = r * s + s / 2;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    });
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  // goal flag
+  ctx.font = (s * 0.55) + 'px Segoe UI Emoji';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🏁', ox + cfg.goal[1] * s + s / 2, cfg.goal[0] * s + s / 2);
+  // player
+  ctx.font = (s * 0.5) + 'px Segoe UI Emoji';
+  ctx.fillText('🟡', ox + pos[1] * s + s / 2, pos[0] * s + s / 2);
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+cv.onResize(() => draw());
+
+function resetPlayer() {
+  pos = [...cfg.start];
+  totalReward = 0; steps = 0; trail = [[...pos]]; finished = false;
+  aiBtn.disabled = false;
+  stats.set('Your reward', '0');
+  stats.set('Your steps', '0');
+  draw();
+}
+
+function move(dr, dc) {
+  if (finished || showingAgent) return;
+  let nr = pos[0] + dr, nc = pos[1] + dc;
+  if (nr < 0 || nr >= N || nc < 0 || nc >= N || isWall(nr, nc)) { nr = pos[0]; nc = pos[1]; }
+  totalReward += rewardOf(nr, nc);
+  steps++;
+  pos = [nr, nc];
+  trail.push([...pos]);
+  stats.set('Your reward', String(totalReward));
+  stats.set('Your steps', String(steps));
+  draw();
+  if (isGoal(nr, nc)) {
+    finished = true;
+    outcomeEl.appendChild(h('div', { class: 'callout callout-tip' }, [
+      h('div', { class: 'callout-title' }, '🏁 Reached the flag!'),
+      `${totalReward} reward in ${steps} steps. Now train the agent to see the optimal route.`,
+    ]));
+  }
+}
+window.addEventListener('keydown', e => {
+  const map = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+  if (map[e.key]) { e.preventDefault(); move(...map[e.key]); }
+});
+
+function trainAgent() {
+  const actions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  const key = (r, c) => r + ',' + c;
+  const Q = {};
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (!isWall(r, c)) Q[key(r, c)] = [0, 0, 0, 0];
+  let epsilon = 0.9;
+  const alpha = 0.5, gamma = 0.9;
+  for (let ep = 0; ep < 900; ep++) {
+    let r = cfg.start[0], c = cfg.start[1];
+    for (let t = 0; t < 60; t++) {
+      if (isGoal(r, c)) break;
+      const s = key(r, c);
+      const a = Math.random() < epsilon ? Math.floor(Math.random() * 4) : Q[s].indexOf(Math.max(...Q[s]));
+      let nr = r + actions[a][0], nc = c + actions[a][1];
+      if (nr < 0 || nr >= N || nc < 0 || nc >= N || isWall(nr, nc)) { nr = r; nc = c; }
+      const rew = rewardOf(nr, nc);
+      const s2 = key(nr, nc);
+      Q[s][a] += alpha * (rew + gamma * Math.max(...Q[s2]) - Q[s][a]);
+      r = nr; c = nc;
+    }
+    epsilon = Math.max(0.05, epsilon * 0.995);
+  }
+  let r = cfg.start[0], c = cfg.start[1];
+  const path = [[r, c]];
+  let reward = 0, st = 0;
+  for (let t = 0; t < 40; t++) {
+    if (isGoal(r, c)) break;
+    const qs = Q[key(r, c)];
+    const a = qs.indexOf(Math.max(...qs));
+    let nr = r + actions[a][0], nc = c + actions[a][1];
+    if (nr < 0 || nr >= N || nc < 0 || nc >= N || isWall(nr, nc)) { nr = r; nc = c; }
+    reward += rewardOf(nr, nc);
+    st++;
+    r = nr; c = nc;
+    path.push([r, c]);
+  }
+  return { path, reward, steps: st };
+}
+
+function watchAgent() {
+  if (showingAgent) return;
+  showingAgent = true;
+  aiBtn.disabled = true;
+  const agent = trainAgent();
+  stats.set('Agent reward', String(agent.reward));
+  stats.set('Agent steps', String(agent.steps));
+  draw(agent.path);
+  const beat = totalReward >= agent.reward;
+  const msg = finished
+    ? (beat ? `🏆 You matched or beat the agent! You: ${totalReward} vs Agent: ${agent.reward}.` : `🤖 The agent found a better route: ${agent.reward} reward in ${agent.steps} steps vs your ${totalReward} in ${steps}.`)
+    : `🤖 The agent reached the flag with ${agent.reward} reward in ${agent.steps} steps — the cyan dashed line is its route.`;
+  outcomeEl.appendChild(h('div', { class: 'callout ' + (beat && finished ? 'callout-tip' : 'callout-info') }, [
+    h('div', { class: 'callout-title' }, 'Agent trained (900 episodes of Q-learning)'),
+    msg,
+  ]));
+  const roundScore = finished ? Math.max(0, Math.min(100, Math.round(100 * (totalReward + 20) / (agent.reward + 20)))) : 40;
+  scores.push(roundScore);
+  nextBtn.disabled = false;
+  if (level === LEVELS.length - 1) nextBtn.textContent = '🏆 See final score';
+}
+
+function nextLevel() {
+  if (level === LEVELS.length - 1) { showScorecard(); return; }
+  level++;
+  levelTitle.textContent = `Level ${level + 1} of ${LEVELS.length}`;
+  startLevel();
+}
+
+function startLevel() {
+  cfg = LEVELS[level];
+  showingAgent = false;
+  outcomeEl.innerHTML = '';
+  nextBtn.disabled = true;
+  stats.set('Agent reward', '—');
+  stats.set('Agent steps', '—');
+  resetPlayer();
+}
+
+function showScorecard() {
+  const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  let verdict;
+  if (avg >= 85) verdict = '🏆 You navigate as efficiently as a trained agent!';
+  else if (avg >= 60) verdict = '🎉 Good instincts — a bit more planning and you\'ll match the agent.';
+  else verdict = '🐢 Reinforcement learning agents explore thousands of paths before committing — no shame losing to 900 episodes of practice.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  document.getElementById('scorecard-wrap').appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Score'),
+    h('div', { class: 'go-score' }, avg + '% avg vs agent'),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [button('🔁 Play again', () => location.reload())]),
+  ]));
+}
+
+levelTitle.textContent = `Level 1 of ${LEVELS.length}`;
+stats.set('Agent reward', '—');
+stats.set('Agent steps', '—');
+startLevel();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('gridworld-quest');
+</script>
+</body>
+</html>

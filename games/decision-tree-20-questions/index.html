@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🌳 Decision Tree: 20 Questions — ML Playground Games</title>
+<meta name="description" content="Pick the best splits to classify a dataset with the shallowest tree, watching Gini impurity drop with every question. A hands-on game for decision trees." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../css/style.css?v=12" />
+<link rel="stylesheet" href="../games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🎮 All games</a>
+      <a href="../../decision-trees/">← Back to lesson</a>
+    </div>
+  </header>
+
+  <main class="game-page">
+    <div class="game-hero">
+      <div class="gh-emoji">🌳</div>
+      <h1>Decision Tree: <span class="grad-text">20 Questions</span></h1>
+      <p>The dashed box shows the region being split next — the one a real tree would pick first. Choose a feature (X or Y) and a threshold to divide it, aiming for a <b>pure</b> tree in as few questions as possible.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🧩 Intermediate</span>
+        <span class="game-badge">~2 min</span>
+        <span class="game-badge">Concept: Decision Trees</span>
+      </div>
+    </div>
+
+    <div class="demo" id="demo-panel">
+      <div class="demo-title" id="round-title">Puzzle 1 of 2</div>
+      <div class="demo-hint">Split the highlighted (dashed) region until every leaf is a single color.</div>
+      <canvas id="cv"></canvas>
+      <div class="game-choice-row" id="featBtns" style="max-width:280px"></div>
+      <div class="controls" id="controls"></div>
+      <div class="stat-row" id="stats"></div>
+      <div id="outcome"></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">📌 Gini impurity</div>
+      0 = perfectly pure region (one class only). 0.5 = a fully mixed 50/50 region. A good split makes the <b>weighted average</b> impurity of the two children as low as possible.
+    </div>
+
+    <div id="scorecard-wrap"></div>
+    <div id="more-games"></div>
+
+    <div class="game-footer-nav">
+      <a href="../../decision-trees/">📖 Review the Decision Trees lesson</a>
+    </div>
+  </main>
+
+<script type="module">
+import { h, makeCanvas, slider, button, statRow, clamp } from '../../js/utils.js';
+
+const PUZZLES = [
+  { par: 2, gen: () => {
+    const pts = [];
+    for (let i = 0; i < 12; i++) pts.push({ x: 0.35 + Math.random() * 0.6, y: -0.9 + Math.random() * 1.8, label: 1 });
+    for (let i = 0; i < 8; i++) pts.push({ x: -0.95 + Math.random() * 0.95, y: 0.4 + Math.random() * 0.5, label: 1 });
+    for (let i = 0; i < 8; i++) pts.push({ x: -0.95 + Math.random() * 0.95, y: -0.9 + Math.random() * 1.15, label: 0 });
+    return pts;
+  }},
+  { par: 3, gen: () => {
+    const pts = [];
+    const quads = [[0.25, 0.9, 0.25, 0.9, 0], [0.25, 0.9, -0.9, -0.25, 1], [-0.9, -0.25, 0.25, 0.9, 1], [-0.9, -0.25, -0.9, -0.25, 0]];
+    for (const [x0, x1, y0, y1, label] of quads) for (let i = 0; i < 8; i++) pts.push({ x: x0 + Math.random() * (x1 - x0), y: y0 + Math.random() * (y1 - y0), label });
+    return pts;
+  }},
+];
+
+let puzzle = 0, leaves = [], splitCount = 0, feature = 'x', threshold = 0, scores = [];
+const COLORS = ['#f0883e', '#58a6ff'];
+
+const cv = makeCanvas(360);
+document.getElementById('cv').replaceWith(cv.canvas);
+
+const stats = statRow(['Weighted impurity', 'Splits used', 'Par', 'Leaves']);
+document.getElementById('stats').replaceWith(stats.el);
+
+const featBtns = document.getElementById('featBtns');
+const xBtn = h('button', { class: 'game-choice' }, 'Split on X');
+const yBtn = h('button', { class: 'game-choice' }, 'Split on Y');
+xBtn.addEventListener('click', () => { feature = 'x'; refreshControls(); });
+yBtn.addEventListener('click', () => { feature = 'y'; refreshControls(); });
+featBtns.appendChild(xBtn); featBtns.appendChild(yBtn);
+
+const controls = document.getElementById('controls');
+const confirmBtn = button('✂️ Confirm split', () => confirmSplit());
+const nextBtn = button('Next puzzle →', () => nextPuzzle(), true);
+nextBtn.disabled = true;
+
+const outcomeEl = document.getElementById('outcome');
+const roundTitle = document.getElementById('round-title');
+
+function toX(x) { return 20 + (x + 1.05) / 2.1 * (cv.W - 40); }
+function toY(y) { return 20 + (1 - (y + 1.05) / 2.1) * (cv.H - 40); }
+
+function gini(pts) {
+  if (!pts.length) return 0;
+  const c0 = pts.filter(p => p.label === 0).length / pts.length;
+  const c1 = 1 - c0;
+  return 1 - c0 * c0 - c1 * c1;
+}
+function isPure(leaf) { return leaf.points.length === 0 || gini(leaf.points) === 0; }
+function weightedImpurity() {
+  const n = leaves.reduce((a, l) => a + l.points.length, 0);
+  return leaves.reduce((a, l) => a + gini(l.points) * l.points.length, 0) / (n || 1);
+}
+function pickTarget() {
+  const impure = leaves.filter(l => !isPure(l));
+  if (!impure.length) return null;
+  return impure.reduce((best, l) => (gini(l.points) * l.points.length > gini(best.points) * best.points.length ? l : best), impure[0]);
+}
+
+function genPuzzle() {
+  const p = PUZZLES[puzzle];
+  const pts = p.gen();
+  leaves = [{ points: pts, xr: [-1, 1], yr: [-1, 1] }];
+  splitCount = 0;
+  outcomeEl.innerHTML = '';
+  nextBtn.disabled = true;
+  stats.set('Splits used', '0');
+  stats.set('Par', String(p.par));
+  stats.set('Leaves', '1');
+  feature = 'x';
+  refreshControls();
+}
+
+function refreshControls() {
+  const target = pickTarget();
+  controls.innerHTML = '';
+  xBtn.classList.toggle('correct', feature === 'x');
+  yBtn.classList.toggle('correct', feature === 'y');
+  if (!target) { draw(null); return; }
+  const range = feature === 'x' ? target.xr : target.yr;
+  threshold = (range[0] + range[1]) / 2;
+  const s = slider(`Threshold (${feature.toUpperCase()})`, { min: range[0] + 0.02, max: range[1] - 0.02, step: 0.01, value: threshold, fmt: v => v.toFixed(2) }, v => { threshold = v; draw(target); });
+  controls.appendChild(s.el);
+  controls.appendChild(confirmBtn);
+  controls.appendChild(nextBtn);
+  draw(target);
+}
+
+function draw(target) {
+  const { ctx, W, H } = cv;
+  ctx.clearRect(0, 0, W, H);
+  // leaf boundary rectangles (faint)
+  for (const l of leaves) {
+    ctx.strokeStyle = isPure(l) ? 'rgba(74,222,128,0.35)' : 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(toX(l.xr[0]), toY(l.yr[1]), toX(l.xr[1]) - toX(l.xr[0]), toY(l.yr[0]) - toY(l.yr[1]));
+  }
+  // target dashed highlight + preview split line
+  if (target) {
+    ctx.strokeStyle = 'rgba(227,179,65,0.9)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    ctx.strokeRect(toX(target.xr[0]), toY(target.yr[1]), toX(target.xr[1]) - toX(target.xr[0]), toY(target.yr[0]) - toY(target.yr[1]));
+    ctx.setLineDash([]);
+    ctx.strokeStyle = '#e3b341'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    if (feature === 'x') { ctx.moveTo(toX(threshold), toY(target.yr[1])); ctx.lineTo(toX(threshold), toY(target.yr[0])); }
+    else { ctx.moveTo(toX(target.xr[0]), toY(threshold)); ctx.lineTo(toX(target.xr[1]), toY(threshold)); }
+    ctx.stroke();
+  }
+  // points
+  for (const l of leaves) for (const p of l.points) {
+    ctx.beginPath(); ctx.arc(toX(p.x), toY(p.y), 5, 0, 2 * Math.PI);
+    ctx.fillStyle = COLORS[p.label]; ctx.fill();
+  }
+  stats.set('Weighted impurity', weightedImpurity().toFixed(3));
+  stats.set('Leaves', String(leaves.length));
+}
+cv.onResize(() => draw(pickTarget()));
+
+function confirmSplit() {
+  const target = pickTarget();
+  if (!target) return;
+  const key = feature;
+  const left = { points: target.points.filter(p => p[key] <= threshold), xr: key === 'x' ? [target.xr[0], threshold] : target.xr, yr: key === 'y' ? [target.yr[0], threshold] : target.yr };
+  const right = { points: target.points.filter(p => p[key] > threshold), xr: key === 'x' ? [threshold, target.xr[1]] : target.xr, yr: key === 'y' ? [threshold, target.yr[1]] : target.yr };
+  if (!left.points.length || !right.points.length) {
+    outcomeEl.innerHTML = '';
+    outcomeEl.appendChild(h('div', { class: 'callout callout-warn' }, 'That threshold puts every point on one side — try a value nearer the gap between colors.'));
+    return;
+  }
+  leaves = leaves.filter(l => l !== target).concat([left, right]);
+  splitCount++;
+  stats.set('Splits used', String(splitCount));
+  const allPure = leaves.every(isPure);
+  outcomeEl.innerHTML = '';
+  if (allPure) {
+    const p = PUZZLES[puzzle];
+    const score = Math.max(0, Math.min(100, Math.round(100 * p.par / splitCount)));
+    scores.push(score);
+    outcomeEl.appendChild(h('div', { class: 'callout callout-tip' }, [
+      h('div', { class: 'callout-title' }, '🎉 Fully pure tree!'),
+      `Solved in ${splitCount} split${splitCount === 1 ? '' : 's'} (par: ${p.par}).`,
+    ]));
+    nextBtn.disabled = false;
+    if (puzzle === PUZZLES.length - 1) nextBtn.textContent = '🏆 See final score';
+    controls.querySelectorAll('input,button').forEach(el => { if (el !== nextBtn) el.disabled = true; });
+    draw(null);
+    return;
+  }
+  if (splitCount >= 6) {
+    scores.push(20);
+    outcomeEl.appendChild(h('div', { class: 'callout callout-warn' }, `Used all 6 splits without full purity — remaining impurity: ${weightedImpurity().toFixed(3)}.`));
+    nextBtn.disabled = false;
+    controls.querySelectorAll('input,button').forEach(el => { if (el !== nextBtn) el.disabled = true; });
+    return;
+  }
+  refreshControls();
+}
+
+function nextPuzzle() {
+  if (puzzle === PUZZLES.length - 1) { showScorecard(); return; }
+  puzzle++;
+  roundTitle.textContent = `Puzzle ${puzzle + 1} of ${PUZZLES.length}`;
+  genPuzzle();
+}
+
+function showScorecard() {
+  const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  let verdict;
+  if (avg >= 90) verdict = '🏆 Perfectly greedy splits — you think like the CART algorithm.';
+  else if (avg >= 60) verdict = '🎉 Good tree-building instincts.';
+  else verdict = '🐢 Try to split wherever the weighted impurity drops the most, not just wherever looks tidy.';
+
+  document.getElementById('demo-panel').style.display = 'none';
+  document.getElementById('scorecard-wrap').appendChild(h('div', { class: 'demo game-over-banner' }, [
+    h('div', { class: 'demo-title', style: { justifyContent: 'center' } }, '🏁 Final Score'),
+    h('div', { class: 'go-score' }, avg + '% avg'),
+    h('p', { style: { marginTop: '16px', fontWeight: '700' } }, verdict),
+    h('div', { class: 'controls', style: { justifyContent: 'center', marginTop: '18px' } }, [button('🔁 Play again', () => location.reload())]),
+  ]));
+}
+
+roundTitle.textContent = `Puzzle 1 of ${PUZZLES.length}`;
+genPuzzle();
+
+import { OTHER_GAMES_HTML } from '../games-data.js';
+document.getElementById('more-games').outerHTML = OTHER_GAMES_HTML('decision-tree-20-questions');
+</script>
+</body>
+</html>

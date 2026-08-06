@@ -185,6 +185,13 @@ export default {
     ));
 
     root.appendChild(htmlOutro());
+
+    root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Neuron Wiring: Solve XOR</div>
+        See activation functions do real work — hand-tune a tiny tanh network until it solves a problem a linear model never could. <a href="../games/neuron-wiring/" style="color:var(--accent);font-weight:700;">Play Neuron Wiring →</a>
+      </div>
+    `));
   },
 };
 

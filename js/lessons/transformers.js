@@ -214,6 +214,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Attention Spotlight</div>
+        Guess which word a pronoun refers to before the simulated attention weights reveal it — watch one word flip the whole answer. <a href="../games/attention-spotlight/" style="color:var(--accent);font-weight:700;">Play Attention Spotlight →</a>
+      </div>
+
       <h3>The full transformer block</h3>
       <p>Attention is the star, but a transformer layer wraps it with supporting machinery, then stacks the whole block dozens of times:</p>
       <div class="cards">

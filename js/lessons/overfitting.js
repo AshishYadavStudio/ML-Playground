@@ -154,6 +154,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Overfit or Not?</div>
+        A model was just fit to hidden data — guess underfit, good fit, or overfit from the curve alone before the test points reveal the truth. <a href="../games/overfit-or-not/" style="color:var(--accent);font-weight:700;">Play Overfit or Not? →</a>
+      </div>
+
       <h3>What you should have seen</h3>
       <ul>
         <li><strong>Degree 1–2:</strong> both errors high — the line can't bend enough. <em>Underfitting.</em></li>

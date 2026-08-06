@@ -174,6 +174,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Neuron Wiring: Solve XOR</div>
+        Hand-tune every weight of a tiny network until it solves XOR — you'll feel exactly what backprop's gradients are trying to do for you automatically. <a href="../games/neuron-wiring/" style="color:var(--accent);font-weight:700;">Play Neuron Wiring →</a>
+      </div>
+
       <h3>The two rules of the backward pass</h3>
       <ol>
         <li><strong>Local derivative:</strong> each operation only needs to know its own derivative — tanh contributes (1 − h²), a multiply node contributes the <em>other</em> factor, addition just passes gradients through.</li>

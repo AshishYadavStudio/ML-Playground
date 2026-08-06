@@ -24,6 +24,7 @@ import mlCode from './lessons/ml-code.js';
 import { QUIZZES } from './quizzes.js';
 import { EXAMPLES } from './examples.js';
 import { GISCUS, NEWSLETTER } from './config.js';
+import { GAMES } from '../games/games-data.js';
 import logisticRegression from './lessons/logistic-regression.js';
 import knn from './lessons/knn.js';
 import svm from './lessons/svm.js';
@@ -60,6 +61,7 @@ const BASE_PATH = (function () {
   return '';
 })();
 const lessonUrl = id => id === 'home' ? BASE_PATH + '/' : BASE_PATH + '/' + id + '/';
+const gamesUrl = slug => BASE_PATH + '/games/' + (slug ? slug + '/' : '');
 const ALL_IDS = new Set(ALL.map(l => l.id));
 function currentLessonId() {
   // 1) initial-page marker (set by generated <lesson>/index.html)
@@ -416,6 +418,30 @@ function buildExamples(lessonId) {
   return wrap;
 }
 
+// ---- Games highlight (homepage) ----
+function buildGamesHighlight() {
+  const featured = GAMES.slice(0, 6);
+  return h('div', { class: 'games-highlight' }, [
+    h('div', { class: 'games-highlight-head' }, [
+      h('div', {}, [
+        h('span', { class: 'games-highlight-badge' }, '🎮 Learn by playing'),
+        h('h3', {}, '13 games, one per concept'),
+        h('p', {}, "Tune a learning rate, wire a neuron by hand, out-navigate a Q-learning agent. Each game targets exactly one idea — play it, then the lesson clicks."),
+      ]),
+      h('a', { class: 'games-highlight-all', href: gamesUrl() }, 'See all 13 games →'),
+    ]),
+    h('div', { class: 'lesson-grid' }, featured.map(g => h('a', { class: 'lesson-card', href: gamesUrl(g.slug) }, [
+      h('div', { class: 'lc-top' }, [h('div', { class: 'lc-emoji' }, g.emoji)]),
+      h('h4', {}, g.title),
+      h('p', {}, g.blurb),
+      h('div', { class: 'lc-foot' }, [
+        h('span', { class: 'level-badge level-' + g.level }, g.level),
+        h('span', { class: 'lc-arrow' }, 'Play →'),
+      ]),
+    ]))),
+  ]);
+}
+
 // ---- Comments (Giscus → GitHub Discussions) ----
 function buildComments(lessonId) {
   const configured = GISCUS.repoId && !GISCUS.repoId.startsWith('REPLACE_')
@@ -599,6 +625,11 @@ function buildFooter() {
           ['Evaluation Metrics', lessonUrl('metrics')],
           ['Optimizers', lessonUrl('optimizers')],
         ]),
+        colLinks('🎮 Games', [
+          ['All 13 games', gamesUrl()],
+          ['Gradient Descent Golf', gamesUrl('gradient-descent-golf')],
+          ['Neuron Wiring: XOR', gamesUrl('neuron-wiring')],
+        ]),
       ]),
     ]),
     buildNewsletter(),
@@ -656,6 +687,9 @@ function renderHome() {
     ]),
   ]);
   contentEl.appendChild(reveal(features));
+
+  // games highlight
+  contentEl.appendChild(reveal(buildGamesHighlight()));
 
   // curriculum
   const blocks = h('div', { class: 'home-sections' });

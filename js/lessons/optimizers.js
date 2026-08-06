@@ -198,6 +198,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Gradient Descent Golf</div>
+        Tune a learning rate by hand and race to convergence across five holes — the exact intuition behind why momentum and adaptive steps help. <a href="../games/gradient-descent-golf/" style="color:var(--accent);font-weight:700;">Play Gradient Descent Golf →</a>
+      </div>
+
       <h3>What each racer is doing</h3>
       <table class="info-table">
         <tr><th>Optimizer</th><th>Idea</th><th>Behavior you saw</th></tr>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🎮 Games — ML Playground</title>
+<meta name="description" content="13 hands-on games that teach machine learning concepts by playing, not reading — gradient descent golf, K-means clustering, Q-learning grids, XOR neuron wiring and more." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css?v=12" />
+<link rel="stylesheet" href="games.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>" />
+</head>
+<body class="game-body">
+  <header class="game-topbar">
+    <a class="gt-brand" href="../">🧠 ML Playground</a>
+    <div class="gt-right">
+      <a href="../">🏠 Home / Curriculum</a>
+    </div>
+  </header>
+
+  <main class="game-page" style="max-width:1080px;">
+    <div class="game-hero">
+      <div class="gh-emoji">🎮</div>
+      <h1>Learn by <span class="grad-text">Playing</span></h1>
+      <p>Thirteen small games, one per concept, built to make the intuition stick in a way reading never quite does. Tune a learning rate, wire a neuron by hand, out-navigate a Q-learning agent — then head back to the lesson with the concept already in your fingers.</p>
+      <div class="game-badge-row">
+        <span class="game-badge">🎮 13 games</span>
+        <span class="game-badge">⏱️ 2–4 min each</span>
+        <span class="game-badge">100% free</span>
+      </div>
+    </div>
+
+    <div id="grid"></div>
+  </main>
+
+<script type="module">
+import { ALL_GAMES_GRID_HTML } from './games-data.js';
+document.getElementById('grid').outerHTML = ALL_GAMES_GRID_HTML('./');
+</script>
+</body>
+</html>

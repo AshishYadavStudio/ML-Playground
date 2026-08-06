@@ -1,0 +1,159 @@
+/* ============ Games — shared shell (dark "arcade" pages, standalone from the SPA) ============ */
+/* Loaded alongside ../../css/style.css — reuses .demo/.btn/.stat-row/.callout/.lesson-card etc. */
+
+html[data-theme] { /* games never read the saved theme — always the framed-dark palette */ }
+
+body.game-body {
+  min-height: 100vh;
+}
+
+.game-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px clamp(16px, 4vw, 40px);
+  background: rgba(7, 9, 15, 0.82);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.game-topbar a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 600;
+  transition: color 0.15s;
+}
+.game-topbar a:hover { color: var(--text); }
+.game-topbar .gt-brand { color: var(--text); font-family: var(--font-display); font-weight: 700; }
+.game-topbar .gt-right { display: flex; gap: 18px; align-items: center; }
+
+.game-page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 40px clamp(16px, 4vw, 40px) 90px;
+}
+
+.game-hero {
+  text-align: center;
+  margin-bottom: 30px;
+}
+.game-hero .gh-emoji {
+  width: 64px; height: 64px;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  margin: 0 auto 16px;
+  border-radius: 18px;
+  background: var(--grad-soft);
+  border: 1px solid rgba(109, 141, 255, 0.3);
+  box-shadow: var(--shadow-glow);
+}
+.game-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+.game-hero h1 .grad-text {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.game-hero p {
+  color: var(--text-dim);
+  max-width: 560px;
+  margin: 0 auto;
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+.game-badge-row { display: flex; justify-content: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.game-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 13px;
+  border-radius: 20px;
+  background: rgba(109, 141, 255, 0.1);
+  border: 1px solid rgba(109, 141, 255, 0.32);
+  color: var(--accent);
+}
+
+.game-pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.game-pill {
+  background: rgba(18, 23, 41, 0.8);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+.game-pill b { color: var(--cyan); font-family: var(--font-mono); font-weight: 700; margin-left: 5px; }
+
+.game-over-banner {
+  text-align: center;
+  padding: 22px;
+}
+.game-over-banner .go-score {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 800;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 8px 0;
+}
+
+.game-choice-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.game-choice {
+  flex: 1;
+  min-width: 130px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  color: var(--text-body);
+  padding: 13px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.game-choice:hover:not(:disabled) { border-color: var(--accent); background: var(--bg-hover); transform: translateY(-1px); }
+.game-choice.correct { background: rgba(74, 222, 128, 0.14) !important; border-color: var(--green) !important; color: var(--green); }
+.game-choice.wrong { background: rgba(248, 113, 113, 0.12) !important; border-color: var(--red) !important; color: var(--red); }
+.game-choice:disabled { cursor: default; opacity: 0.7; }
+
+.game-footer-nav {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.game-footer-nav a { color: var(--text-dim); text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+.game-footer-nav a:hover { color: var(--accent); }
+
+/* other games grid (bottom of every game page + games hub) reuses .lesson-grid/.lesson-card */
+.game-emoji-badge {
+  width: 44px; height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 640px) {
+  .game-topbar { flex-wrap: wrap; }
+}

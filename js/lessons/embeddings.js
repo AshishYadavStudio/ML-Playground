@@ -175,6 +175,11 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="callout callout-tip">
+        <div class="callout-title">🎮 Play: Word Vector Analogies</div>
+        king − man + woman = ? Solve six analogies by navigating a toy embedding space yourself. <a href="../games/word-analogy/" style="color:var(--accent);font-weight:700;">Play Word Vector Analogies →</a>
+      </div>
+
       <h3>Why directions mean things</h3>
       <p>Notice the arrows: <em>man → king</em> and <em>woman → queen</em> are (nearly) the same vector — a "royalty direction." <em>france → paris</em> and <em>japan → tokyo</em> share a "capital-of direction." Nobody programmed these; they <strong>emerge</strong> because the training objective forces words used in analogous contexts into analogous geometric relationships.</p>
       <div class="formula">v(king) − v(man) + v(woman) ≈ v(queen)</div>

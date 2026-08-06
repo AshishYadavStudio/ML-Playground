@@ -218,7 +218,7 @@ def build_pages(sections):
                 json_desc='"' + desc.replace('"', '\\"') + '"',
                 section_name=esc(strip_html(section_name)),
                 h1_title=esc("{emoji} {title}".format(**meta)),
-                css_url="../css/style.css?v=11",
+                css_url="../css/style.css?v=12",
                 js_url="../js/app.js",
             )
 
@@ -230,12 +230,22 @@ def build_pages(sections):
     return all_meta
 
 
+GAME_SLUGS = [
+    "gradient-descent-golf", "fit-the-line", "cluster-quest", "gridworld-quest",
+    "overfit-or-not", "knn-detective", "draw-the-boundary", "decision-tree-20-questions",
+    "neuron-wiring", "rotate-to-compress", "attention-spotlight", "word-analogy",
+    "confusion-matrix-blitz",
+]
+
+
 def build_sitemap(all_meta):
     """Emit sitemap.xml + robots.txt at the repo root."""
     today = datetime.utcnow().strftime("%Y-%m-%d")
-    urls = [(SITE_URL + "/", "1.0", "weekly")]
+    urls = [(SITE_URL + "/", "1.0", "weekly"), (SITE_URL + "/games/", "0.7", "monthly")]
     for m in all_meta:
         urls.append((SITE_URL + "/" + m["id"] + "/", "0.8", "monthly"))
+    for slug in GAME_SLUGS:
+        urls.append((SITE_URL + "/games/" + slug + "/", "0.6", "monthly"))
 
     body = ['<?xml version="1.0" encoding="UTF-8"?>',
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
