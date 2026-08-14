@@ -457,4 +457,100 @@ export const EXAMPLES = {
       connection: 'Every profession is quietly rewriting itself around LLMs. The Foundations chapter you completed is the mental model needed to work with (or on) them.',
     },
   ],
+  'ensemble-methods': [
+    {
+      icon: '🏆', title: 'Every Kaggle winner for a decade',
+      story: 'Look at the top-3 solutions of almost any Kaggle competition on tabular data since 2015 — home prices, credit defaults, click-through rates. Nine times out of ten the winning approach is a XGBoost or LightGBM ensemble, sometimes stacked with a second layer of even more boosted trees. Not neural networks. Not fancy AutoML. Just hundreds of shallow trees stacked cleverly.',
+      connection: 'One tree is weak. Hundreds trained on each other\'s mistakes wins competitions — that\'s the entire pitch of boosting.',
+    },
+    {
+      icon: '💳', title: 'Fraud detection at your bank',
+      story: 'When a transaction comes in, the bank\'s system runs it through a Random Forest of hundreds of decision trees, each trained on a different slice of past fraud cases. Any single tree could be wrong or biased, but the majority vote across all of them is stable, fast, and accurate enough to flag or block in under 200 milliseconds.',
+      connection: 'Bagging tames unstable models by averaging out their idiosyncrasies. Random Forest is the industrial workhorse behind millions of daily fraud decisions.',
+    },
+  ],
+  'cross-validation': [
+    {
+      icon: '🍞', title: 'A baker perfecting a new sourdough recipe',
+      story: 'A baker doesn\'t judge a recipe from one loaf — they bake it five times over a week, at different times of day, and average the results. One perfect loaf could just be a lucky oven day; five decent loaves means the recipe genuinely works.',
+      connection: 'One train/test split is one loaf. K-fold cross-validation is the whole week — the average tells you what to trust.',
+    },
+    {
+      icon: '📊', title: 'A/B testing that isn\'t fooled by a lucky week',
+      story: 'A product team tests a new checkout button. Week 1 shows +12% conversion — champagne! But they don\'t ship: they wait five more weeks and see +4%, -2%, +8%, +1%, +3%. The real effect is closer to +4% ± 5%, and the "amazing" +12% was noise.',
+      connection: 'Same problem, same fix: measure several times, average the score, watch the spread. Cross-validation is the ML flavor of exactly this discipline.',
+    },
+  ],
+  'bayes-theorem': [
+    {
+      icon: '🩻', title: 'Why a "99% accurate" cancer screen can still be wrong',
+      story: 'A new blood test claims 99% accuracy for a cancer that affects 1 in 1,000 people. You test positive. Most doctors\' intuition says "I probably have cancer." Bayes\' theorem says: only about 9%. The false-positive rate multiplied by the huge healthy population drowns the tiny true-positive count.',
+      connection: 'Prior × Likelihood = Posterior. Without knowing how rare the disease is, no test accuracy makes sense.',
+    },
+    {
+      icon: '🕵️', title: 'The spam filter working in your inbox right now',
+      story: 'Gmail\'s classic filter tallies each word\'s frequency in past spam vs past ham. When a new email arrives, it multiplies all the word likelihoods with a "spam prior" and computes P(spam | email). "Viagra" pushes the probability way up; "meeting" pulls it back down.',
+      connection: 'That\'s literally Naive Bayes — Bayes\' theorem with the naive assumption that word occurrences are independent. Simple, fast, still shockingly effective.',
+    },
+  ],
+  'feature-engineering': [
+    {
+      icon: '🏠', title: 'How Kaggle grand-masters win house-price contests',
+      story: 'The raw dataset says the house has 3 bedrooms and 2000 sq ft. But the top-scoring notebooks always add derived features: price-per-sqft comparables, distance to top schools, log-transformed lot size, whether the sale month was peak season, interaction between neighborhood and bedroom count. The model is the same LightGBM everyone else runs — the feature list is what wins.',
+      connection: 'Better features > fancier models. Domain knowledge encoded as columns is where the accuracy actually comes from.',
+    },
+    {
+      icon: '⏰', title: 'Uber knowing surge pricing before you request the ride',
+      story: 'Uber\'s pricing model doesn\'t see just the raw timestamp of your request. It sees sin/cos-encoded hour-of-day, day-of-week, distance to nearest concert venue, average recent driver density, weather forecast, and dozens of similar hand-crafted features. Each one lets the model learn a specific pattern it couldn\'t see from raw fields alone.',
+      connection: 'Datetime engineering, geo distances, aggregates, interactions — all the moves this lesson covers, in a shipping product touching millions of rides an hour.',
+    },
+  ],
+  'autoencoders': [
+    {
+      icon: '📸', title: 'JPEG compression, but learned',
+      story: 'JPEG shrinks a photo by throwing away detail humans barely notice. A neural autoencoder does the same trick — but the "throw away" rules aren\'t hand-designed by a 1992 committee, they\'re learned from millions of specific images. Trained on faces, it compresses faces beautifully; trained on medical scans, it keeps the diagnostically-important pixels sharp.',
+      connection: 'The bottleneck is the compression ratio. Encoder = zip, decoder = unzip, learned end-to-end.',
+    },
+    {
+      icon: '🚨', title: 'A factory catching defective products it\'s never seen',
+      story: 'A soft-drink line trains an autoencoder on 10,000 photos of perfect bottles. In production, if a bottle photo reconstructs poorly (high error), it\'s flagged for a human — even if the defect is a type nobody labeled. Missing cap, off-center label, chipped glass all show up as high reconstruction error.',
+      connection: 'Anomaly detection via reconstruction error — one of the most reliable industrial uses of unsupervised deep learning.',
+    },
+  ],
+  'diffusion': [
+    {
+      icon: '🎨', title: 'DALL·E and Midjourney turning "a corgi astronaut" into pixels',
+      story: 'You type a wild prompt and 10 seconds later a photorealistic corgi in a spacesuit appears. Under the hood, the system starts with a canvas of pure random noise, then a network trained on billions of image-caption pairs subtracts predicted noise 30–50 times, each step nudging the noise toward "things captioned like your prompt." The corgi materializes.',
+      connection: 'That\'s diffusion in production. The T-step reverse denoising you saw is literally this process, just with the noise-predictor trained on internet-scale data.',
+    },
+    {
+      icon: '🎵', title: 'Music and video generators using the same trick',
+      story: 'OpenAI\'s Sora generates minute-long HD video from text. Suno makes original songs from a prompt. Both use the same "learn to reverse noise" recipe as image diffusion — just applied to different data (video tensors, audio spectrograms). The neural network changes; the mechanism is identical.',
+      connection: 'Diffusion isn\'t image-specific. Any high-dimensional continuous data can be corrupted with noise and taught to be reversed. That\'s why 2023-2025 saw an explosion in generative media.',
+    },
+  ],
+  'fine-tuning': [
+    {
+      icon: '⚖️', title: 'A law firm\'s in-house LLM assistant',
+      story: 'A boutique firm can\'t train a foundation model — but they can spend $200 of GPU time to LoRA-fine-tune Llama 3 on 5,000 anonymized past briefs. The result: an assistant that writes in their house style, cites the case types they actually litigate, and uses their firm\'s section-numbering conventions. A general-purpose LLM sounded like a college student; the fine-tuned one sounds like their senior associates.',
+      connection: 'LoRA touches ~1% of parameters — enough to teach style and format without wiping out the base model\'s general knowledge.',
+    },
+    {
+      icon: '🎮', title: 'Open-source model hubs full of hobbyist LoRAs',
+      story: 'Browse Hugging Face and you\'ll find thousands of LoRA adapters for Stable Diffusion and Llama — each one a few megabytes trained by one person over a weekend on a gaming GPU. "Wes Anderson style", "medical terminology assistant", "SQL-only responses". You download the tiny adapter, layer it on top of the base model, and get a specialized model without downloading a whole new one.',
+      connection: 'Hot-swappable specializations. LoRA turned model customization into a community craft, not a corporate-only capability.',
+    },
+  ],
+  'rag': [
+    {
+      icon: '💼', title: 'Every corporate "chat with our docs" tool built since 2023',
+      story: 'A company gives their support team an AI chat that answers questions from the internal wiki, product manuals, and past ticket resolutions. The LLM was never trained on any of it — instead, at each question, an embedding lookup finds the top-3 relevant snippets and feeds them into the prompt. When a policy changes, they re-embed one document; the assistant is instantly up-to-date.',
+      connection: 'That\'s RAG. Fresh knowledge, no retraining, native citations. It\'s the default architecture for enterprise LLM apps.',
+    },
+    {
+      icon: '⚖️', title: 'Perplexity, You.com, and every "AI search" product',
+      story: 'You ask a question about last night\'s election result. A conventional LLM would either refuse ("my training cut off") or hallucinate. A RAG-powered search engine hits a fresh web index, retrieves the top articles, and hands them to the LLM as context. The answer arrives with clickable citations — often less than a second later.',
+      connection: 'RAG turned LLMs from static knowledge bases into live-web reasoners. Same trick, planet-scale index.',
+    },
+  ],
 };

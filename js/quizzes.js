@@ -187,4 +187,44 @@ export const QUIZZES = {
     { q: 'Raising the temperature makes generation…', opts: ['More random and creative', 'More accurate', 'Faster'], correct: 0, why: 'Temperature reshapes the probability distribution before sampling: low = greedy and repetitive, high = chaotic.' },
     { q: 'Hallucinations happen because…', opts: ['The GPU overheats', 'The model always samples some fluent token, with no built-in "I don\'t know" state', 'The context window is full'], correct: 1, why: 'Fluency is not truth — the sampling loop produces plausible text even where training data gives no support.' },
   ],
+  'ensemble-methods': [
+    { q: 'What is the core difference between bagging and boosting?', opts: ['Bagging is faster', 'Bagging trains models in parallel on random samples; boosting trains sequentially, each fixing prior mistakes', 'Bagging uses more memory'], correct: 1, why: 'Bagging reduces variance by averaging independent models; boosting reduces bias by chaining focused corrections.' },
+    { q: 'Random Forest is bagging plus...', opts: ['deep networks', 'random subsets of features at each split', 'reinforcement learning'], correct: 1, why: 'Random feature subsets prevent all trees from copying the same dominant feature, giving true diversity.' },
+    { q: 'For most tabular data problems, the strongest baseline is usually...', opts: ['A deep neural network', 'Gradient-boosted trees (XGBoost / LightGBM)', 'K-Means'], correct: 1, why: 'Neural nets dominate images/audio/text. On spreadsheets, boosted trees still routinely win.' },
+  ],
+  'cross-validation': [
+    { q: 'Why is K-fold cross-validation better than a single train/test split?', opts: ['It trains a bigger model', 'You get an estimate from K different splits, so lucky/unlucky splits are averaged out', 'It removes the need for a test set'], correct: 1, why: 'One split gives one number that depends on which points landed in test. K rotations average that away and give a spread too.' },
+    { q: 'You fit StandardScaler on the full dataset before running K-fold. What is wrong?', opts: ['Nothing', 'Data leakage - the scaler saw information from the test folds during their turns', 'It uses too much memory'], correct: 1, why: 'The scaler statistics were computed with test-fold data included, inflating scores. Fit the scaler inside the fold (or inside a Pipeline).' },
+    { q: 'Nested cross-validation is used to...', opts: ['Speed up training', 'Tune hyperparameters without leaking test-fold information into that tuning', 'Handle imbalanced classes'], correct: 1, why: 'Outer loop evaluates; inner loop (on each outer training set) picks hyperparameters - no cheating.' },
+  ],
+  'bayes-theorem': [
+    { q: 'A test is 99% accurate for a disease affecting 1% of people. You test positive. Your rough chance of having the disease is...', opts: ['~99%', '~50%', '~9%'], correct: 1, why: 'False positives from the huge healthy population roughly equal true positives from the tiny sick population.' },
+    { q: 'The prior probability P(H) represents...', opts: ['The probability of the evidence', 'What you believed about H before seeing the new evidence', 'The likelihood the evidence is wrong'], correct: 1, why: 'Bayes turns prior belief into posterior belief using the evidence likelihood.' },
+    { q: 'Two identical positive tests for a rare disease. Compared to one positive test, your posterior belief should...', opts: ['Stay the same', 'Roughly multiply the odds again (compound evidence)', 'Reset to the prior'], correct: 1, why: 'Independent pieces of evidence each multiply the odds - that is why multiple independent tests are so much stronger than one.' },
+  ],
+  'feature-engineering': [
+    { q: 'On the XOR demo, adding the feature x*y made a linear model jump from ~50% to ~99% accuracy because...', opts: ['The model became nonlinear', 'The new feature is directly predictive; the linear model just had to weight it', 'The dataset shrank'], correct: 1, why: 'The algorithm did not change; the input features did. Encoding domain knowledge as features is the essence of feature engineering.' },
+    { q: 'One-hot encoding is a bad choice when the categorical variable has...', opts: ['Only 3 categories', 'Millions of unique values (like user IDs)', 'A natural order'], correct: 1, why: 'Millions of columns is infeasible; use embeddings or target encoding instead.' },
+    { q: 'The #1 leakage trap in feature engineering is...', opts: ['Using too few features', 'Building features (aggregates, target encodings) using data from the future or the test set', 'Using too many features'], correct: 1, why: 'A feature that could not have been known at inference time will inflate CV scores and destroy production performance.' },
+  ],
+  autoencoders: [
+    { q: 'Why does an autoencoder need a bottleneck narrower than its input?', opts: ['It runs faster', 'Without a bottleneck it would just copy input to output and learn nothing useful', 'It uses less memory'], correct: 1, why: 'The narrow middle forces the network to discover a compressed code that captures what matters.' },
+    { q: 'A denoising autoencoder is trained by...', opts: ['Making the bottleneck bigger', 'Feeding corrupted inputs and asking the network to reconstruct the clean original', 'Removing the decoder'], correct: 1, why: 'The corruption/reconstruction game forces the network to learn what parts of the input are signal vs noise.' },
+    { q: 'Stable Diffusion runs its expensive diffusion process in a compressed latent space produced by a VAE. Why?', opts: ['To improve accuracy', 'Because diffusing a small 64x64 latent is much cheaper than a 512x512 pixel image, at similar quality', 'To reduce hallucinations'], correct: 1, why: 'A pretrained VAE shrinks the tensor ~48x, so all downstream compute is much cheaper.' },
+  ],
+  diffusion: [
+    { q: 'What does a diffusion model actually learn to predict?', opts: ['The pixel values of the final image', 'The noise that was added at each step', 'A label for the image'], correct: 1, why: 'Predicting noise gives a stable, mean-zero target; the reverse process subtracts predicted noise step by step.' },
+    { q: 'Classifier-free guidance controls...', opts: ['The image resolution', 'How strongly the model steers toward the text prompt vs producing a generic sample', 'The number of training steps'], correct: 1, why: 'Higher guidance = more literal, less creative output. It is the prompt weight every UI exposes.' },
+    { q: 'Why did diffusion mostly replace GANs for text-to-image generation?', opts: ['Diffusion is faster to sample', 'Diffusion trains stably with a simple MSE loss - no adversarial min-max collapse', 'GANs need bigger networks'], correct: 1, why: 'GAN training is notoriously flaky; diffusion stable MSE loss scaled up cleanly to billions of images.' },
+  ],
+  'fine-tuning': [
+    { q: 'LoRA adds trainable low-rank matrices A and B such that...', opts: ['B dot A is added to a frozen base weight matrix W', 'W is replaced entirely by A dot B', 'The optimizer is changed'], correct: 0, why: 'The base weights stay frozen; only the tiny A and B get gradients. Total trainable params drop to ~1% of the base.' },
+    { q: 'QLoRA extends LoRA by...', opts: ['Adding more layers', 'Quantizing the frozen base weights to 4 bits, letting a 65B model fit on one 48GB GPU', 'Removing the decoder'], correct: 1, why: 'The base does not need gradients so its precision can be dropped; the LoRA adapters stay in bf16 for training stability.' },
+    { q: 'You need the LLM to answer questions about last night news. Which should you reach for first?', opts: ['LoRA fine-tune', 'RAG (retrieval-augmented generation)', 'QLoRA'], correct: 1, why: 'RAG handles fresh, changing facts. Fine-tuning is for style, format, or narrow-domain skills.' },
+  ],
+  rag: [
+    { q: 'What are the three steps of a RAG pipeline?', opts: ['Train, validate, deploy', 'Retrieve, augment, generate', 'Encode, decode, compare'], correct: 1, why: 'Embed and retrieve top-k chunks -> augment the prompt with them -> generate the grounded answer.' },
+    { q: 'A key advantage of RAG over fine-tuning for factual QA is...', opts: ['RAG models are smaller', 'Updates are instant (re-embed the doc) and answers can cite specific sources', 'RAG uses less GPU'], correct: 1, why: 'Fine-tuned knowledge is baked into weights, uncitable, and expensive to update. RAG updates in seconds.' },
+    { q: 'Hybrid search in RAG combines...', opts: ['Text and image models', 'Keyword (BM25) and dense semantic embeddings, often via reciprocal-rank fusion', 'GPUs and CPUs'], correct: 1, why: 'Keyword search catches exact terms; semantic search catches meaning. Combining them beats either alone.' },
+  ],
 };

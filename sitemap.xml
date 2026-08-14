@@ -2,313 +2,361 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/intro/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/supervised-learning/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/unsupervised-learning/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/reinforcement-learning/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/data-features/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ashishyadavstudio.github.io/ML-Playground/feature-engineering/</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ashishyadavstudio.github.io/ML-Playground/bayes-theorem/</loc>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/linear-regression/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/gradient-descent/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/overfitting/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ashishyadavstudio.github.io/ML-Playground/cross-validation/</loc>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/metrics/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/python-intro/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/python-variables/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/python-collections/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/python-control/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/python-functions/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/python-basics/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/python-advanced/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/numpy/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/pandas/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/dataviz/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/ml-code/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/logistic-regression/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/knn/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/svm/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/naive-bayes/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/decision-trees/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ashishyadavstudio.github.io/ML-Playground/ensemble-methods/</loc>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/kmeans/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/pca/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/neural-networks/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/activations/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/backprop/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/optimizers/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ashishyadavstudio.github.io/ML-Playground/autoencoders/</loc>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/cnn/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/rnn/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/transformers/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/embeddings/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/generative/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ashishyadavstudio.github.io/ML-Playground/diffusion/</loc>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/llms/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ashishyadavstudio.github.io/ML-Playground/fine-tuning/</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ashishyadavstudio.github.io/ML-Playground/rag/</loc>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/gradient-descent-golf/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/fit-the-line/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/cluster-quest/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/gridworld-quest/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/overfit-or-not/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/knn-detective/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/draw-the-boundary/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/decision-tree-20-questions/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/neuron-wiring/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/rotate-to-compress/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/attention-spotlight/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/word-analogy/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://ashishyadavstudio.github.io/ML-Playground/games/confusion-matrix-blitz/</loc>
-    <lastmod>2026-08-06</lastmod>
+    <lastmod>2026-08-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

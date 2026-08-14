@@ -6,9 +6,12 @@ import supervisedLearning from './lessons/supervised-learning.js';
 import unsupervisedLearning from './lessons/unsupervised-learning.js';
 import reinforcementLearning from './lessons/reinforcement-learning.js';
 import dataFeatures from './lessons/data-features.js';
+import featureEngineering from './lessons/feature-engineering.js';
 import linearRegression from './lessons/linear-regression.js';
 import gradientDescent from './lessons/gradient-descent.js';
 import overfitting from './lessons/overfitting.js';
+import crossValidation from './lessons/cross-validation.js';
+import bayesTheorem from './lessons/bayes-theorem.js';
 import metrics from './lessons/metrics.js';
 import pythonIntro from './lessons/python-intro.js';
 import pythonVariables from './lessons/python-variables.js';
@@ -30,25 +33,30 @@ import knn from './lessons/knn.js';
 import svm from './lessons/svm.js';
 import naiveBayes from './lessons/naive-bayes.js';
 import decisionTrees from './lessons/decision-trees.js';
+import ensembleMethods from './lessons/ensemble-methods.js';
 import kmeans from './lessons/kmeans.js';
 import pca from './lessons/pca.js';
 import neuralNetworks from './lessons/neural-networks.js';
 import activations from './lessons/activations.js';
 import backprop from './lessons/backprop.js';
 import optimizers from './lessons/optimizers.js';
+import autoencoders from './lessons/autoencoders.js';
 import cnn from './lessons/cnn.js';
 import rnn from './lessons/rnn.js';
 import transformers from './lessons/transformers.js';
 import embeddings from './lessons/embeddings.js';
 import generative from './lessons/generative.js';
+import diffusion from './lessons/diffusion.js';
 import llms from './lessons/llms.js';
+import fineTuning from './lessons/fine-tuning.js';
+import rag from './lessons/rag.js';
 
 export const SECTIONS = [
-  { name: '🌱 Foundations', short: 'Foundations', lessons: [intro, supervisedLearning, unsupervisedLearning, reinforcementLearning, dataFeatures, linearRegression, gradientDescent, overfitting, metrics] },
+  { name: '🌱 Foundations', short: 'Foundations', lessons: [intro, supervisedLearning, unsupervisedLearning, reinforcementLearning, dataFeatures, featureEngineering, bayesTheorem, linearRegression, gradientDescent, overfitting, crossValidation, metrics] },
   { name: '🐍 Python for ML', short: 'Python for ML', lessons: [pythonIntro, pythonVariables, pythonCollections, pythonControl, pythonFunctions, pythonBasics, pythonAdvanced, numpy, pandas, dataviz, mlCode] },
-  { name: '📊 Classical ML', short: 'Classical ML', lessons: [logisticRegression, knn, svm, naiveBayes, decisionTrees, kmeans, pca] },
-  { name: '🧠 Deep Learning', short: 'Deep Learning', lessons: [neuralNetworks, activations, backprop, optimizers] },
-  { name: '🚀 Advanced', short: 'Advanced & GenAI', lessons: [cnn, rnn, transformers, embeddings, generative, llms] },
+  { name: '📊 Classical ML', short: 'Classical ML', lessons: [logisticRegression, knn, svm, naiveBayes, decisionTrees, ensembleMethods, kmeans, pca] },
+  { name: '🧠 Deep Learning', short: 'Deep Learning', lessons: [neuralNetworks, activations, backprop, optimizers, autoencoders] },
+  { name: '🚀 Advanced', short: 'Advanced & GenAI', lessons: [cnn, rnn, transformers, embeddings, generative, diffusion, llms, fineTuning, rag] },
 ];
 
 const ALL = SECTIONS.flatMap(s => s.lessons.map(l => ({ ...l, sectionName: s.name })));
@@ -160,6 +168,35 @@ const CONCEPTS = [
   ['softmax', 'activations'],
   ['momentum', 'optimizers'],
   ['comprehension', 'python-advanced'],
+  ['ensemble', 'ensemble-methods'],
+  ['random forest', 'ensemble-methods'],
+  ['random forests', 'ensemble-methods'],
+  ['gradient boosting', 'ensemble-methods'],
+  ['boosting', 'ensemble-methods'],
+  ['bagging', 'ensemble-methods'],
+  ['cross-validation', 'cross-validation'],
+  ['k-fold', 'cross-validation'],
+  ['bayes theorem', 'bayes-theorem'],
+  ["bayes' theorem", 'bayes-theorem'],
+  ['posterior', 'bayes-theorem'],
+  ['prior probability', 'bayes-theorem'],
+  ['feature engineering', 'feature-engineering'],
+  ['one-hot', 'feature-engineering'],
+  ['target encoding', 'feature-engineering'],
+  ['autoencoder', 'autoencoders'],
+  ['autoencoders', 'autoencoders'],
+  ['bottleneck', 'autoencoders'],
+  ['denoising autoencoder', 'autoencoders'],
+  ['diffusion model', 'diffusion'],
+  ['diffusion models', 'diffusion'],
+  ['stable diffusion', 'diffusion'],
+  ['fine-tune', 'fine-tuning'],
+  ['fine-tuning', 'fine-tuning'],
+  ['LoRA', 'fine-tuning', true],
+  ['QLoRA', 'fine-tuning', true],
+  ['retrieval-augmented', 'rag'],
+  ['vector database', 'rag'],
+  ['RAG', 'rag', true],
   // case-sensitive acronyms / proper names
   ['SVM', 'svm', true],
   ['CNN', 'cnn', true],
@@ -176,6 +213,13 @@ const CONCEPTS = [
   ['NumPy', 'numpy', true],
   ['Adam', 'optimizers', true],
   ['SGD', 'optimizers', true],
+  ['XGBoost', 'ensemble-methods', true],
+  ['LightGBM', 'ensemble-methods', true],
+  ['CatBoost', 'ensemble-methods', true],
+  ['VAE', 'autoencoders', true],
+  ['MAE', 'autoencoders', true],
+  ['DDPM', 'diffusion', true],
+  ['RAG', 'rag', true],
 ];
 
 const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

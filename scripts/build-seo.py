@@ -17,8 +17,9 @@ SITE_URL = "https://ashishyadavstudio.github.io/ML-Playground"
 SECTIONS = [
     ("🌱 Foundations", [
         "intro", "supervised-learning", "unsupervised-learning",
-        "reinforcement-learning", "data-features", "linear-regression",
-        "gradient-descent", "overfitting", "metrics",
+        "reinforcement-learning", "data-features", "feature-engineering",
+        "bayes-theorem", "linear-regression", "gradient-descent",
+        "overfitting", "cross-validation", "metrics",
     ]),
     ("🐍 Python for ML", [
         "python-intro", "python-variables", "python-collections",
@@ -27,13 +28,15 @@ SECTIONS = [
     ]),
     ("📊 Classical ML", [
         "logistic-regression", "knn", "svm", "naive-bayes",
-        "decision-trees", "kmeans", "pca",
+        "decision-trees", "ensemble-methods", "kmeans", "pca",
     ]),
     ("🧠 Deep Learning", [
         "neural-networks", "activations", "backprop", "optimizers",
+        "autoencoders",
     ]),
     ("🚀 Advanced", [
-        "cnn", "rnn", "transformers", "embeddings", "generative", "llms",
+        "cnn", "rnn", "transformers", "embeddings", "generative",
+        "diffusion", "llms", "fine-tuning", "rag",
     ]),
 ]
 
@@ -218,7 +221,7 @@ def build_pages(sections):
                 json_desc='"' + desc.replace('"', '\\"') + '"',
                 section_name=esc(strip_html(section_name)),
                 h1_title=esc("{emoji} {title}".format(**meta)),
-                css_url="../css/style.css?v=12",
+                css_url="../css/style.css?v=13",
                 js_url="../js/app.js",
             )
 
