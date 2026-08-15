@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ashishyadavstudio.github.io/ML-Playground/sitemap.xml
+Sitemap: https://mlplayground.co.in/sitemap.xml

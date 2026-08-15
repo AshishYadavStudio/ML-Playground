@@ -89,6 +89,6 @@
     <rect x="0" y="0" width="52" height="52" rx="14" fill="url(#chipBg)"/>
     <text x="26" y="36" text-anchor="middle" font-family="Segoe UI Emoji, sans-serif" font-size="26">🧠</text>
     <text x="72" y="28" font-family="Sora, Inter, sans-serif" font-size="24" font-weight="800" fill="#eaf0fa">ML Playground</text>
-    <text x="72" y="52" font-family="Inter, sans-serif" font-size="15" fill="#8b96b2">ashishyadavstudio.github.io/ML-Playground</text>
+    <text x="72" y="52" font-family="Inter, sans-serif" font-size="15" fill="#8b96b2">mlplayground.co.in</text>
   </g>
 </svg>

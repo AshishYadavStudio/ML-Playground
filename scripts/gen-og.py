@@ -189,7 +189,7 @@ def draw_brand_strip(img, x, y):
     d.text((x + 76, y + 4), "ML Playground", font=font(26, bold=True), fill=TEXT)
     d.text(
         (x + 76, y + 34),
-        "ashishyadavstudio.github.io/ML-Playground",
+        "mlplayground.co.in",
         font=font(15),
         fill=MUTE,
     )

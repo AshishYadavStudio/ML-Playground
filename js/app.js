@@ -62,7 +62,9 @@ export const SECTIONS = [
 const ALL = SECTIONS.flatMap(s => s.lessons.map(l => ({ ...l, sectionName: s.name })));
 
 // ---- URL model: real paths (SEO-friendly) with hash-URL backwards compat ----
-// Production: /ML-Playground/<lesson-id>/   Localhost dev: /<lesson-id>/
+// Custom domain (mlplayground.co.in) and localhost both serve at /.
+// The old /ML-Playground/ prefix (project-pages URL) is kept as a redirect
+// for any inbound links from before the custom domain was set up.
 const BASE_PATH = (function () {
   const p = location.pathname;
   if (p.startsWith('/ML-Playground/') || p === '/ML-Playground') return '/ML-Playground';

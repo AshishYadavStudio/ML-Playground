@@ -11,7 +11,7 @@ from datetime import datetime
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 LESSONS_DIR = os.path.join(ROOT, "js", "lessons")
-SITE_URL = "https://ashishyadavstudio.github.io/ML-Playground"
+SITE_URL = "https://mlplayground.co.in"
 
 # ---------- lesson order (mirrors js/app.js SECTIONS) ----------
 SECTIONS = [
