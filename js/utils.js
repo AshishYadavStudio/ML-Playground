@@ -55,10 +55,38 @@ export function pyCode(code, opts = {}) {
   const box = document.createElement('div');
   box.className = 'code-block';
   box.innerHTML = `
-    ${opts.title ? `<div class="code-title"><span class="code-dots"><i></i><i></i><i></i></span>${esc(opts.title)}</div>` : ''}
+    <div class="code-title">
+      <span class="code-dots"><i></i><i></i><i></i></span>
+      ${opts.title ? esc(opts.title) : ''}
+      <button type="button" class="code-copy" aria-label="Copy code to clipboard">📋 Copy</button>
+    </div>
     <pre class="code-body">${lines.map((l, i) => `<span class="code-ln">${i + 1}</span>${highlight(l) || ' '}`).join('\n')}</pre>
     ${opts.output != null ? `<div class="code-output"><span class="code-out-label">▸ output</span>\n${esc(opts.output)}</div>` : ''}
   `;
+  const copyBtn = box.querySelector('.code-copy');
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      copyBtn.classList.add('copied');
+      copyBtn.textContent = '✓ Copied';
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.textContent = '📋 Copy';
+      }, 1500);
+    } catch {
+      // fallback for older browsers / non-secure contexts
+      const ta = document.createElement('textarea');
+      ta.value = code;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); copyBtn.textContent = '✓ Copied'; } catch { copyBtn.textContent = '⚠ Failed'; }
+      document.body.removeChild(ta);
+      copyBtn.classList.add('copied');
+      setTimeout(() => { copyBtn.classList.remove('copied'); copyBtn.textContent = '📋 Copy'; }, 1500);
+    }
+  });
   return box;
 }
 

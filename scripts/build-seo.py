@@ -172,6 +172,16 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
       </div>
     </aside>
     <button id="menu-toggle" aria-label="Toggle menu">☰</button>
+    <div id="floating-actions">
+      <button id="fab-search" class="fab" aria-label="Search (Ctrl+K)" title="Search (Ctrl+K)">
+        <span aria-hidden="true">🔍</span>
+        <span class="fab-hint">Ctrl K</span>
+      </button>
+      <a id="fab-feedback" class="fab fab-feedback" href="https://forms.gle/9SLERvXiKTcY4TuFA" target="_blank" rel="noopener" aria-label="Share feedback" title="Share feedback">
+        <span aria-hidden="true">💬</span>
+        <span class="fab-label">Feedback</span>
+      </a>
+    </div>
     <main id="content">
       <!-- Static crawlable content for SEO — replaced by the SPA once JS loads. -->
       <noscript>
@@ -221,7 +231,7 @@ def build_pages(sections):
                 json_desc='"' + desc.replace('"', '\\"') + '"',
                 section_name=esc(strip_html(section_name)),
                 h1_title=esc("{emoji} {title}".format(**meta)),
-                css_url="../css/style.css?v=13",
+                css_url="../css/style.css?v=15",
                 js_url="../js/app.js",
             )
 

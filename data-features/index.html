@@ -68,7 +68,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../css/style.css?v=13" />
+  <link rel="stylesheet" href="../css/style.css?v=15" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
 </head>
 <body>
@@ -94,6 +94,16 @@
       </div>
     </aside>
     <button id="menu-toggle" aria-label="Toggle menu">☰</button>
+    <div id="floating-actions">
+      <button id="fab-search" class="fab" aria-label="Search (Ctrl+K)" title="Search (Ctrl+K)">
+        <span aria-hidden="true">🔍</span>
+        <span class="fab-hint">Ctrl K</span>
+      </button>
+      <a id="fab-feedback" class="fab fab-feedback" href="https://forms.gle/9SLERvXiKTcY4TuFA" target="_blank" rel="noopener" aria-label="Share feedback" title="Share feedback">
+        <span aria-hidden="true">💬</span>
+        <span class="fab-label">Feedback</span>
+      </a>
+    </div>
     <main id="content">
       <!-- Static crawlable content for SEO — replaced by the SPA once JS loads. -->
       <noscript>

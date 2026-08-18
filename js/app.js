@@ -678,8 +678,14 @@ function buildFooter() {
           ['Gradient Descent Golf', gamesUrl('gradient-descent-golf')],
           ['Neuron Wiring: XOR', gamesUrl('neuron-wiring')],
         ]),
-        colLinks('💬 Feedback', [
-          ['Share your thoughts →', 'https://forms.gle/9SLERvXiKTcY4TuFA'],
+        h('div', { class: 'foot-col' }, [
+          h('h5', {}, '💬 Feedback'),
+          h('a', {
+            href: 'https://forms.gle/9SLERvXiKTcY4TuFA',
+            target: '_blank',
+            rel: 'noopener',
+            class: 'foot-feedback-btn',
+          }, ['📝 Share your thoughts', h('span', {}, '→')]),
         ]),
       ]),
     ]),
@@ -913,4 +919,161 @@ document.addEventListener('click', e => {
   navigateTo(id);
 });
 document.getElementById('menu-toggle').addEventListener('click', () => sidebar.classList.toggle('open'));
+
+// ============ Site-wide search (Ctrl-K / Cmd-K) ============
+// Index: every lesson + every game as one flat searchable list.
+const SEARCH_INDEX = [
+  ...ALL.map(l => ({
+    kind: 'lesson', emoji: l.emoji, title: l.title, blurb: l.blurb,
+    section: l.sectionName, url: lessonUrl(l.id),
+    haystack: (l.title + ' ' + l.blurb + ' ' + l.sectionName + ' ' + l.id).toLowerCase(),
+  })),
+  ...GAMES.map(g => ({
+    kind: 'game', emoji: g.emoji, title: g.title, blurb: g.blurb,
+    section: 'Game', url: gamesUrl(g.slug),
+    haystack: (g.title + ' ' + g.blurb + ' game ' + g.slug).toLowerCase(),
+  })),
+];
+
+let searchOverlay, searchInput, searchResults, searchActive = -1, searchCurrent = [];
+
+function buildSearchOverlay() {
+  if (searchOverlay) return;
+  searchOverlay = h('div', { id: 'search-overlay', role: 'dialog', 'aria-label': 'Search' }, [
+    h('div', { id: 'search-panel' }, [
+      h('div', { id: 'search-input-row' }, [
+        h('span', { class: 'search-icon' }, '🔍'),
+        (searchInput = h('input', { id: 'search-input', type: 'text', placeholder: 'Search 45 lessons + 13 games…', autocomplete: 'off', spellcheck: 'false' })),
+        h('button', { id: 'search-close', 'aria-label': 'Close search', onclick: closeSearch }, 'Esc'),
+      ]),
+      (searchResults = h('div', { id: 'search-results' })),
+      h('div', { id: 'search-footer' }, [
+        h('span', {}, [h('kbd', {}, '↑'), h('kbd', {}, '↓'), ' navigate']),
+        h('span', {}, [h('kbd', {}, '↵'), ' open']),
+        h('span', {}, [h('kbd', {}, 'Esc'), ' close']),
+      ]),
+    ]),
+  ]);
+  document.body.appendChild(searchOverlay);
+  searchOverlay.addEventListener('click', e => { if (e.target === searchOverlay) closeSearch(); });
+  searchInput.addEventListener('input', renderSearch);
+  searchInput.addEventListener('keydown', onSearchKey);
+}
+
+function openSearch() {
+  buildSearchOverlay();
+  searchOverlay.classList.add('open');
+  searchInput.value = '';
+  searchActive = 0;
+  renderSearch();
+  setTimeout(() => searchInput.focus(), 30);
+}
+function closeSearch() {
+  if (searchOverlay) searchOverlay.classList.remove('open');
+}
+
+function highlightMatch(text, terms) {
+  if (!terms.length) return text;
+  const re = new RegExp('(' + terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+  return text.replace(re, '<mark>$1</mark>');
+}
+
+function renderSearch() {
+  const q = searchInput.value.trim().toLowerCase();
+  const terms = q ? q.split(/\s+/).filter(Boolean) : [];
+  let results;
+  if (!terms.length) {
+    // default: show a few popular lessons + games
+    results = SEARCH_INDEX.filter(x => ['neural-networks', 'llms', 'transformers', 'gradient-descent', 'ensemble-methods', 'rag'].some(id => x.url.includes('/' + id + '/'))).slice(0, 6);
+  } else {
+    results = SEARCH_INDEX
+      .map(x => {
+        let score = 0;
+        for (const t of terms) {
+          if (!x.haystack.includes(t)) return null;
+          if (x.title.toLowerCase().includes(t)) score += 10;
+          if (x.blurb.toLowerCase().includes(t)) score += 3;
+          if (x.section.toLowerCase().includes(t)) score += 2;
+          score += 1;
+        }
+        return { x, score };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.score - a.score)
+      .map(r => r.x)
+      .slice(0, 12);
+  }
+  searchCurrent = results;
+  searchActive = Math.min(searchActive, Math.max(0, results.length - 1));
+  if (!results.length) {
+    searchResults.innerHTML = '<div class="search-empty">No matches for <b>' + q.replace(/[<>&]/g, '') + '</b>. Try a shorter or different word.</div>';
+    return;
+  }
+  searchResults.innerHTML = results.map((r, i) => `
+    <a class="search-result${i === searchActive ? ' active' : ''}" href="${r.url}" data-i="${i}">
+      <div class="sr-top">
+        <span class="sr-emoji">${r.emoji}</span>
+        <span class="sr-title">${highlightMatch(r.title, terms)}</span>
+        <span class="sr-badge${r.kind === 'game' ? ' game' : ''}">${r.kind === 'game' ? '🎮 Game' : r.section.replace(/^[^A-Za-z]+/, '')}</span>
+      </div>
+      <div class="sr-blurb">${highlightMatch(r.blurb, terms)}</div>
+    </a>
+  `).join('');
+  // hover to activate
+  searchResults.querySelectorAll('.search-result').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      searchActive = parseInt(el.dataset.i);
+      searchResults.querySelectorAll('.search-result').forEach((r, i) => r.classList.toggle('active', i === searchActive));
+    });
+    el.addEventListener('click', e => {
+      // Let the SPA click handler intercept for internal URLs; close overlay first
+      closeSearch();
+    });
+  });
+}
+
+function onSearchKey(e) {
+  if (e.key === 'Escape') { e.preventDefault(); closeSearch(); return; }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    searchActive = Math.min(searchActive + 1, searchCurrent.length - 1);
+    updateActive();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    searchActive = Math.max(searchActive - 1, 0);
+    updateActive();
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const target = searchCurrent[searchActive];
+    if (target) {
+      closeSearch();
+      // navigate via the same path the SPA link interceptor uses
+      const a = document.createElement('a');
+      a.href = target.url;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
+}
+function updateActive() {
+  const nodes = searchResults.querySelectorAll('.search-result');
+  nodes.forEach((n, i) => n.classList.toggle('active', i === searchActive));
+  const el = nodes[searchActive];
+  if (el) el.scrollIntoView({ block: 'nearest' });
+}
+
+// Global keyboard shortcut
+window.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    openSearch();
+  } else if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA' && !document.activeElement.isContentEditable) {
+    e.preventDefault();
+    openSearch();
+  }
+});
+const fabSearch = document.getElementById('fab-search');
+if (fabSearch) fabSearch.addEventListener('click', openSearch);
+
 route();
