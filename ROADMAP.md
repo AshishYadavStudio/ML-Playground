@@ -13,10 +13,10 @@ Living to-do list for mlplayground.co.in. Update as items ship or priorities shi
 ## Bigger lifts
 
 - [ ] **Next tier of lessons** (5–10 more): MLOps basics, Vision Transformers (ViT), DBSCAN & hierarchical clustering, Prompt Engineering, Graph Neural Networks, Time Series (ARIMA/seasonality), Hyperparameter tuning, Explainability (SHAP/LIME), Fairness & bias in ML
-- [ ] **Feedback form** — Google Form linked in footer for structured user feedback (separate from Giscus per-lesson comments)
 
 ## Shipped
 
+- [x] **Feedback form** — Google Form linked in footer for structured user feedback (separate from Giscus per-lesson comments)
 - [x] 45 interactive lessons across 5 sections (Foundations → Python → Classical ML → Deep Learning → Advanced/GenAI)
 - [x] 13 hands-on games (`/games/`), one per concept, linked from lessons + homepage
 - [x] Light/dark theming with framed-dark demo islands
