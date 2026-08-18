@@ -646,7 +646,9 @@ function buildNewsletter() {
 function buildFooter() {
   const colLinks = (title, links) => h('div', { class: 'foot-col' }, [
     h('h5', {}, title),
-    ...links.map(([label, href]) => h('a', { href }, label)),
+    ...links.map(([label, href]) => h('a',
+      href.startsWith('http') ? { href, target: '_blank', rel: 'noopener' } : { href },
+      label)),
   ]);
   return h('footer', { class: 'site-footer' }, [
     h('div', { class: 'foot-grid' }, [
@@ -676,11 +678,14 @@ function buildFooter() {
           ['Gradient Descent Golf', gamesUrl('gradient-descent-golf')],
           ['Neuron Wiring: XOR', gamesUrl('neuron-wiring')],
         ]),
+        colLinks('💬 Feedback', [
+          ['Share your thoughts →', 'https://forms.gle/9SLERvXiKTcY4TuFA'],
+        ]),
       ]),
     ]),
     buildNewsletter(),
     h('div', { class: 'foot-bottom' }, [
-      h('span', {}, '37 interactive lessons · beginner → expert · free forever'),
+      h('span', {}, '45 interactive lessons · beginner → expert · free forever'),
       h('span', {}, 'No frameworks, no installs, no fluff — just learning.'),
     ]),
   ]);
