@@ -27,6 +27,7 @@ import mlCode from './lessons/ml-code.js';
 import { QUIZZES } from './quizzes.js';
 import { EXAMPLES } from './examples.js';
 import { GISCUS, NEWSLETTER } from './config.js';
+let pyCell = null;
 import { GAMES } from '../games/games-data.js';
 import logisticRegression from './lessons/logistic-regression.js';
 import knn from './lessons/knn.js';
@@ -50,10 +51,11 @@ import diffusion from './lessons/diffusion.js';
 import llms from './lessons/llms.js';
 import fineTuning from './lessons/fine-tuning.js';
 import rag from './lessons/rag.js';
+import csvSandbox from './lessons/csv-sandbox.js';
 
 export const SECTIONS = [
   { name: '🌱 Foundations', short: 'Foundations', lessons: [intro, supervisedLearning, unsupervisedLearning, reinforcementLearning, dataFeatures, featureEngineering, bayesTheorem, linearRegression, gradientDescent, overfitting, crossValidation, metrics] },
-  { name: '🐍 Python for ML', short: 'Python for ML', lessons: [pythonIntro, pythonVariables, pythonCollections, pythonControl, pythonFunctions, pythonBasics, pythonAdvanced, numpy, pandas, dataviz, mlCode] },
+  { name: '🐍 Python for ML', short: 'Python for ML', lessons: [pythonIntro, pythonVariables, pythonCollections, pythonControl, pythonFunctions, pythonBasics, pythonAdvanced, numpy, pandas, dataviz, mlCode, csvSandbox] },
   { name: '📊 Classical ML', short: 'Classical ML', lessons: [logisticRegression, knn, svm, naiveBayes, decisionTrees, ensembleMethods, kmeans, pca] },
   { name: '🧠 Deep Learning', short: 'Deep Learning', lessons: [neuralNetworks, activations, backprop, optimizers, autoencoders] },
   { name: '🚀 Advanced', short: 'Advanced & GenAI', lessons: [cnn, rnn, transformers, embeddings, generative, diffusion, llms, fineTuning, rag] },
@@ -222,7 +224,156 @@ const CONCEPTS = [
   ['MAE', 'autoencoders', true],
   ['DDPM', 'diffusion', true],
   ['RAG', 'rag', true],
+  ['bring your own data', 'csv-sandbox'],
+  ['csv sandbox', 'csv-sandbox'],
+  ['upload csv', 'csv-sandbox'],
 ];
+
+const PYTHON_STARTERS = {
+  'python-intro': `# Your first Python program
+name = "ML Playground"
+print(f"Hello from {name}!")
+print(f"2 + 3 = {2 + 3}")`,
+
+  'python-variables': `# Try different variable types
+x = 42
+pi = 3.14159
+name = "neural network"
+is_training = True
+
+print(type(x), x)
+print(type(pi), pi)
+print(type(name), name)
+print(type(is_training), is_training)`,
+
+  'python-collections': `# Lists, dicts, and comprehensions
+scores = [85, 92, 78, 95, 88]
+print("Scores:", scores)
+print("Average:", sum(scores) / len(scores))
+print("Top 3:", sorted(scores, reverse=True)[:3])
+
+student = {"name": "Alex", "grade": "A", "score": 95}
+for key, val in student.items():
+    print(f"  {key}: {val}")`,
+
+  'python-control': `# Loops and conditionals
+for i in range(1, 6):
+    if i % 2 == 0:
+        print(f"{i} is even")
+    else:
+        print(f"{i} is odd")
+
+# While loop with break
+n = 1
+while True:
+    if n * n > 50:
+        print(f"{n}^2 = {n*n} > 50, stopping")
+        break
+    n += 1`,
+
+  'python-functions': `# Define and use functions
+def greet(name, excited=False):
+    msg = f"Hello, {name}!"
+    return msg.upper() if excited else msg
+
+print(greet("World"))
+print(greet("ML", excited=True))
+
+# Lambda + map
+nums = [1, 2, 3, 4, 5]
+squared = list(map(lambda x: x**2, nums))
+print("Squared:", squared)`,
+
+  'python-basics': `# Putting it together: a mini data pipeline
+data = [
+    {"name": "Alice", "score": 92},
+    {"name": "Bob", "score": 85},
+    {"name": "Carol", "score": 97},
+    {"name": "Dave", "score": 78},
+]
+
+avg = sum(d["score"] for d in data) / len(data)
+print(f"Class average: {avg:.1f}")
+
+top = [d["name"] for d in data if d["score"] > avg]
+print(f"Above average: {', '.join(top)}")`,
+
+  'python-advanced': `# Generators and decorators
+def fibonacci(n):
+    a, b = 0, 1
+    for _ in range(n):
+        yield a
+        a, b = b, a + b
+
+fibs = list(fibonacci(10))
+print("First 10 Fibonacci:", fibs)
+
+# List comprehension with condition
+evens = [x for x in fibs if x % 2 == 0]
+print("Even ones:", evens)`,
+
+  'numpy': `import numpy as np
+
+# Vectorized operations — no loops needed
+a = np.array([1, 2, 3, 4, 5])
+b = np.array([10, 20, 30, 40, 50])
+print("a + b =", a + b)
+print("a * b =", a * b)
+print("mean(a) =", np.mean(a))
+
+# Broadcasting: matrix + vector
+M = np.arange(12).reshape(3, 4)
+print("\\nMatrix:\\n", M)
+print("\\nRow means:", M.mean(axis=1))`,
+
+  'pandas': `import numpy as np
+
+# Simulated pandas-like operations with numpy
+# (pandas takes ~30s to load; numpy shows the same ideas)
+names = ["Alice", "Bob", "Carol", "Dave", "Eve"]
+scores = np.array([92, 85, 97, 78, 91])
+hours = np.array([12, 8, 15, 6, 11])
+
+print("Student data:")
+for n, s, h in zip(names, scores, hours):
+    print(f"  {n}: score={s}, hours={h}")
+
+print(f"\\nAverage score: {scores.mean():.1f}")
+print(f"Score std dev: {scores.std():.1f}")
+print(f"Correlation (hours vs score): {np.corrcoef(hours, scores)[0,1]:.3f}")`,
+
+  'dataviz': `import numpy as np
+
+# Generate data for a scatter plot pattern
+np.random.seed(42)
+n = 20
+x = np.linspace(0, 10, n)
+y = 2.5 * x + np.random.randn(n) * 3
+
+print("x:", np.round(x[:5], 2), "...")
+print("y:", np.round(y[:5], 2), "...")
+print(f"Correlation: {np.corrcoef(x, y)[0,1]:.3f}")
+print(f"Best fit: y = {np.polyfit(x, y, 1)[0]:.2f}x + {np.polyfit(x, y, 1)[1]:.2f}")`,
+
+  'ml-code': `import numpy as np
+
+# Mini linear regression from scratch
+np.random.seed(42)
+X = np.random.rand(50) * 10
+y = 3 * X + 7 + np.random.randn(50) * 2
+
+# Gradient descent
+w, b, lr = 0.0, 0.0, 0.01
+for epoch in range(200):
+    pred = w * X + b
+    error = pred - y
+    w -= lr * (2/len(X)) * np.dot(error, X)
+    b -= lr * (2/len(X)) * error.sum()
+
+print(f"Learned: y = {w:.2f}x + {b:.2f}")
+print(f"True:    y = 3.00x + 7.00")
+print(f"Final MSE: {np.mean((w*X + b - y)**2):.3f}")`,
+};
 
 const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const CONCEPT_TERMS = CONCEPTS
@@ -488,6 +639,33 @@ function buildGamesHighlight() {
   ]);
 }
 
+// ---- Sandbox highlight (homepage) ----
+function buildSandboxHighlight() {
+  return h('div', { class: 'sandbox-highlight' }, [
+    h('div', { class: 'sandbox-highlight-head' }, [
+      h('div', {}, [
+        h('span', { class: 'sandbox-highlight-badge' }, '🆕 New: hands-on sandboxes'),
+        h('h3', {}, 'Write real Python & train on your own data'),
+        h('p', {}, "No installs, no sign-ups. Python runs in your browser via WebAssembly, and your CSV never leaves your machine. Drop in data, pick an algorithm, watch it learn."),
+      ]),
+    ]),
+    h('div', { class: 'sandbox-highlight-cards' }, [
+      h('a', { class: 'sandbox-card', href: lessonUrl('python-intro') }, [
+        h('div', { class: 'sandbox-card-emoji' }, '🐍'),
+        h('h4', {}, 'Python in the Browser'),
+        h('p', {}, 'Every Python lesson now has a live code cell powered by Pyodide. Edit, run, experiment — real NumPy, real output, zero setup.'),
+        h('span', { class: 'sandbox-card-arrow' }, 'Try it →'),
+      ]),
+      h('a', { class: 'sandbox-card', href: lessonUrl('csv-sandbox') }, [
+        h('div', { class: 'sandbox-card-emoji' }, '📂'),
+        h('h4', {}, 'Bring Your Own CSV'),
+        h('p', {}, 'Drop any CSV and watch linear regression, KNN, or K-Means train live on your data. Everything stays in your browser.'),
+        h('span', { class: 'sandbox-card-arrow' }, 'Open sandbox →'),
+      ]),
+    ]),
+  ]);
+}
+
 // ---- Comments (Giscus → GitHub Discussions) ----
 function buildComments(lessonId) {
   const configured = GISCUS.repoId && !GISCUS.repoId.startsWith('REPLACE_')
@@ -672,6 +850,7 @@ function buildFooter() {
           ['Full curriculum', lessonUrl('home')],
           ['Evaluation Metrics', lessonUrl('metrics')],
           ['Optimizers', lessonUrl('optimizers')],
+          ['BYO CSV Sandbox', lessonUrl('csv-sandbox')],
         ]),
         colLinks('🎮 Games', [
           ['All 13 games', gamesUrl()],
@@ -691,7 +870,7 @@ function buildFooter() {
     ]),
     buildNewsletter(),
     h('div', { class: 'foot-bottom' }, [
-      h('span', {}, '45 interactive lessons · beginner → expert · free forever'),
+      h('span', {}, '46 interactive lessons · beginner → expert · free forever'),
       h('span', {}, 'No frameworks, no installs, no fluff — just learning.'),
     ]),
   ]);
@@ -710,7 +889,7 @@ function renderHome() {
   const hero = h('div', { class: 'hero' }, [
     heroCanvas,
     h('div', { class: 'hero-inner' }, [
-      h('div', { class: 'hero-badge' }, [h('span', { class: 'pulse-dot' }), '37 interactive lessons · 48+ live demos · 100% free']),
+      h('div', { class: 'hero-badge' }, [h('span', { class: 'pulse-dot' }), '46 interactive lessons · 48+ live demos · 100% free']),
       h('h2', { html: 'See machine learning.<br><span class="grad-text">Actually understand it.</span>' }),
       h('p', { class: 'hero-sub' }, 'From your first regression line to the transformers inside ChatGPT and Claude — every concept is a living visualization you can drag, tune, and train right in your browser. No math prerequisites. No installs. No fluff.'),
       h('div', { class: 'hero-cta' }, [
@@ -718,7 +897,7 @@ function renderHome() {
         h('a', { class: 'cta-ghost', href: lessonUrl('llms') }, ['🤖 How ChatGPT works']),
       ]),
       h('div', { class: 'hero-stats' }, [
-        h('div', { class: 'hero-stat' }, [h('b', {}, '37'), h('span', {}, 'visual lessons')]),
+        h('div', { class: 'hero-stat' }, [h('b', {}, '46'), h('span', {}, 'visual lessons')]),
         h('div', { class: 'hero-stat' }, [h('b', {}, '48+'), h('span', {}, 'interactive demos')]),
         h('div', { class: 'hero-stat' }, [h('b', {}, '5'), h('span', {}, 'skill levels')]),
         h('div', { class: 'hero-stat' }, [h('b', {}, '0'), h('span', {}, 'installs needed')]),
@@ -747,6 +926,9 @@ function renderHome() {
 
   // games highlight
   contentEl.appendChild(reveal(buildGamesHighlight()));
+
+  // sandbox highlight (Pyodide + BYO CSV)
+  contentEl.appendChild(reveal(buildSandboxHighlight()));
 
   // curriculum
   const blocks = h('div', { class: 'home-sections' });
@@ -805,6 +987,24 @@ function renderLesson(lesson) {
 
   // reveal-on-scroll for demo panels & headings
   body.querySelectorAll('.demo').forEach(d => reveal(d));
+
+  // Pyodide "Try it yourself" playground for Python-section lessons (lazy-loaded)
+  if (PYTHON_STARTERS[lesson.id]) {
+    const pyWrap = h('div', { class: 'pyodide-playground' }, [
+      h('div', { class: 'pyodide-playground-header' }, [
+        h('span', {}, '🐍 Try it yourself — real Python, right here'),
+        h('span', { class: 'pyodide-playground-hint' }, 'Ctrl+Enter to run · powered by Pyodide (WebAssembly)'),
+      ]),
+    ]);
+    contentEl.appendChild(reveal(pyWrap));
+    const starterCode = PYTHON_STARTERS[lesson.id];
+    (async () => {
+      try {
+        if (!pyCell) { const m = await import('./pyodide-runner.js'); pyCell = m.pyCell; }
+        pyWrap.appendChild(pyCell(starterCode));
+      } catch { pyWrap.style.display = 'none'; }
+    })();
+  }
 
   // real-world examples
   const examples = buildExamples(lesson.id);
@@ -943,7 +1143,7 @@ function buildSearchOverlay() {
     h('div', { id: 'search-panel' }, [
       h('div', { id: 'search-input-row' }, [
         h('span', { class: 'search-icon' }, '🔍'),
-        (searchInput = h('input', { id: 'search-input', type: 'text', placeholder: 'Search 45 lessons + 13 games…', autocomplete: 'off', spellcheck: 'false' })),
+        (searchInput = h('input', { id: 'search-input', type: 'text', placeholder: 'Search 46 lessons + 13 games…', autocomplete: 'off', spellcheck: 'false' })),
         h('button', { id: 'search-close', 'aria-label': 'Close search', onclick: closeSearch }, 'Esc'),
       ]),
       (searchResults = h('div', { id: 'search-results' })),

@@ -553,4 +553,16 @@ export const EXAMPLES = {
       connection: 'RAG turned LLMs from static knowledge bases into live-web reasoners. Same trick, planet-scale index.',
     },
   ],
+  'csv-sandbox': [
+    {
+      icon: '🏥', title: 'A hospital analyst exploring patient readmission data',
+      story: 'A healthcare data analyst exports a CSV of anonymized patient records — age, length of stay, number of prior visits, readmission flag. They drop it into the sandbox, set the target column, and run KNN classification. In seconds they see which patients cluster together and which features predict readmission, without writing a line of code or installing Python.',
+      connection: 'That\'s the BYO CSV sandbox: real ML algorithms on real data, entirely in the browser. No uploads, no setup, instant insight.',
+    },
+    {
+      icon: '🏠', title: 'A student analyzing housing prices for a class project',
+      story: 'A university student downloads a housing dataset from Kaggle — square footage, bedrooms, neighborhood, price. They drop the CSV in, select square footage as X and price as Y, and run linear regression. The R² value and regression line appear instantly, giving them a head start on their report.',
+      connection: 'The sandbox turns data exploration from a multi-tool setup into a single drag-and-drop. Same math, zero friction.',
+    },
+  ],
 };

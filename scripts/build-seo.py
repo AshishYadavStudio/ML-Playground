@@ -25,6 +25,7 @@ SECTIONS = [
         "python-intro", "python-variables", "python-collections",
         "python-control", "python-functions", "python-basics",
         "python-advanced", "numpy", "pandas", "dataviz", "ml-code",
+        "csv-sandbox",
     ]),
     ("📊 Classical ML", [
         "logistic-regression", "knn", "svm", "naive-bayes",
@@ -231,7 +232,7 @@ def build_pages(sections):
                 json_desc='"' + desc.replace('"', '\\"') + '"',
                 section_name=esc(strip_html(section_name)),
                 h1_title=esc("{emoji} {title}".format(**meta)),
-                css_url="../css/style.css?v=15",
+                css_url="../css/style.css?v=16",
                 js_url="../js/app.js",
             )
 

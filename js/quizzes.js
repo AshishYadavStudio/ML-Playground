@@ -227,4 +227,9 @@ export const QUIZZES = {
     { q: 'A key advantage of RAG over fine-tuning for factual QA is...', opts: ['RAG models are smaller', 'Updates are instant (re-embed the doc) and answers can cite specific sources', 'RAG uses less GPU'], correct: 1, why: 'Fine-tuned knowledge is baked into weights, uncitable, and expensive to update. RAG updates in seconds.' },
     { q: 'Hybrid search in RAG combines...', opts: ['Text and image models', 'Keyword (BM25) and dense semantic embeddings, often via reciprocal-rank fusion', 'GPUs and CPUs'], correct: 1, why: 'Keyword search catches exact terms; semantic search catches meaning. Combining them beats either alone.' },
   ],
+  'csv-sandbox': [
+    { q: 'Linear regression finds...', opts: ['The line that minimizes the sum of squared vertical distances to data points', 'The line that passes through the most points', 'A curved boundary between classes'], correct: 0, why: 'Least-squares regression minimizes the total squared residuals, giving the best-fit straight line.' },
+    { q: 'In KNN classification with K=5, a new point is labeled by...', opts: ['The nearest single neighbor', 'A majority vote among the 5 closest training points', 'Averaging all training labels'], correct: 1, why: 'KNN counts the labels of the K nearest neighbors and assigns the majority class.' },
+    { q: 'K-Means clustering requires you to choose...', opts: ['The distance metric only', 'The number of clusters K in advance', 'Which points are noise'], correct: 1, why: 'K-Means needs K upfront. Choosing the right K is often the hardest part, which is why techniques like the elbow method exist.' },
+  ],
 };
