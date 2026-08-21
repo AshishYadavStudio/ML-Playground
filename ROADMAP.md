@@ -2,6 +2,44 @@
 
 Living to-do list for mlplayground.co.in. Update as items ship or priorities shift.
 
+## 🚦 Phase 1 — Fix the funnel (before any launch)
+
+GA4 (first 28 days, Jul 24 – Aug 20 2026): 268 users, 64s avg engagement, 267/268
+sessions are (direct)/(none) — never launched anywhere. Curriculum page → Lesson 1
+is fine (140 views), but Lesson 1 → Lesson 2 drops 78% (140 → 30). Traffic is
+almost entirely a personal network in Punjab (Chandigarh, Ludhiana, Mohali).
+
+- [x] **Flip demo-before-explanation** on `intro`, `supervised-learning`,
+      `unsupervised-learning` — "How it works" now renders *after* the first
+      interactive demo instead of before it, so visitors hit the interactive
+      part before the wall of text. Shipped 2026-08-21.
+- [ ] Re-check GA4 engagement time after 1–2 weeks to confirm it moved
+- [ ] Investigate the Lesson 1 → Lesson 2 drop-off specifically — is the "Next"
+      link ([app.js:1038](js/app.js:1038)) visible without scrolling?
+
+## 🚀 Phase 2 — Launch (one-shot, don't waste it)
+
+- [ ] Show HN post — lead with Pyodide-in-browser + BYO-CSV sandbox
+- [ ] r/learnmachinelearning
+- [ ] r/Python
+- [ ] r/MachineLearning (check self-promo rules first)
+- [ ] Space posts ~1 day apart; get a fresh pair of eyes to click through cold first
+
+## 📈 Phase 3 — Retention
+
+Day-25 GA4 spike: 120 new vs 20 returning users — near-zero return-visit rate.
+
+- [ ] Daily streak + shareable completion badges (see ⭐ below)
+- [ ] Newsletter push after lesson completion, not just footer
+- [ ] Game leaderboards + shareable score cards (see ⭐ below)
+
+## 💰 Phase 5 — Monetization (hold)
+
+Current volume (268 users/month) makes ads/affiliates worth ~$0–1/month — not
+worth the setup time or the UX cost. Revisit at ~10k users/month; sponsorships
+and affiliates become plausible before ads do. Keep growing the newsletter list
+in the meantime — it's the one asset that survives a traffic dip.
+
 ## ⭐ Important — differentiators that make the site unique
 
 These are the moves that make ML Playground *different*, not just bigger than

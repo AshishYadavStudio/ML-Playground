@@ -18,17 +18,6 @@ export default {
       <div class="formula">given only x₁, x₂, x₃, … (no answers) &nbsp;→&nbsp; discover groups, patterns, or anomalies</div>
       <p>Three main jobs: <strong>clustering</strong> (group similar things), <strong>dimensionality reduction</strong> (simplify without losing the essence), and <strong>anomaly detection</strong> (spot what doesn't fit).</p>
 
-      <div class="how-it-works">
-        <h3>⚙️ How it works — step by step</h3>
-        <ol>
-          <li><strong>Start with raw, unlabeled data:</strong> You have observations (data points) but no categories, no "right answers" — just numbers describing each example.</li>
-          <li><strong>Choose a structure to look for:</strong> Decide what kind of pattern you want: groups (clustering), a simpler representation (dimensionality reduction), or outliers (anomaly detection).</li>
-          <li><strong>Define a similarity or distance measure:</strong> The algorithm needs a way to say "these two points are alike." Common choices: Euclidean distance, cosine similarity, or correlation.</li>
-          <li><strong>Run the algorithm:</strong> The algorithm iteratively reorganizes the data — assigning points to clusters, projecting onto lower dimensions, or scoring outlierness — optimizing an internal objective (like minimizing within-cluster distances).</li>
-          <li><strong>Interpret the results:</strong> Unlike supervised learning, there is no automatic accuracy score. A human must inspect the discovered structure and judge whether it reveals something useful about the data.</li>
-        </ol>
-      </div>
-
       <h3>1 · Clustering: find the groups</h3>
       <p>Below are data points with <strong>no labels</strong> — all grey, no categories given. Press <em>Discover</em> and watch the algorithm find natural groupings entirely on its own.</p>
     `));
@@ -127,6 +116,17 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Start with raw, unlabeled data:</strong> You have observations (data points) but no categories, no "right answers" — just numbers describing each example.</li>
+          <li><strong>Choose a structure to look for:</strong> Decide what kind of pattern you want: groups (clustering), a simpler representation (dimensionality reduction), or outliers (anomaly detection).</li>
+          <li><strong>Define a similarity or distance measure:</strong> The algorithm needs a way to say "these two points are alike." Common choices: Euclidean distance, cosine similarity, or correlation.</li>
+          <li><strong>Run the algorithm:</strong> The algorithm iteratively reorganizes the data — assigning points to clusters, projecting onto lower dimensions, or scoring outlierness — optimizing an internal objective (like minimizing within-cluster distances).</li>
+          <li><strong>Interpret the results:</strong> Unlike supervised learning, there is no automatic accuracy score. A human must inspect the discovered structure and judge whether it reveals something useful about the data.</li>
+        </ol>
+      </div>
+
       <h3>2 · Anomaly detection: spot the oddball</h3>
       <p>Model what "normal" looks like, then flag anything far from it. Drag the sensitivity — points beyond the boundary are flagged as anomalies (fraud, faulty sensors, intrusions).</p>
     `));

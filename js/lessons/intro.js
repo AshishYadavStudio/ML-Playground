@@ -18,16 +18,6 @@ export default {
       <p><strong>Machine learning flips this around:</strong> we give the computer data <em>and</em> the answers (examples), and it figures out the rules by itself.</p>
       <div class="formula">Traditional: &nbsp; Rules + Data → Answers &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; Machine Learning: &nbsp; Data + Answers → Rules</div>
       <p>Those learned "rules" are called a <strong>model</strong>. Once trained, the model can make predictions on data it has never seen before.</p>
-      <div class="how-it-works">
-        <h3>⚙️ How it works — step by step</h3>
-        <ol>
-          <li><strong>Collect examples:</strong> Gather data where you already know the right answers — e.g., photos labeled "cat" or "dog," emails marked "spam" or "not spam."</li>
-          <li><strong>Choose a model family:</strong> Pick a flexible mathematical structure (a line, a tree, a neural network) that can represent many possible rules.</li>
-          <li><strong>Initialize randomly:</strong> Start the model's internal numbers (parameters) at random values — its first "guess" is intentionally bad.</li>
-          <li><strong>Measure the error:</strong> Compare the model's predictions to the known answers using a loss function — a single number that says "how wrong am I?"</li>
-          <li><strong>Adjust and repeat:</strong> Nudge the parameters to reduce the error, then measure again. Repeat hundreds or thousands of times until the error is small and the model has "learned" a good rule from the data.</li>
-        </ol>
-      </div>
 
       <h3>Try it: can you beat the machine?</h3>
       <p>Below are two groups of points (🟠 oranges and 🔵 blueberries, say). Your job — and the machine's job — is to find a line that separates them. <strong>Drag anywhere on the canvas to place and rotate your line</strong>, then hit <em>Let the machine learn</em> and watch it find its own line, step by step, purely from the data.</p>
@@ -163,6 +153,18 @@ export default {
 
     root.appendChild(html(`
       <p>What just happened? The machine started with a <em>random</em> line, measured how wrong it was on each point, and nudged the line to be a little less wrong — over and over. That simple recipe (<strong>guess → measure error → adjust</strong>) is the heart of almost all machine learning.</p>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Collect examples:</strong> Gather data where you already know the right answers — e.g., photos labeled "cat" or "dog," emails marked "spam" or "not spam."</li>
+          <li><strong>Choose a model family:</strong> Pick a flexible mathematical structure (a line, a tree, a neural network) that can represent many possible rules.</li>
+          <li><strong>Initialize randomly:</strong> Start the model's internal numbers (parameters) at random values — its first "guess" is intentionally bad.</li>
+          <li><strong>Measure the error:</strong> Compare the model's predictions to the known answers using a loss function — a single number that says "how wrong am I?"</li>
+          <li><strong>Adjust and repeat:</strong> Nudge the parameters to reduce the error, then measure again. Repeat hundreds or thousands of times until the error is small and the model has "learned" a good rule from the data.</li>
+        </ol>
+      </div>
+
       <h3>The three flavors of machine learning</h3>
       <div class="cards">
         <div class="card"><div class="card-icon">🏷️</div><h4>Supervised learning</h4><p>Learn from labeled examples: spam / not-spam emails, house prices, cat photos with the answer attached. What you just watched above. Most of this course.</p></div>

@@ -21,17 +21,6 @@ export default {
       </ul>
       <p>Supervised problems split into two jobs depending on what kind of answer you're predicting:</p>
 
-      <div class="how-it-works">
-        <h3>⚙️ How it works — step by step</h3>
-        <ol>
-          <li><strong>Pair inputs with answers:</strong> Each training example is a pair (x, y) — features x and the correct label or value y that a human (or process) has provided.</li>
-          <li><strong>Define a model:</strong> Choose a function family f(x; θ) with tunable parameters θ — for example, a line (linear regression), a logistic curve (logistic regression), or a deep neural network.</li>
-          <li><strong>Pick a loss function:</strong> Measure how far f(x) is from y. Classification typically uses cross-entropy loss; regression uses mean squared error (MSE).</li>
-          <li><strong>Optimize:</strong> Adjust θ to minimize the total loss across all training examples, usually via gradient descent — computing how each parameter should change and updating them iteratively.</li>
-          <li><strong>Predict on new data:</strong> Once trained, feed new, unseen inputs into f(x; θ) to get predictions — a class label or a numeric value — without needing the answers.</li>
-        </ol>
-      </div>
-
       <h3>Try it: classification vs regression</h3>
       <p>Toggle the two modes and <strong>move your mouse over the plot</strong> to drop a new example — the model predicts its answer from the labeled training data.</p>
     `));
@@ -148,6 +137,17 @@ export default {
     ));
 
     root.appendChild(html(`
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Pair inputs with answers:</strong> Each training example is a pair (x, y) — features x and the correct label or value y that a human (or process) has provided.</li>
+          <li><strong>Define a model:</strong> Choose a function family f(x; θ) with tunable parameters θ — for example, a line (linear regression), a logistic curve (logistic regression), or a deep neural network.</li>
+          <li><strong>Pick a loss function:</strong> Measure how far f(x) is from y. Classification typically uses cross-entropy loss; regression uses mean squared error (MSE).</li>
+          <li><strong>Optimize:</strong> Adjust θ to minimize the total loss across all training examples, usually via gradient descent — computing how each parameter should change and updating them iteratively.</li>
+          <li><strong>Predict on new data:</strong> Once trained, feed new, unseen inputs into f(x; θ) to get predictions — a class label or a numeric value — without needing the answers.</li>
+        </ol>
+      </div>
+
       <h3>Classification vs Regression</h3>
       <table class="info-table">
         <tr><th></th><th>🎨 Classification</th><th>📈 Regression</th></tr>
