@@ -51,6 +51,19 @@ export default {
   render(root) {
     root.appendChild(html_intro());
 
+    root.appendChild(html(`
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Weighted sum arrives:</strong> Each neuron receives z = w·x + b — a linear combination of its inputs. Without an activation function, the entire network would collapse to a single linear transformation, no matter how many layers.</li>
+          <li><strong>Activation squashes the sum:</strong> The nonlinear function f(z) bends the output — sigmoid squashes to (0,1), ReLU clips negatives to zero, tanh squashes to (−1,1). This bending is what lets the network model curves, not just straight lines.</li>
+          <li><strong>Output feeds forward:</strong> The activated value a = f(z) becomes the input to the next layer. Each layer's nonlinear bend compounds with the next, building increasingly complex decision boundaries.</li>
+          <li><strong>Gradient flows backward:</strong> During backpropagation, the derivative f'(z) is multiplied into the gradient chain. If f'(z) is tiny (sigmoid at the tails: ~0.0), gradients vanish. If f'(z) = 1 (ReLU for positive inputs), gradients pass through undiminished.</li>
+          <li><strong>The choice shapes training:</strong> Different activations create different gradient flow patterns. ReLU's constant gradient enabled the training of networks with 100+ layers. Modern alternatives like GELU add smoothness near zero for better optimization in transformers.</li>
+        </ol>
+      </div>
+    `));
+
     const cv = makeCanvas(360);
     let cur = 'relu';
     let probe = 1.2;
@@ -191,6 +204,39 @@ export default {
         <div class="callout-title">🎮 Play: Neuron Wiring: Solve XOR</div>
         See activation functions do real work — hand-tune a tiny tanh network until it solves a problem a linear model never could. <a href="../games/neuron-wiring/" style="color:var(--accent);font-weight:700;">Play Neuron Wiring →</a>
       </div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Activation Design, Saturation, and Dying Neurons</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>An activation function must be nonlinear — otherwise any composition of linear layers L₂(L₁(x)) = (W₂W₁)x + (W₂b₁ + b₂) remains linear. The key properties that matter are:</p>
+          <div class="formula">σ(x) = 1/(1+e<sup>−x</sup>), &nbsp; σ'(x) = σ(x)(1−σ(x)), &nbsp; max σ'(x) = 0.25 at x=0</div>
+          <div class="formula">ReLU(x) = max(0, x), &nbsp; ReLU'(x) = 1 if x > 0, else 0</div>
+          <div class="formula">GELU(x) = x · Φ(x), &nbsp; where Φ is the standard Gaussian CDF</div>
+          <p>The sigmoid derivative peaks at only 0.25. Multiplying n such values gives 0.25<sup>n</sup> — after just 10 layers, the gradient is attenuated by a factor of ~10<sup>−6</sup>. ReLU's derivative is exactly 1 for active neurons, solving this entirely.</p>
+
+          <h4>Sigmoid Saturation</h4>
+          <p>When |z| is large, sigmoid outputs are near 0 or 1 and the derivative approaches zero. This is <strong>saturation</strong>: the neuron is "confident" but unable to learn. In a deep network, even moderate z values compound the problem. Batch normalization helps by keeping pre-activation values centered near zero where the derivative is largest.</p>
+
+          <h4>The Dying ReLU Problem</h4>
+          <p>If a neuron's bias becomes sufficiently negative (or a large gradient update pushes weights so that w·x + b < 0 for all training inputs), the ReLU output is permanently zero. Its gradient is also zero, so it can never recover — the neuron is "dead." This is not rare: studies have found 10-40% of neurons can die during training with high learning rates. Leaky ReLU (slope 0.01 for negative inputs) and PReLU (learnable slope) were designed as fixes.</p>
+
+          <h4>Intuition</h4>
+          <p>Think of activation functions as gatekeepers. Sigmoid is a cautious gatekeeper that lets everything through but squishes it into a narrow hallway (0 to 1) — messages get quieter and quieter. ReLU is a bouncer that blocks negatives entirely but lets positives through at full volume. GELU is a probabilistic bouncer that mostly blocks negatives but occasionally lets a slightly negative value leak through — this smoothness near zero helps optimization find better paths.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "ReLU is always better than sigmoid."</div>
+          <p><strong>✅ Reality:</strong> ReLU is better for <em>hidden layers</em> in deep networks because of gradient flow. But sigmoid is still the correct choice for the output layer of a binary classifier (it produces a valid probability). And tanh remains standard in LSTMs where the (−1, 1) range interacts with gating mechanisms. The right choice depends on where in the architecture you are.</p>
+
+          <div class="misconception"><strong>❌ Misconception:</strong> "GELU is just a smooth version of ReLU — they're basically the same."</div>
+          <p><strong>✅ Reality:</strong> GELU(x) = x · Φ(x) weights each input by how likely it is to be "above average" under a Gaussian. Unlike ReLU, GELU has a non-zero gradient everywhere and a slight negative region (minimum ≈ −0.17 at x ≈ −0.75). This stochastic regularization effect and smoothness contribute to measurably better performance in transformers, which is why GPT and BERT adopted it.</p>
+
+          <h4>Historical Context</h4>
+          <p>Sigmoid dominated from the 1980s through the 2000s. The vanishing gradient problem it caused was identified by Hochreiter (1991) and motivated the invention of LSTMs (1997). ReLU was introduced to deep learning by Nair & Hinton (2010) and was critical to AlexNet's success (2012). GELU was proposed by Hendrycks & Gimpel (2016) and became the default in transformers after BERT (2018). The SwiGLU variant (Shazeer, 2020) — used in LLaMA and PaLM — combines Swish activation with gated linear units for even better transformer performance.</p>
+        </div>
+      </details>
     `));
   },
 };

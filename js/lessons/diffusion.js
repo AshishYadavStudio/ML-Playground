@@ -22,6 +22,16 @@ export default {
       </ol>
       <div class="formula">forward: xₜ = √(αₜ)·x₀ + √(1−αₜ)·ε &nbsp;&nbsp;&nbsp; reverse: xₜ₋₁ = (xₜ − √(1−αₜ)·ε̂θ(xₜ, t)) / √(αₜ) + noise</div>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Sample a real image:</strong> Pick a training image x₀ and a random timestep t from 1 to T.</li>
+          <li><strong>Add noise:</strong> Sample Gaussian noise ε and mix it with the image according to the noise schedule: xₜ = √(ᾱₜ)·x₀ + √(1−ᾱₜ)·ε. Higher t means more noise.</li>
+          <li><strong>Predict the noise:</strong> Feed the noisy image xₜ and timestep t into a U-Net. The network outputs its estimate ε̂ of the noise that was added.</li>
+          <li><strong>Compute loss and update:</strong> The training loss is simply MSE between the real noise ε and the predicted noise ε̂. Backpropagate and update weights. Repeat millions of times.</li>
+          <li><strong>Generate (sampling):</strong> To create a new image, start from pure noise x_T and iteratively subtract the predicted noise at each timestep, stepping from T down to 0. The image crystallizes out of static.</li>
+        </ol>
+      </div>
       <h3>Try it: destroy and rebuild a "shape"</h3>
       <p>Our "image" is a simple 2-D shape (a heart of points). Drag the <b>time slider</b> to watch it dissolve into Gaussian noise. Then press <em>Reverse denoise</em> and watch it re-materialize — the animation uses a trained lookup, but the mechanism is identical to how Stable Diffusion generates a photo.</p>
     `));
@@ -175,6 +185,47 @@ export default {
 
       <div class="callout callout-info"><div class="callout-title">📌 The intuition to keep</div>
       Generation = <strong>learning to reverse randomness</strong>. Start from noise, take small principled steps toward the data distribution, and after enough steps something meaningful appears. That's it. Every UI knob — steps, guidance scale, scheduler, seed — is a lever on that reversal.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — noise schedules, samplers, and guidance</summary>
+        <div class="deep-dive-body">
+          <h4>The Forward Process — Formally</h4>
+          <p>At each step t, a small amount of Gaussian noise is added:</p>
+          <div class="formula">q(xₜ | xₜ₋₁) = N(xₜ; √(1−βₜ) · xₜ₋₁, βₜI)</div>
+          <p>The key insight: thanks to the reparameterization trick, we can jump directly to any timestep t without iterating:</p>
+          <div class="formula">xₜ = √(ᾱₜ) · x₀ + √(1−ᾱₜ) · ε &nbsp;&nbsp; where ᾱₜ = ∏ᵢ₌₁ᵗ (1−βᵢ)</div>
+          <p>This makes training efficient — sample a random t, compute xₜ in one shot, predict ε.</p>
+
+          <h4>Noise Schedules</h4>
+          <p>The β values control how fast signal is destroyed. Common schedules:</p>
+          <ul>
+            <li><strong>Linear:</strong> β increases linearly from 0.0001 to 0.02. Simple but wastes steps in the middle where not much changes.</li>
+            <li><strong>Cosine:</strong> ᾱₜ follows a cosine curve, spreading the signal destruction more evenly across timesteps. Used by Improved DDPM and most modern models.</li>
+          </ul>
+
+          <h4>Classifier-Free Guidance</h4>
+          <p>To generate conditioned outputs (e.g., from a text prompt), the model is trained to predict noise both with and without the condition. At sampling time:</p>
+          <div class="formula">ε̂_guided = ε̂_uncond + s · (ε̂_cond − ε̂_uncond)</div>
+          <p>The guidance scale s (typically 7–15) amplifies the difference between conditioned and unconditioned predictions. Higher s → more prompt-faithful but less diverse. This is the "CFG scale" slider in every Stable Diffusion UI.</p>
+
+          <h4>Fast Samplers</h4>
+          <p>The original DDPM needed 1000 denoising steps. Modern samplers are dramatically faster:</p>
+          <ul>
+            <li><strong>DDIM:</strong> Deterministic sampling that skips steps — 50 steps with quality close to 1000.</li>
+            <li><strong>DPM-Solver:</strong> Uses higher-order ODE solvers to reduce steps to 20–25.</li>
+            <li><strong>Consistency Models:</strong> Distill the entire denoising trajectory into 1–4 steps.</li>
+          </ul>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "The model removes noise from an image, like a Photoshop filter."</div>
+          <p><strong>✅ Reality:</strong> The model doesn't "clean up" — it <em>predicts</em> what noise was added and subtracts it. When starting from pure noise (generation), there's no real image underneath. The model is hallucinating an image that's consistent with the current partially-denoised state and the conditioning prompt.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "More denoising steps always means better quality."</div>
+          <p><strong>✅ Reality:</strong> Quality plateaus after a certain number of steps (typically 20–50 with modern samplers). Beyond that, additional steps add negligible improvement but double the compute time. The sampler matters more than the step count.</p>
+
+          <h4>Historical Context</h4>
+          <p>The connection between diffusion and thermodynamics was made by Sohl-Dickstein et al. (2015). Ho, Jain, and Abbeel's DDPM (2020) made diffusion competitive with GANs. Song et al.'s score-based models (2020–2021) unified the theory. Rombach et al.'s Latent Diffusion (2022) enabled Stable Diffusion by moving to compressed latent space. In 2024, flow matching (Lipman et al.) emerged as a simpler, faster alternative formulation that's powering the next generation of models.</p>
+        </div>
+      </details>
     `));
   },
 };

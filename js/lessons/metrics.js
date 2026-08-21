@@ -21,6 +21,18 @@ export default {
         <tr><td><b>Predicted negative</b></td><td style="color:#f85149">False Negative (FN) — missed case</td><td style="color:#3fb950">True Negative (TN) ✓</td></tr>
       </table>
       <div class="formula">Precision = TP / (TP + FP) &nbsp;&nbsp;·&nbsp;&nbsp; Recall = TP / (TP + FN) &nbsp;&nbsp;·&nbsp;&nbsp; F1 = 2·P·R / (P + R) &nbsp;&nbsp;·&nbsp;&nbsp; Accuracy = (TP+TN) / all</div>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Model outputs continuous scores:</strong> The classifier does not directly say "positive" or "negative" — it outputs a probability or score for each example (e.g., "82% chance of disease").</li>
+          <li><strong>Choose a decision threshold:</strong> You pick a cutoff: scores above the threshold are predicted positive, scores below are predicted negative. This is a human choice, not a model choice.</li>
+          <li><strong>Build the confusion matrix:</strong> Compare predictions to ground truth. Count True Positives (correct positive calls), False Positives (false alarms), False Negatives (missed cases), and True Negatives (correct negatives).</li>
+          <li><strong>Compute metrics from the matrix:</strong> Precision = TP/(TP+FP) measures "of all my alarms, how many were real." Recall = TP/(TP+FN) measures "of all real cases, how many did I catch." F1 balances both.</li>
+          <li><strong>Sweep the threshold to see the full picture:</strong> Moving the threshold trades precision for recall. The ROC curve plots this trade-off at every threshold; AUC summarizes the model's quality independent of any single threshold choice.</li>
+        </ol>
+      </div>
+
       <h3>Try it: slide the threshold</h3>
       <p>Below are the model's scores for sick patients (orange) and healthy patients (blue) — the distributions overlap, as they always do in real life. <strong>Drag the threshold</strong> and watch every metric respond.</p>
     `));
@@ -177,6 +189,39 @@ export default {
       </ul>
       <div class="callout callout-tip"><div class="callout-title">💡 Big idea</div>
       A model gives you scores; <em>you</em> choose the operating point. The right threshold is a business/ethics decision about which mistake hurts more — not a math decision.</div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Precision-recall trade-off, ROC/AUC math, and calibration</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>The <strong>ROC curve</strong> plots True Positive Rate (Recall) on the y-axis against False Positive Rate on the x-axis as the decision threshold sweeps from +infinity to -infinity:</p>
+          <div class="formula">TPR(t) = TP(t) / (TP(t) + FN(t)) &nbsp;&nbsp;&nbsp; FPR(t) = FP(t) / (FP(t) + TN(t))</div>
+          <p>The <strong>Area Under the ROC Curve (AUC)</strong> has a beautiful probabilistic interpretation: it equals the probability that the model assigns a higher score to a randomly chosen positive example than to a randomly chosen negative example:</p>
+          <div class="formula">AUC = P(score(x⁺) > score(x⁻)) &nbsp;&nbsp; for random positive x⁺ and random negative x⁻</div>
+          <p>AUC = 1.0 means perfect separation; AUC = 0.5 means the model is no better than random coin-flipping. This is equivalent to the <strong>Wilcoxon-Mann-Whitney statistic</strong>, connecting classification metrics to classical nonparametric statistics.</p>
+          <p>The <strong>Precision-Recall (PR) curve</strong> is more informative than ROC when classes are heavily imbalanced. A model can have a high AUC-ROC yet perform poorly in practice because the vast number of true negatives inflates the TN count, making FPR look artificially small. The PR curve avoids this by ignoring TN entirely.</p>
+          <div class="formula">Average Precision (AP) = Σ_k (R_k − R_{k−1}) · P_k &nbsp;&nbsp; (area under the PR curve)</div>
+
+          <h4>Intuition</h4>
+          <p>Precision and recall are locked in a tug-of-war by the threshold. Lowering the threshold catches more true positives (recall goes up) but also lets in more false positives (precision goes down). There is no free lunch — improving one always costs the other unless the model itself improves. The F1 score is the harmonic mean of precision and recall, which heavily penalizes models where one is much lower than the other. An F1 of 0.90 requires both P and R to be at least around 0.82, not just one of them being high.</p>
+          <p>Think of AUC as asking: "If I pick one sick person and one healthy person at random, how often does the model rank the sick person higher?" A perfect model always does; a random model does it 50% of the time.</p>
+
+          <h4>Calibration</h4>
+          <p>A model is <strong>well-calibrated</strong> if its predicted probabilities match observed frequencies: among all patients the model assigns 80% disease probability, roughly 80% should actually be sick. Many models (including random forests and SVMs) are poorly calibrated out of the box — they rank predictions correctly but their probability values are not meaningful.</p>
+          <p><strong>Platt scaling</strong> (fitting a sigmoid to model outputs) and <strong>isotonic regression</strong> are common post-hoc calibration methods. A <strong>reliability diagram</strong> (or calibration curve) bins predictions by their predicted probability and plots the actual positive rate in each bin. A perfectly calibrated model follows the diagonal.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Accuracy is the most important metric — if accuracy is 95%, the model is excellent."</div>
+          <p><strong>✅ Reality:</strong> On a dataset with 95% negatives and 5% positives, a model that always predicts "negative" achieves 95% accuracy while catching zero positive cases. Accuracy is meaningful only when classes are roughly balanced. For imbalanced problems, precision, recall, F1, and AUC are far more informative.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "AUC is always the best single metric to compare models."</div>
+          <p><strong>✅ Reality:</strong> AUC summarizes performance across all thresholds, but in practice you operate at one threshold. If your application demands very high precision (e.g., autonomous driving), a model with slightly lower AUC but much better performance in the high-precision region of the curve may be the right choice. Also, AUC-ROC can be misleadingly optimistic for imbalanced data — AUC-PR (Average Precision) is often more appropriate.</p>
+
+          <h4>Historical Context</h4>
+          <p>ROC analysis originated in signal detection theory during World War II, where radar operators needed to distinguish enemy aircraft (true signal) from noise (false alarms). The name "Receiver Operating Characteristic" comes from this radar engineering context. The method was adopted by medical diagnostics in the 1960s-70s and entered machine learning in the 1990s through the work of Tom Fawcett and Foster Provost. The F1 score was borrowed from information retrieval, where it was introduced by C.J. van Rijsbergen in 1979 as a weighted harmonic mean of precision and recall (the "F" stands for a general parameter "beta" that controls the weighting; F1 is the balanced case with beta=1).</p>
+        </div>
+      </details>
     `));
   },
 };

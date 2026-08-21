@@ -18,6 +18,19 @@ export default {
       <div class="formula">z = w₁x₁ + w₂x₂ + b &nbsp;&nbsp;→&nbsp;&nbsp; p = σ(z) = 1 / (1 + e⁻ᶻ)</div>
     `));
 
+    root.appendChild(html(`
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Compute a linear score:</strong> Multiply each input feature by a learned weight and add a bias: z = w₁x₁ + w₂x₂ + b. This is the same linear combination used in linear regression.</li>
+          <li><strong>Squash with the sigmoid:</strong> Pass z through σ(z) = 1/(1 + e⁻ᶻ), which maps any real number into a probability between 0 and 1. Large positive z → probability near 1; large negative z → near 0.</li>
+          <li><strong>Apply a decision threshold:</strong> If the output probability p ≥ 0.5 (i.e., z ≥ 0), predict class 1; otherwise predict class 0. The set of points where p = 0.5 forms the decision boundary — always a straight line (or hyperplane).</li>
+          <li><strong>Measure the error:</strong> Use cross-entropy loss L = −[y·log(p) + (1−y)·log(1−p)] to score predictions. This loss heavily punishes confident wrong answers — predicting 0.99 when the true label is 0 costs far more than predicting 0.6.</li>
+          <li><strong>Update weights via gradient descent:</strong> Compute how each weight contributes to the total error and nudge it in the direction that reduces the loss. Repeat over many passes (epochs) until the boundary settles.</li>
+        </ol>
+      </div>
+    `));
+
     // ---- Demo 1: sigmoid explorer ----
     const cv1 = makeCanvas(260);
     let sw = 1, sb = 0;
@@ -162,6 +175,31 @@ export default {
         <li>Cross-entropy is the natural loss for probabilities — confidently wrong = huge penalty.</li>
         <li>Despite the name, logistic <em>regression</em> is a classification algorithm — and still a workhorse baseline in industry today.</li>
       </ul></div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — The Math Behind Logistic Regression</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>Logistic regression is trained by <strong>maximum likelihood estimation (MLE)</strong>. Given N data points (xᵢ, yᵢ) where yᵢ ∈ {0, 1}, we seek the weights that make the observed labels most probable:</p>
+          <div class="formula">maximize &nbsp; Π P(yᵢ | xᵢ; w, b) = Π [σ(zᵢ)^yᵢ · (1 − σ(zᵢ))^(1−yᵢ)]</div>
+          <p>Taking the log converts the product into a sum — the <strong>log-likelihood</strong> — and flipping the sign gives the cross-entropy loss we minimize:</p>
+          <div class="formula">L(w, b) = −(1/N) Σ [yᵢ · log σ(zᵢ) + (1 − yᵢ) · log(1 − σ(zᵢ))]</div>
+          <p>This loss is <strong>convex</strong>, meaning gradient descent is guaranteed to find the global minimum — unlike neural networks, there are no local minima traps.</p>
+          <h4>Decision Boundary Geometry</h4>
+          <p>The decision boundary is the set of points where p = 0.5, which means z = w·x + b = 0. In 2D this is a line; in 3D a plane; in general a <strong>hyperplane</strong>. The weight vector w is perpendicular to this hyperplane, and its magnitude controls how steeply the probability transitions from 0 to 1 across the boundary.</p>
+          <h4>Intuition</h4>
+          <p>Think of logistic regression as a "confidence calibrator." Linear regression might predict a 1.3 probability of passing an exam — nonsense. The sigmoid squashes this to a valid probability near 1.0. The model learns where to place the transition zone (bias b) and how sharp to make it (magnitude of w).</p>
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Logistic regression is a regression algorithm because it has 'regression' in the name."</div>
+          <p><strong>✅ Reality:</strong> Despite the name, logistic regression is a <em>classification</em> algorithm. The "regression" refers to the fact that it models a continuous probability internally, but the output is a discrete class label. The name is historical — it predates modern ML terminology.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Logistic regression can only handle two classes."</div>
+          <p><strong>✅ Reality:</strong> The <strong>multinomial (softmax) extension</strong> handles any number of classes. Instead of one sigmoid, you compute k linear scores and pass them through softmax: P(class j) = e^(zⱼ) / Σ e^(zₖ). This is exactly what the output layer of most neural network classifiers uses.</p>
+          <h4>Historical Context</h4>
+          <p>The logistic function was introduced by Pierre-Francois Verhulst in 1845 to model population growth curves. Its application to statistical classification was formalized by David Cox in 1958. Today, logistic regression remains one of the most widely deployed models in medicine (disease risk scoring), economics (discrete choice models), and industry (click-through rate prediction, baseline classifiers). It is often the first model tried and the benchmark against which fancier approaches are measured.</p>
+        </div>
+      </details>
     `));
   },
 };

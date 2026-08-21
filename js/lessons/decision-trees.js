@@ -16,6 +16,16 @@ export default {
       <p>A decision tree plays <em>twenty questions</em> with your data: "Is x &gt; 0.3? Is y &gt; −0.5?" Each question splits the space with an axis-aligned cut, and each leaf region predicts the majority class inside it.</p>
       <p>Training is <strong>greedy</strong>: at every node, try all possible cuts on all features and keep the one that makes the two children as <em>pure</em> as possible (measured by <strong>Gini impurity</strong> or entropy):</p>
       <div class="formula">Gini = 1 − Σ pₖ² &nbsp;&nbsp;&nbsp; (0 = pure leaf, 0.5 = perfect 50/50 mix for 2 classes)</div>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Start with all data:</strong> Begin at the root with every training point in one group. The tree asks: "What single yes/no question best separates the classes?"</li>
+          <li><strong>Try every possible split:</strong> For each feature and each threshold value, measure how "pure" the resulting two groups would be using Gini impurity (or entropy). Pick the split that produces the purest children.</li>
+          <li><strong>Recurse:</strong> Apply the same process to each child node — find the best split for that subset of data. Keep going until a stopping condition is met (max depth, minimum samples, or pure leaves).</li>
+          <li><strong>Assign leaf predictions:</strong> Each leaf predicts the majority class of the training points that ended up in it.</li>
+          <li><strong>Classify new points:</strong> A new data point walks down the tree, answering each yes/no question, until it lands in a leaf. That leaf's majority class is the prediction.</li>
+        </ol>
+      </div>
       <h3>Try it: grow the tree yourself</h3>
       <p>This XOR-style dataset is <em>impossible</em> for a single straight line (try it mentally!) — but trivial for a tree. Press <strong>Grow one split</strong> repeatedly and watch the greedy algorithm carve the plane. Then use the depth slider to see overfitting appear as tiny sliver-regions around noise points.</p>
     `));
@@ -167,6 +177,40 @@ export default {
       </div>
       <div class="callout callout-tip"><div class="callout-title">💡 Practitioner's secret</div>
       For tabular/spreadsheet-style data, gradient-boosted trees still routinely beat deep neural networks. Deep learning dominates images, audio, and text — not every problem. Choosing the right tool <em>is</em> the skill.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — splitting criteria and tree theory</summary>
+        <div class="deep-dive-body">
+          <h4>Gini Impurity vs. Entropy</h4>
+          <p>Both measure how "mixed" a node is. For K classes with proportions p₁, p₂, …, p_K:</p>
+          <div class="formula">Gini = 1 − Σ pₖ² &nbsp;&nbsp;&nbsp;&nbsp; Entropy = −Σ pₖ log₂ pₖ</div>
+          <p>A pure node (all one class) has Gini = 0 and Entropy = 0. A 50/50 split has Gini = 0.5 and Entropy = 1.0. In practice, they produce nearly identical trees — scikit-learn defaults to Gini because it's slightly faster (no logarithm).</p>
+
+          <h4>Information Gain</h4>
+          <p>The best split maximizes the <strong>information gain</strong> — the parent's impurity minus the weighted average of the children's impurities:</p>
+          <div class="formula">Gain = H(parent) − [nₗ/n · H(left) + nᵣ/n · H(right)]</div>
+          <p>The greedy algorithm tries every feature and every threshold, computes this gain, and picks the split with the highest value.</p>
+
+          <h4>Pruning</h4>
+          <p>A fully grown tree memorizes the training data (every leaf is pure). To generalize, we prune:</p>
+          <ul>
+            <li><strong>Pre-pruning:</strong> Stop splitting early — set max_depth, min_samples_split, or min_samples_leaf. Simple and fast.</li>
+            <li><strong>Post-pruning (cost-complexity):</strong> Grow the full tree, then remove branches that don't improve validation accuracy enough to justify their complexity. scikit-learn's <code>ccp_alpha</code> parameter controls this.</li>
+          </ul>
+
+          <h4>Intuition</h4>
+          <p>A decision tree is a flowchart that a domain expert might draw by hand — "if age > 40 and cholesterol > 200, flag as high risk." The algorithm just automates finding the best questions to ask. The rectangular decision boundaries are a direct consequence of axis-aligned splits: each question only looks at one feature at a time, creating "cuts" parallel to the axes.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Decision trees always find the globally optimal tree."</div>
+          <p><strong>✅ Reality:</strong> Finding the optimal tree is NP-complete. The greedy algorithm (CART, ID3, C4.5) finds a locally optimal split at each node, which may not lead to the globally best tree. That's one reason ensembles (Random Forests, Gradient Boosting) work so well — they compensate for single trees' suboptimality.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Trees can't handle continuous features."</div>
+          <p><strong>✅ Reality:</strong> Trees handle continuous features natively by testing thresholds. They also handle missing values gracefully (surrogate splits) and need no feature scaling — one of their genuine advantages over SVMs and neural networks.</p>
+
+          <h4>Historical Context</h4>
+          <p>The CART algorithm (Classification and Regression Trees) was published by Breiman, Friedman, Olshen, and Stone in 1984. Around the same time, Ross Quinlan developed ID3 (1986) and later C4.5 (1993), which used entropy-based splitting. Leo Breiman then introduced Random Forests in 2001, and Jerome Friedman formalized Gradient Boosting in 2001 — both built directly on the CART foundation.</p>
+        </div>
+      </details>
     `));
   },
 };

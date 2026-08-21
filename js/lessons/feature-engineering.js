@@ -15,6 +15,17 @@ export default {
     root.appendChild(html(`
       <p>"Coming up with features is difficult, time-consuming, requires expert knowledge. Applied machine learning is basically feature engineering." — Andrew Ng. Below are the moves every practitioner reaches for before touching a model.</p>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Understand the domain:</strong> Before touching the data, learn what each column means. Domain knowledge is what separates a good feature engineer from someone blindly running algorithms — knowing that "distance to nearest subway" matters for apartment pricing is insight no algorithm will discover on its own.</li>
+          <li><strong>Encode categoricals:</strong> Convert text features into numbers: one-hot encoding for unordered categories (color, country), ordinal encoding for ordered ones (small/medium/large), or target encoding for high-cardinality features (zip codes).</li>
+          <li><strong>Transform distributions:</strong> Apply log, square root, or power transforms to skewed features so that models — especially linear ones — can work with roughly normal distributions and equal-magnitude scales.</li>
+          <li><strong>Create interaction features:</strong> Multiply, divide, or combine existing features to capture relationships the model can't learn on its own. For example, "price per square foot" = price / area encodes a relationship that a linear model would miss with raw price and area alone.</li>
+          <li><strong>Select and prune:</strong> Remove redundant or noisy features using correlation analysis, L1 regularization, or tree-based importance scores. Fewer, better features reduce overfitting, speed up training, and improve interpretability.</li>
+        </ol>
+      </div>
+
       <h3>1 · Encoding categoricals into numbers</h3>
       <p>Most models eat numbers, not strings. The choice of encoding matters more than people realize.</p>
       <table class="info-table">
@@ -180,6 +191,33 @@ export default {
 
       <div class="callout callout-tip"><div class="callout-title">💡 Deep learning didn't kill feature engineering</div>
       Neural nets learn features automatically for <em>images, audio, and text</em>. For tabular data, gradient-boosted trees on hand-crafted features still routinely beat deep nets — because in that regime the human still knows more about the domain than a shallow MLP does. Feature engineering is where domain expertise turns into models that ship.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Interaction Terms, Polynomial Features & Domain Knowledge</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>A linear model predicts y = w₁x₁ + w₂x₂ + b. It can only learn a flat plane through feature space — no curves, no interactions. <strong>Polynomial features</strong> expand the feature space:</p>
+          <div class="formula">Original: [x₁, x₂] &nbsp;→&nbsp; Degree 2: [x₁, x₂, x₁², x₂², x₁·x₂]</div>
+          <p>Now the "linear" model is actually fitting y = w₁x₁ + w₂x₂ + w₃x₁² + w₄x₂² + w₅x₁x₂ + b — a full quadratic surface. The model is still linear <em>in its parameters</em> (the weights), but nonlinear in the original features. This trick lets simple, fast, interpretable models capture complex curved boundaries.</p>
+          <p><strong>Interaction terms</strong> (like x₁·x₂) capture the idea that the effect of one feature depends on another. For example, the effect of "has a pool" on house price depends on "average temperature" — a pool in Phoenix is worth more than a pool in Alaska. Without the interaction feature, a linear model can't represent this dependency.</p>
+          <p>The danger of polynomial features is combinatorial explosion. With d features and degree p, the number of terms grows as:</p>
+          <div class="formula">C(d + p, p) = (d + p)! / (d! · p!)</div>
+          <p>With 100 features and degree 2, that's 5,151 terms. Degree 3 gives 176,851. Regularization (L1/L2) becomes essential to prevent overfitting in this expanded space.</p>
+
+          <h4>Intuition</h4>
+          <p>Feature engineering is the art of encoding what you know about the world into numbers a model can use. Consider predicting taxi ride duration. Raw features: pickup time, pickup lat/long, dropoff lat/long. Engineered features that encode domain knowledge: haversine distance between pickup and dropoff, time of day (rush hour or not), day of week (weekday vs weekend), whether it's raining. A model with these engineered features will vastly outperform one using raw coordinates, because you've pre-computed the relationships the model would struggle to discover.</p>
+          <p>The XOR demo above illustrates this perfectly: no linear boundary separates the four quadrants, but the single feature x*y perfectly encodes the "same sign" vs "different sign" pattern. One brilliant feature beats a more complex model.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> More features always improve model performance.</div>
+          <p><strong>✅ Reality:</strong> The <strong>curse of dimensionality</strong> means that adding features without adding proportionally more training data makes the problem harder, not easier. In high dimensions, all points become roughly equidistant, distances lose meaning, and models need exponentially more data to fill the space. A model with 5 well-chosen features often beats one with 500 noisy features.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> Feature engineering is obsolete because deep learning learns features automatically.</div>
+          <p><strong>✅ Reality:</strong> Deep learning excels at learning features from raw perceptual data (images, audio, text) where humans can't easily articulate the patterns. But for <strong>tabular data</strong> — the bread and butter of most industry ML — hand-crafted features combined with gradient-boosted trees (XGBoost, LightGBM) still win most Kaggle competitions and production deployments. The reason: tabular data is low-dimensional with rich domain structure that a few hundred engineered features capture better than a neural network discovers from scratch.</p>
+
+          <h4>Historical Context</h4>
+          <p>Feature engineering has been central to ML since its earliest days. The kernel trick in SVMs (Boser, Guyon & Vapnik, 1992) is essentially automatic feature engineering — mapping data to a higher-dimensional space where it becomes linearly separable, without explicitly computing the transformed features. The term "feature engineering" became prominent in the 2010s Kaggle competition era, where competitions were consistently won by better features rather than better algorithms. Andrew Ng's widely cited observation that "applied machine learning is basically feature engineering" captures a truth that persists today: the 2023-2024 wave of tabular ML benchmarks continues to show that XGBoost with domain features outperforms deep neural networks on most structured data tasks.</p>
+        </div>
+      </details>
     `));
   },
 };

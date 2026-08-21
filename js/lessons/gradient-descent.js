@@ -19,6 +19,18 @@ export default {
         <li>The <strong>gradient</strong> points in the direction of steepest <em>increase</em> — so we move against it.</li>
         <li>The <strong>learning rate η</strong> scales the step size. It is the single most important knob in deep learning.</li>
       </ul>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Initialize parameters:</strong> Start with some initial guess for the model's parameters (often random). This places the "ball" somewhere on the loss landscape.</li>
+          <li><strong>Compute the loss:</strong> Evaluate how wrong the model currently is by feeding all training data through it and computing the loss function (e.g., MSE).</li>
+          <li><strong>Compute the gradient:</strong> Calculate the partial derivative of the loss with respect to each parameter. The gradient vector points in the direction of steepest increase.</li>
+          <li><strong>Update parameters against the gradient:</strong> Subtract a fraction (the learning rate eta) of the gradient from each parameter: theta = theta - eta * gradient. This moves "downhill" toward lower loss.</li>
+          <li><strong>Repeat until convergence:</strong> Go back to step 2. Stop when the loss barely changes between steps, or after a fixed number of iterations (epochs).</li>
+        </ol>
+      </div>
+
       <h3>Try it: roll the ball</h3>
       <p><strong>Click anywhere on the curve</strong> to drop the ball, then press <em>Step</em> or <em>Auto-run</em>. Now try cranking the learning rate up past 1.0 and watch what happens…</p>
     `));
@@ -199,5 +211,36 @@ export default {
     import('../gd3d.js').then(m => { if (alive3d) m.default(root); }).catch(() => {
       if (alive3d) root.appendChild(html('<p style="color:#8b96a8;text-align:center;padding:20px 0">3D visualization requires internet for the Three.js engine. The 2D demo above works offline.</p>'));
     });
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Learning rate theory, convergence, and GD variants</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>For a convex loss function L with Lipschitz-continuous gradient (the gradient doesn't change too fast), gradient descent converges to the global minimum provided the learning rate satisfies:</p>
+          <div class="formula">eta < 2 / L_max &nbsp;&nbsp; where L_max is the largest eigenvalue of the Hessian (second-derivative matrix)</div>
+          <p>With a fixed learning rate eta = 1/L_max, gradient descent achieves an error of at most epsilon after O(1/epsilon) steps — this is called <strong>sublinear convergence</strong>. For strongly convex functions (with a positive minimum eigenvalue mu of the Hessian), convergence is <strong>linear</strong> (exponentially fast):</p>
+          <div class="formula">L(w_t) − L(w*) ≤ (1 − mu/L_max)^t · (L(w_0) − L(w*))</div>
+          <p>The ratio kappa = L_max / mu is called the <strong>condition number</strong>. A large condition number means a narrow, elongated valley in the loss landscape — gradient descent zig-zags slowly across it instead of heading straight for the bottom.</p>
+
+          <h4>The Three Variants</h4>
+          <p><strong>Batch gradient descent</strong> computes the gradient using the entire dataset each step. It gives the exact gradient but costs O(n) per step, which is prohibitive for large datasets.</p>
+          <p><strong>Stochastic gradient descent (SGD)</strong> uses a single randomly-chosen example per step. The gradient estimate is noisy (high variance) but unbiased, and each step is O(1). The noise actually helps escape shallow local minima and saddle points.</p>
+          <p><strong>Mini-batch gradient descent</strong> — the practical default — uses a random subset of B examples (typically B = 32 to 512). It strikes a balance: the gradient estimate is less noisy than SGD, and modern hardware (GPUs) processes a batch almost as fast as a single example thanks to parallelism.</p>
+
+          <h4>Intuition</h4>
+          <p>Think of the learning rate as the size of your steps while hiking downhill in dense fog. Too small, and you inch along wasting time. Too large, and you leap over the valley floor and end up on the opposite slope — or worse, higher than where you started. The "just right" step size depends on how steep and curved the terrain is. Adaptive optimizers like Adam effectively give each parameter its own learning rate, taking bigger steps in flat directions and smaller steps in steep ones.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Gradient descent always finds the global minimum."</div>
+          <p><strong>✅ Reality:</strong> Only for convex functions. For non-convex losses (like neural network training), GD finds a local minimum or saddle point. However, research shows that in high dimensions, most local minima have loss values close to the global minimum — the real problem is saddle points and flat plateaus, not bad local minima.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "A smaller learning rate is always safer and will always converge eventually."</div>
+          <p><strong>✅ Reality:</strong> A very small learning rate can get trapped in sharp, narrow minima that generalize poorly. It also takes impractically long. Modern practice often uses <strong>learning rate warmup</strong> (start small, ramp up) followed by a <strong>schedule</strong> (cosine decay, step decay) to get the best of both worlds — fast early progress and precise final convergence.</p>
+
+          <h4>Historical Context</h4>
+          <p>The method of steepest descent was first described by Augustin-Louis Cauchy in 1847. Stochastic approximation — the ancestor of SGD — was introduced by Herbert Robbins and Sutton Monro in 1951. SGD became central to machine learning through the backpropagation revolution of the 1980s (Rumelhart, Hinton, Williams, 1986). Modern adaptive methods emerged with AdaGrad (Duchi et al., 2011), RMSProp (Hinton, unpublished lecture, 2012), and Adam (Kingma and Ba, 2014), which remains the most widely used optimizer in deep learning today.</p>
+        </div>
+      </details>
+    `));
   },
 };

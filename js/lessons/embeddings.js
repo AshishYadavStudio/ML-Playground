@@ -37,6 +37,16 @@ export default {
       <p>Neural networks eat numbers, not words. The naive fix — give each word an ID — is terrible: it makes "cat" exactly as different from "kitten" as from "carburetor." The real fix is one of the most beautiful ideas in ML:</p>
       <div class="callout callout-info"><div class="callout-title">The embedding idea</div>
       Represent every word (or image, song, user, product…) as a <strong>point in a continuous vector space</strong>, positioned so that <em>similar things sit close together</em>. The positions aren't designed — they're <strong>learned</strong>, typically by training a model to predict words from their neighbors ("you shall know a word by the company it keeps").</div>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Assign each token an ID:</strong> Every unique word (or subword token) in the vocabulary gets an integer index — e.g. "cat" = 4821. This ID is meaningless on its own; it is just a lookup key.</li>
+          <li><strong>Look up the embedding vector:</strong> The model maintains a large table (the "embedding matrix") where each row is a dense vector of, say, 300 dimensions. Token 4821 retrieves row 4821 — that vector <em>is</em> the word's meaning to the model.</li>
+          <li><strong>Learn the vectors from context:</strong> During training (e.g. predicting a word from its neighbors), backpropagation adjusts each embedding vector so that words used in similar contexts drift toward similar positions in the vector space. Nobody hand-places words; the geometry emerges from data.</li>
+          <li><strong>Use geometry as meaning:</strong> After training, distance and direction in the embedding space carry semantic meaning. Similar words cluster together; regular relationships (gender, tense, country-capital) become parallel vector offsets. The model can now do math on meaning.</li>
+        </ol>
+      </div>
+
       <p>Real embeddings live in 300–4096 dimensions; below is a 2-D map so you can see the geometry. <strong>Hover any word</strong> to see its nearest neighbors — then run the famous analogies and watch arithmetic do semantics.</p>
     `));
 
@@ -194,6 +204,40 @@ export default {
       <p>The very first layer of GPT-style models is an embedding table: token → vector. Everything the model does afterward — all the attention you explored last lesson — is geometry on these vectors. The final layer measures which token's embedding best matches the computed vector: meaning in, geometry throughout, meaning out.</p>
       <div class="callout callout-tip"><div class="callout-title">🎓 You made it!</div>
       From "what is ML?" to the geometry inside frontier models — you now have the complete conceptual skeleton of modern machine learning. Where to go deeper: build the NN playground datasets in PyTorch, read "Attention Is All You Need", train a tiny GPT (Karpathy's nanoGPT), or revisit any lesson here — the demos reward second visits.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Word2Vec, Cosine Similarity & Embedding Arithmetic</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>The similarity between two embedding vectors is typically measured by <em>cosine similarity</em>:</p>
+          <div class="formula">cos(θ) = (A · B) / (‖A‖ · ‖B‖) = ∑<sub>i</sub> A<sub>i</sub>B<sub>i</sub> / (√∑<sub>i</sub> A<sub>i</sub>² · √∑<sub>i</sub> B<sub>i</sub>²)</div>
+          <p>The result ranges from -1 (opposite meaning) through 0 (unrelated) to +1 (identical meaning). Cosine similarity ignores vector magnitude and measures only the angle between vectors — this is important because two documents about "cats" should be similar regardless of whether one is longer than the other.</p>
+
+          <h4>Word2Vec: CBOW and Skip-gram</h4>
+          <p>Word2Vec (Mikolov et al., 2013) introduced two training objectives for learning embeddings from raw text:</p>
+          <ul>
+            <li><strong>CBOW (Continuous Bag of Words):</strong> Given surrounding context words, predict the center word. Fast to train, works well for frequent words.</li>
+            <li><strong>Skip-gram:</strong> Given a center word, predict the surrounding context words. Slower but produces better embeddings for rare words and smaller datasets.</li>
+          </ul>
+          <div class="formula">Skip-gram objective: maximize ∑<sub>t</sub> ∑<sub>-c≤j≤c, j≠0</sub> log P(w<sub>t+j</sub> | w<sub>t</sub>)<br>where P(w<sub>O</sub> | w<sub>I</sub>) = exp(v'<sub>w<sub>O</sub></sub> · v<sub>w<sub>I</sub></sub>) / ∑<sub>w</sub> exp(v'<sub>w</sub> · v<sub>w<sub>I</sub></sub>)</div>
+          <p>In practice, the expensive softmax denominator (summing over the full vocabulary) is replaced with <em>negative sampling</em>: for each positive (center, context) pair, sample ~5 random "negative" words and train a binary classifier to distinguish real context from noise.</p>
+
+          <h4>Embedding Arithmetic</h4>
+          <p>The famous <code>king - man + woman ≈ queen</code> works because the training objective forces words with analogous relationships into analogous geometric configurations. The "royalty" direction <code>v(king) - v(man)</code> is approximately parallel to <code>v(queen) - v(woman)</code>. This is not a trick of cherry-picked examples — it reflects genuine linear structure that emerges from distributional statistics. However, it works best for regular, high-frequency semantic relationships and becomes less reliable for abstract or infrequent analogies.</p>
+
+          <h4>Intuition</h4>
+          <p>Imagine placing every word in the dictionary on a vast, high-dimensional map where the "address" of each word encodes its meaning. Words that substitute for each other in sentences ("happy" and "glad") end up as neighbors. Systematic meaning shifts (singular→plural, present→past, country→capital) become consistent compass directions. The map is never drawn by hand — it crystallizes from billions of examples of how words appear together.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Each dimension of an embedding corresponds to a specific human-interpretable feature."</div>
+          <p><strong>✅ Reality:</strong> Individual embedding dimensions are not interpretable. Meaning is encoded in <em>directions</em> (linear combinations of dimensions), not in single axes. A direction that looks like "gender" might involve dozens of dimensions in a complex pattern. Tools like PCA and t-SNE project these high-dimensional directions into 2-D for visualization, but the true structure lives in the full space.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Word embeddings are bias-free representations of meaning."</div>
+          <p><strong>✅ Reality:</strong> Embeddings absorb the biases present in their training data. Studies have shown that Word2Vec and GloVe embeddings encode gender stereotypes (e.g. "doctor" closer to "man," "nurse" closer to "woman") and racial biases. Debiasing techniques exist but remain an active research area, and awareness of these biases is essential when deploying embedding-based systems.</p>
+
+          <h4>Historical Context</h4>
+          <p>Distributional semantics dates to J.R. Firth's 1957 observation: "You shall know a word by the company it keeps." Early approaches used co-occurrence matrices and SVD (Latent Semantic Analysis, 1988). Bengio et al.'s neural language model (2003) first learned dense word vectors as a byproduct. Mikolov's Word2Vec (2013) made embedding training fast enough for web-scale corpora and demonstrated the now-famous analogy arithmetic. GloVe (Pennington et al., 2014) combined count-based and predictive approaches. Modern transformer models (BERT, GPT) produce <em>contextual</em> embeddings — the same word gets different vectors depending on its sentence — making static Word2Vec-style embeddings largely obsolete for NLP tasks, though the geometric intuition remains foundational.</p>
+        </div>
+      </details>
     `));
   },
 };

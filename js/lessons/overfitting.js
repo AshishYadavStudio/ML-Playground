@@ -19,6 +19,18 @@ export default {
         <li><strong>Overfitting:</strong> model too flexible — fits noise. Tiny training error, big test error.</li>
         <li><strong>Sweet spot:</strong> just enough capacity to capture the pattern, no more.</li>
       </ul>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Train the model on training data:</strong> The model adjusts its parameters to fit the training points as well as possible — reducing training error toward zero.</li>
+          <li><strong>Noise gets memorized too:</strong> Real data is noisy. A highly flexible model (many parameters) can bend to fit the random noise in each specific training point, not just the underlying pattern.</li>
+          <li><strong>Training error drops, test error rises:</strong> The model looks brilliant on data it has seen but makes wild predictions on new data — the classic "U-shaped" generalization curve appears.</li>
+          <li><strong>Add regularization:</strong> Penalize large parameter values by adding a term like lambda * sum(w^2) to the loss. This forces the model to stay simple unless the data strongly justifies complexity.</li>
+          <li><strong>Find the sweet spot:</strong> Tune the regularization strength (or model complexity) using a validation set. The goal is the lowest test error, not the lowest training error.</li>
+        </ol>
+      </div>
+
       <h3>Try it: the degree slider</h3>
       <p>We fit a polynomial of degree <em>d</em> to noisy data sampled from a smooth curve. Blue points are <strong>training</strong> data, yellow points are held-out <strong>test</strong> data the fit never sees. Slide the degree up and watch the two errors diverge.</p>
     `));
@@ -178,6 +190,40 @@ export default {
       </div>
       <div class="callout callout-tip"><div class="callout-title">💡 The bias–variance trade-off</div>
       Simple models have high <strong>bias</strong> (systematically wrong) but low <strong>variance</strong> (stable across datasets). Flexible models have the reverse. Total error = bias² + variance + irreducible noise — the U-shaped test curve you saw is this equation drawn in real time.</div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Bias-variance decomposition, L1 vs L2, and the Bayesian connection</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>For any model, the expected prediction error at a point x decomposes exactly into three terms:</p>
+          <div class="formula">E[(y − f-hat(x))²] = Bias²(f-hat(x)) + Var(f-hat(x)) + sigma²</div>
+          <p>Where <strong>Bias</strong> = E[f-hat(x)] - f(x) measures systematic error (how far the average prediction is from truth), <strong>Variance</strong> = E[(f-hat(x) - E[f-hat(x)])²] measures how much the prediction fluctuates across different training sets, and sigma² is the irreducible noise in the data that no model can eliminate.</p>
+          <p><strong>L2 regularization (Ridge)</strong> adds the squared magnitude of weights to the loss:</p>
+          <div class="formula">L_ridge = MSE + lambda · Σ w_j² &nbsp;&nbsp; → &nbsp;&nbsp; w* = (X<sup>T</sup>X + lambda·I)<sup>-1</sup> X<sup>T</sup>y</div>
+          <p>The lambda·I term makes the matrix always invertible and shrinks all weights toward zero proportionally. Geometrically, the constraint region is a sphere — the solution is the point where the MSE contours first touch the sphere.</p>
+          <p><strong>L1 regularization (Lasso)</strong> uses absolute values instead:</p>
+          <div class="formula">L_lasso = MSE + lambda · Σ |w_j|</div>
+          <p>The L1 constraint region is a diamond (hypercube). Because its corners lie on the axes, the MSE contours tend to touch at a corner — where some weights are exactly zero. This makes Lasso a built-in feature selector: it automatically drops irrelevant features from the model.</p>
+
+          <h4>Intuition</h4>
+          <p>Imagine fitting a curve through 5 noisy points. A degree-1 polynomial (line) cannot wiggle — it has low variance but high bias if the true shape is curved. A degree-4 polynomial passes through every point exactly — zero training error — but a different set of 5 noisy points from the same source would give a wildly different curve. The bias is zero but the variance is enormous. The best model complexity is where the sum bias² + variance is minimized.</p>
+          <p>Regularization works by deliberately increasing bias (forcing simpler solutions) to achieve a larger decrease in variance. You lose a little accuracy on the training set but gain much more stability on new data — net win.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "More training data always prevents overfitting."</div>
+          <p><strong>✅ Reality:</strong> More data helps, but a sufficiently flexible model can still overfit an enormous dataset. A polynomial of degree n-1 can perfectly fit n points regardless of n. In practice, if your model has more effective parameters than useful patterns in the data, overfitting is still possible. Regularization, architecture choice, and early stopping remain necessary.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "L1 and L2 regularization do essentially the same thing — they just penalize weights."</div>
+          <p><strong>✅ Reality:</strong> They have fundamentally different effects. L2 (Ridge) shrinks all weights smoothly toward zero but rarely makes any exactly zero — it keeps all features in the model. L1 (Lasso) produces sparse solutions, setting many weights to exactly zero, effectively performing automatic feature selection. <strong>Elastic Net</strong> combines both: lambda_1·Σ|w_j| + lambda_2·Σw_j², getting sparsity from L1 and the stability of L2.</p>
+
+          <h4>The Bayesian Connection</h4>
+          <p>Regularization has an elegant Bayesian interpretation. L2 regularization is equivalent to placing a Gaussian prior on the weights (each weight is assumed to come from a normal distribution centered at zero). L1 regularization corresponds to a Laplace prior (sharply peaked at zero, with heavy tails). The regularization strength lambda controls how strongly the prior pulls weights toward zero. Maximum a posteriori (MAP) estimation with these priors yields exactly the Ridge and Lasso solutions, respectively — showing that regularization is not an ad hoc trick but principled Bayesian reasoning about what weights are plausible before seeing data.</p>
+
+          <h4>Historical Context</h4>
+          <p>The bias-variance decomposition was formalized by Stuart Geman, Elie Bienenstock, and Rene Doursat in their influential 1992 paper on neural networks. Ridge regression was introduced by Arthur Hoerl and Robert Kennard in 1970 to handle multicollinear features. The Lasso was proposed by Robert Tibshirani in 1996, and its ability to perform simultaneous estimation and variable selection made it one of the most cited papers in statistics. The double descent phenomenon — discovered around 2019 by Belkin et al. — challenges the classical U-curve: very overparameterized models (like deep neural networks with more parameters than data points) can generalize well again beyond the interpolation threshold, an observation still being understood theoretically.</p>
+        </div>
+      </details>
     `));
   },
 };

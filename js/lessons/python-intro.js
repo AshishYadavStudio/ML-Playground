@@ -54,6 +54,17 @@ System.out.println("sum of squares: " + total);</pre></div>
       <div class="callout callout-tip"><div class="callout-title">💡 Zero-install alternative</div>
       Don't want to install anything yet? <strong>Google Colab</strong> (colab.research.google.com) runs Python notebooks in your browser with free GPUs — the standard way to experiment with ML. Everything in this course works there too.</div>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>You write a .py file:</strong> Your code is plain text — Python files are nothing more than text files with a <code>.py</code> extension.</li>
+          <li><strong>The interpreter reads it:</strong> When you run <code>python hello.py</code>, the CPython interpreter reads your source file top to bottom.</li>
+          <li><strong>Source is compiled to bytecode:</strong> Python silently compiles your code into a lower-level instruction set called <em>bytecode</em> (stored in <code>__pycache__</code> folders as <code>.pyc</code> files). This isn't machine code — it's an intermediate form.</li>
+          <li><strong>The virtual machine executes bytecode:</strong> CPython's stack-based virtual machine (the PVM) reads each bytecode instruction and executes it one at a time — loading values, calling functions, printing output.</li>
+          <li><strong>Results appear:</strong> Output goes to your terminal (<code>print()</code>) or gets returned to whatever called the script. Errors show a traceback pointing to the exact line that failed.</li>
+        </ol>
+      </div>
+
       <h3>Try the terminal</h3>
       <p>These are the five commands that cover 95% of everyday Python setup work. Click each one to "run" it and read what it does:</p>
     `));
@@ -109,6 +120,28 @@ print("2 + 2 =", 2 + 2)`,
       <div class="callout callout-warn"><div class="callout-title">⚠️ The two beginner traps</div>
       <b>1. PATH:</b> "python is not recognized" on Windows = the installer checkbox was missed. Re-run it and tick "Add to PATH".<br>
       <b>2. python vs python3:</b> on Mac/Linux the command is often <code>python3</code> and <code>pip3</code>. If <code>python</code> fails, add the 3.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — CPython internals and why Python is "slow"</summary>
+        <div class="deep-dive-body">
+          <h4>What is CPython?</h4>
+          <p>When people say "Python" they almost always mean <strong>CPython</strong> — the reference implementation written in C. Alternatives exist (PyPy, Jython, IronPython) but CPython runs 99% of production Python code and all major ML libraries are built against it.</p>
+          <p>CPython compiles your source to <em>bytecode</em> — a compact, platform-independent instruction set — then interprets that bytecode on a stack-based virtual machine. Each bytecode instruction (like <code>LOAD_FAST</code>, <code>BINARY_ADD</code>, <code>CALL_FUNCTION</code>) is implemented as a C switch-case. This is inherently slower than native machine code because every operation pays the cost of the interpreter loop.</p>
+
+          <h4>The GIL (Global Interpreter Lock)</h4>
+          <p>CPython has a mutex called the <strong>GIL</strong> that allows only one thread to execute Python bytecode at a time, even on a 16-core CPU. This exists because CPython's memory management (reference counting) is not thread-safe. The practical effect: CPU-bound Python threads don't speed things up — they take turns. This is being addressed by the free-threaded Python project (PEP 703, experimental in Python 3.13+), but it's not yet standard.</p>
+
+          <h4>So why does ML use Python?</h4>
+          <p>Python is the <em>steering wheel</em>, not the engine. NumPy's inner loops are compiled C and Fortran. PyTorch's tensor operations run on CUDA GPUs. scikit-learn calls into LAPACK and libsvm. The actual math never touches the Python interpreter — Python just orchestrates which C/CUDA routines to call and in what order. A training loop might execute 50 Python bytecodes per batch to dispatch a matrix multiply that does 10 billion floating-point operations in compiled code. The 50-instruction overhead is negligible.</p>
+
+          <h4>Common Pitfalls</h4>
+          <div class="misconception"><strong>❌ Pitfall:</strong> "Python is slow, so I should rewrite my ML code in C++ for speed."</div>
+          <p><strong>✅ Better approach:</strong> Profile first. The bottleneck is almost never the Python code — it's data loading, GPU utilization, or an accidentally un-vectorized loop. Replacing a Python for-loop with a NumPy operation often gives a 100x speedup without leaving Python.</p>
+
+          <h4>The compilation pipeline</h4>
+          <p>Source (<code>.py</code>) → Bytecode (<code>.pyc</code> in <code>__pycache__</code>) → PVM execution. You can inspect bytecode yourself: <code>import dis; dis.dis(my_function)</code> shows the exact instructions. This is invaluable for understanding why one Python idiom is faster than another — fewer bytecodes generally means faster execution.</p>
+        </div>
+      </details>
     `));
   },
 };

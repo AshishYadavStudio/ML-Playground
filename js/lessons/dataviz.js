@@ -22,6 +22,18 @@ export default {
   render(root) {
     root.appendChild(html(`
       <p>Before any model, professionals do one thing: <strong>plot the data</strong>. Not because it's pretty — because summary numbers hide disasters that a two-second glance reveals. This lesson is the proof.</p>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Always plot first:</strong> Before computing any statistic or training any model, visualize the raw data. A 5-second scatter plot catches outliers, non-linear relationships, clusters, and data quality issues that no summary number reveals.</li>
+          <li><strong>Match chart to question:</strong> Line charts show trends over time. Bar charts compare categories. Scatter plots reveal relationships between two variables. Histograms show distributions. The same data tells different stories depending on the chart type.</li>
+          <li><strong>Choose bin widths carefully:</strong> Histograms and heatmaps depend on binning. Too few bins hide structure; too many bins create noise. There's no universally correct number — it requires judgment based on the data's sample size and expected distribution.</li>
+          <li><strong>Distrust summary statistics alone:</strong> Anscombe's Quartet (1973) proved that datasets with identical mean, variance, correlation, and regression line can look completely different. Modern variants (the Datasaurus Dozen) hammer the point further.</li>
+          <li><strong>Plot your errors too:</strong> After training a model, plot residuals (predicted − actual) against inputs. Patterns in residuals reveal systematic failures that aggregate metrics like RMSE average away.</li>
+        </ol>
+      </div>
+
       <h3>Anscombe's Quartet: four datasets, one statistical fingerprint</h3>
       <p>The four datasets below — constructed by statistician Francis Anscombe in 1973 — have <strong>identical</strong> means, variances, correlation (0.816), and even the identical best-fit line <code>y = 0.5x + 3</code>. If you only looked at statistics, they'd be indistinguishable. Look:</p>
     `));
@@ -236,6 +248,35 @@ export default {
       </table>
       <div class="callout callout-tip"><div class="callout-title">💡 Full circle</div>
       Every visualization in this course — decision boundaries, loss curves, attention heatmaps — is this lesson's principle applied to <em>models</em> instead of data: if you can see it, you can debug it. The best ML practitioners are compulsive plotters.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Anscombe's legacy, chart deception, and accessibility</summary>
+        <div class="deep-dive-body">
+          <h4>The Datasaurus Dozen</h4>
+          <p>In 2017, Matejka and Fitzmaurice extended Anscombe's idea dramatically: they generated 13 datasets — including one shaped like a dinosaur — that share <em>identical</em> statistics (mean, standard deviation, and correlation to two decimal places). The technique uses simulated annealing to iteratively move points toward a target shape while preserving statistical properties. This is now the go-to demonstration that summary statistics are necessary but never sufficient.</p>
+
+          <h4>How Charts Lie</h4>
+          <p>Common deceptive practices to watch for (and avoid):</p>
+          <ul>
+            <li><strong>Truncated y-axis:</strong> Starting the y-axis at 95 instead of 0 makes a 2% change look dramatic.</li>
+            <li><strong>Dual y-axes:</strong> Two different scales on left/right make unrelated trends look correlated.</li>
+            <li><strong>Cherry-picked time range:</strong> Any stock looks good if you pick the right start date.</li>
+            <li><strong>3D charts:</strong> Perspective distortion makes bars closer to the viewer look larger. Never use 3D for 2D data.</li>
+          </ul>
+
+          <h4>Accessibility in Visualization</h4>
+          <p>~8% of males have some form of color blindness. Best practices: (1) don't rely on color alone — use shapes, patterns, or labels too; (2) use colorblind-safe palettes (viridis, cividis); (3) maintain sufficient contrast; (4) add alt text to images. Tools like ColorBrewer and the Viz Palette checker help pick accessible colors.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "More data points need more complex charts."</div>
+          <p><strong>✅ Reality:</strong> With large datasets, simple charts often work better. A scatter plot with 10 million points becomes an opaque blob — use hexbin plots, density contours, or random subsampling. A histogram with 10 million values needs fewer bins than you'd think, because the large sample size makes each bin's count reliable.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Beautiful charts are good charts."</div>
+          <p><strong>✅ Reality:</strong> The goal is <em>clarity</em>, not aesthetics. Edward Tufte's principle: maximize the data-ink ratio — every pixel should convey information. Remove gridlines, 3D effects, gradient fills, and decorations that don't help the reader understand the data. A plain scatter plot with good axis labels beats a fancy infographic that obscures the pattern.</p>
+
+          <h4>Historical Context</h4>
+          <p>William Playfair invented the line chart (1786) and bar chart (1801). Florence Nightingale's polar area diagrams (1858) convinced the British government to improve military hospital sanitation — one of the first examples of data visualization changing policy. John Tukey formalized exploratory data analysis (EDA) in 1977, arguing that looking at data should precede formal testing. Anscombe's quartet (1973) was created specifically to counter the argument that "numerical calculations are exact, whereas graphs are rough." The rise of ggplot2 (Wickham, 2005) and seaborn (Waskom, 2012) made it trivial to produce publication-quality plots in one line of code.</p>
+        </div>
+      </details>
     `));
   },
 };

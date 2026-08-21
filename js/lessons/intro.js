@@ -18,6 +18,17 @@ export default {
       <p><strong>Machine learning flips this around:</strong> we give the computer data <em>and</em> the answers (examples), and it figures out the rules by itself.</p>
       <div class="formula">Traditional: &nbsp; Rules + Data → Answers &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; Machine Learning: &nbsp; Data + Answers → Rules</div>
       <p>Those learned "rules" are called a <strong>model</strong>. Once trained, the model can make predictions on data it has never seen before.</p>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Collect examples:</strong> Gather data where you already know the right answers — e.g., photos labeled "cat" or "dog," emails marked "spam" or "not spam."</li>
+          <li><strong>Choose a model family:</strong> Pick a flexible mathematical structure (a line, a tree, a neural network) that can represent many possible rules.</li>
+          <li><strong>Initialize randomly:</strong> Start the model's internal numbers (parameters) at random values — its first "guess" is intentionally bad.</li>
+          <li><strong>Measure the error:</strong> Compare the model's predictions to the known answers using a loss function — a single number that says "how wrong am I?"</li>
+          <li><strong>Adjust and repeat:</strong> Nudge the parameters to reduce the error, then measure again. Repeat hundreds or thousands of times until the error is small and the model has "learned" a good rule from the data.</li>
+        </ol>
+      </div>
+
       <h3>Try it: can you beat the machine?</h3>
       <p>Below are two groups of points (🟠 oranges and 🔵 blueberries, say). Your job — and the machine's job — is to find a line that separates them. <strong>Drag anywhere on the canvas to place and rotate your line</strong>, then hit <em>Let the machine learn</em> and watch it find its own line, step by step, purely from the data.</p>
     `));
@@ -169,6 +180,31 @@ export default {
       </table>
       <div class="callout callout-tip"><div class="callout-title">💡 Big idea</div>
       Machine learning = choosing a flexible family of rules, then using data to automatically pick the best rule from that family. Every lesson that follows is a variation on this theme.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Types of Learning & the No Free Lunch Theorem</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>At its core, machine learning is an optimization problem. Given a hypothesis space <em>H</em> (the set of all rules our model family can represent) and a loss function <em>L</em>, training finds:</p>
+          <div class="formula">h* = argmin<sub>h∈H</sub> (1/n) Σ L(h(xᵢ), yᵢ)</div>
+          <p>This is called <strong>Empirical Risk Minimization (ERM)</strong>. We minimize the average loss over our training examples as a proxy for minimizing loss on all possible future data (the true risk).</p>
+
+          <h4>Intuition</h4>
+          <p>Think of the model as a student cramming for an exam. The training data is the textbook, the loss function is the grade on practice problems, and the test set is the real exam. A good student doesn't just memorize practice answers — they learn the underlying patterns so they can handle new questions. That generalization gap — performing well on data you haven't seen — is what separates real learning from memorization (overfitting).</p>
+
+          <h4>The Four Types of Machine Learning</h4>
+          <p><strong>Supervised learning:</strong> learn from input-output pairs (x, y). <strong>Unsupervised learning:</strong> find structure in inputs x alone. <strong>Reinforcement learning:</strong> learn from delayed reward signals through trial and error. <strong>Self-supervised learning:</strong> a modern hybrid — the model generates its own labels from the data (e.g., "predict the next word"), unlocking massive unlabeled datasets. GPT and BERT are self-supervised.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> There is one "best" machine learning algorithm that works for all problems.</div>
+          <p><strong>✅ Reality:</strong> The <strong>No Free Lunch Theorem</strong> (Wolpert & Macready, 1997) proves that no single algorithm outperforms all others across every possible problem. Averaged over all conceivable data distributions, every learner is equally good (or bad). The reason some algorithms work better in practice is that real-world data has structure — it isn't random noise — and different algorithms exploit different kinds of structure. Choosing the right algorithm means matching it to the structure in your data.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> More data always makes a model better.</div>
+          <p><strong>✅ Reality:</strong> More data helps only if it's representative and correctly labeled. A million mislabeled examples will teach the model the wrong rule. Quality and diversity of data often matter more than sheer quantity.</p>
+
+          <h4>Historical Context</h4>
+          <p>The idea that machines could learn from data dates to Arthur Samuel's 1959 checkers program at IBM — one of the first programs to improve with experience. The term "machine learning" was coined by Samuel himself. The field went through multiple "AI winters" of reduced funding and interest, but the convergence of big data, powerful GPUs, and algorithmic breakthroughs (especially deep learning, ~2012) triggered the modern explosion. Today, ML powers search engines, voice assistants, medical imaging, autonomous vehicles, and the language models you interact with daily.</p>
+        </div>
+      </details>
     `));
   },
 };

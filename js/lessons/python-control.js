@@ -123,6 +123,17 @@ if temperature > 25 and temperature <= 35:
         <li><code>else</code> is the catch-all. <code>elif</code> = "else if".</li>
         <li>Combine tests with <code>and</code>, <code>or</code>, <code>not</code> — real words, not <code>&amp;&amp;</code>/<code>||</code>.</li>
       </ul>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Conditions evaluate to booleans:</strong> Python evaluates the expression after <code>if</code> and coerces it to <code>True</code> or <code>False</code>. Any value can be tested — not just booleans (see truthiness rules in the Deep Dive).</li>
+          <li><strong>Branches are checked top-to-bottom:</strong> Python evaluates <code>if</code>, then each <code>elif</code> in order. The <em>first</em> true branch runs; all remaining branches (including <code>else</code>) are skipped entirely — their code is never even evaluated.</li>
+          <li><strong>For-loops request items from an iterator:</strong> <code>for x in items</code> calls <code>iter(items)</code> to get an iterator, then calls <code>next()</code> repeatedly. Each call yields the next value; when <code>StopIteration</code> is raised, the loop ends. This protocol is why for-loops work on lists, strings, files, generators — anything iterable.</li>
+          <li><strong>While-loops re-check each time:</strong> Before every iteration, the condition is re-evaluated from scratch. If it's <code>True</code>, the body runs; if <code>False</code>, the loop exits. If the condition never becomes <code>False</code>, you get an infinite loop.</li>
+          <li><strong>Break and continue alter the flow:</strong> <code>break</code> immediately exits the innermost loop. <code>continue</code> skips the rest of the current iteration and jumps back to the loop header (re-checking the condition for while, fetching the next item for for).</li>
+        </ol>
+      </div>
+
       <h3>Watch control flow live</h3>
       <p>Pick a program and step through it. The highlight <em>jumps</em> — into branches, back to loop tops, out on break — that jumping <strong>is</strong> control flow:</p>
     `));
@@ -224,6 +235,27 @@ for name, score in zip(["Ada", "Alan"], [95, 88]):
       </table>
       <div class="callout callout-tip"><div class="callout-title">💡 The training loop, again</div>
       Every neural network you trained on this site runs on exactly these tools: <code>for epoch in range(100):</code> wrapping <code>for batch in data:</code>, with an <code>if</code> for early stopping and a <code>break</code> when validation loss rises. Control flow <em>is</em> the training loop.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — truthiness, short-circuit evaluation, and the iterator protocol</summary>
+        <div class="deep-dive-body">
+          <h4>Truthiness: what counts as True?</h4>
+          <p>Python doesn't require booleans in <code>if</code> statements — any value works. The rule: <strong>empty and zero-like things are False; everything else is True</strong>. Specifically falsy: <code>False</code>, <code>None</code>, <code>0</code>, <code>0.0</code>, <code>""</code> (empty string), <code>[]</code> (empty list), <code>{}</code> (empty dict), <code>set()</code>. This is why you see <code>if data:</code> instead of <code>if len(data) > 0:</code> — both work, but the first is idiomatic Python.</p>
+
+          <h4>Short-circuit evaluation</h4>
+          <p><code>and</code> stops at the first falsy value; <code>or</code> stops at the first truthy value. Python doesn't even evaluate the rest. This matters: <code>if x != 0 and 10/x > 2:</code> is safe because when <code>x</code> is 0, the <code>and</code> short-circuits before the division. It also means <code>or</code> can serve as a default: <code>name = user_input or "Anonymous"</code> — if the input is empty (falsy), the name becomes "Anonymous".</p>
+
+          <h4>The iterator protocol under the hood</h4>
+          <p>When Python encounters <code>for x in obj:</code>, it calls <code>obj.__iter__()</code> to get an iterator, then repeatedly calls <code>iterator.__next__()</code>. When <code>__next__</code> raises <code>StopIteration</code>, the loop ends cleanly. This protocol is what makes Python's for-loop so versatile — any object that implements <code>__iter__</code> and <code>__next__</code> is iterable. Files yield lines, <code>range()</code> yields numbers, generators yield whatever you <code>yield</code>.</p>
+
+          <h4>Common Pitfalls</h4>
+          <div class="misconception"><strong>❌ Pitfall:</strong> Modifying a list while iterating over it: <code>for x in lst: if x < 0: lst.remove(x)</code></div>
+          <p><strong>✅ Better approach:</strong> Build a new list: <code>lst = [x for x in lst if x >= 0]</code>. Removing items during iteration skips elements because the underlying index shifts. This bug is silent — no error, just wrong results.</p>
+
+          <h4>The else clause on loops</h4>
+          <p>Python has an unusual feature: <code>for...else</code> and <code>while...else</code>. The <code>else</code> block runs only if the loop completed without hitting <code>break</code>. Useful for search patterns: loop through items looking for a match, <code>break</code> when found, and the <code>else</code> handles the "not found" case — cleaner than a flag variable.</p>
+        </div>
+      </details>
     `));
   },
 };

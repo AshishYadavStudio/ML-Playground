@@ -18,6 +18,16 @@ export default {
         <div class="card"><div class="card-icon">🌲</div><h4>Bagging (parallel)</h4><p>Train many models <em>independently</em> on random subsets of the data. Average their predictions. Random Forests are bagging + random feature subsets per split.</p></div>
         <div class="card"><div class="card-icon">🚀</div><h4>Boosting (sequential)</h4><p>Train models <em>one after another</em>, each one focusing on what the previous ones got wrong. AdaBoost, Gradient Boosting, XGBoost, LightGBM.</p></div>
       </div>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Train many weak learners:</strong> Each model (usually a shallow decision tree) is trained on a different version of the data — a random resample (bagging) or a reweighted version (boosting).</li>
+          <li><strong>Introduce diversity:</strong> In bagging, each tree sees a bootstrap sample (~63% of data) and random feature subsets. In boosting, each tree focuses on the mistakes of the previous round by upweighting misclassified examples.</li>
+          <li><strong>Combine predictions:</strong> For bagging, take a majority vote (classification) or average (regression). For boosting, use a weighted vote where better-performing trees get more say.</li>
+          <li><strong>Errors cancel out:</strong> Because each model makes different mistakes (they saw different data or focused on different errors), averaging them washes away individual noise — leaving the signal.</li>
+          <li><strong>Result:</strong> The ensemble is more accurate and stable than any single member, often dramatically so.</li>
+        </ol>
+      </div>
       <h3>Try it: watch weak learners become a strong one</h3>
       <p>The dataset below is <strong>non-linear</strong> — a single depth-2 tree can barely do better than chance. Add more trees and watch the ensemble's decision boundary sharpen. Switch to <em>Boosting</em> and see how each new tree focuses on the mistakes.</p>
     `));
@@ -248,6 +258,38 @@ export default {
 
       <div class="callout callout-info"><div class="callout-title">📌 Real-world winners</div>
       Random Forests power fraud detection, feature importance for medical studies, and Kinect's body-pose recognition. Gradient boosting won Kaggle's "Higgs Boson" challenge, forms the backbone of Yandex/CatBoost's ranking, and remains the go-to for credit scoring, ad-CTR prediction, and just about anything with a spreadsheet of features.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — the math behind ensembles</summary>
+        <div class="deep-dive-body">
+          <h4>Why Bagging Reduces Variance</h4>
+          <p>If you average M independent estimators each with variance σ², the variance of the average is σ²/M. Bootstrap samples aren't fully independent (they share ~63% of data), but the correlation ρ between trees is low enough that the variance still drops substantially:</p>
+          <div class="formula">Var(ensemble) = ρσ² + (1−ρ)σ²/M</div>
+          <p>Random Forests further reduce ρ by randomizing features at each split — even correlated trees become more independent.</p>
+
+          <h4>AdaBoost Weight Update</h4>
+          <p>AdaBoost trains weak learners sequentially. After each round, misclassified examples get heavier weights:</p>
+          <div class="formula">αₜ = ½ ln((1 − εₜ) / εₜ) &nbsp;&nbsp;&nbsp; wᵢ ← wᵢ · exp(−αₜ · yᵢ · hₜ(xᵢ))</div>
+          <p>αₜ is the learner's voting weight (better learners vote louder). εₜ is its weighted error rate. The exponential reweighting means a single misclassified point can dominate the next round — this is both AdaBoost's power and its vulnerability to outliers.</p>
+
+          <h4>Gradient Boosting — Residual Fitting</h4>
+          <p>Gradient boosting generalizes AdaBoost: each new tree fits the <em>negative gradient of the loss</em> (for MSE, this is simply the residuals):</p>
+          <div class="formula">Fₜ(x) = Fₜ₋₁(x) + η · hₜ(x) &nbsp; where hₜ fits the pseudo-residuals rᵢ = −∂L/∂F(xᵢ)</div>
+          <p>The learning rate η (0.01–0.1) shrinks each tree's contribution, requiring more trees but preventing overfitting. This is why XGBoost uses 500–3000 tiny trees rather than 10 large ones.</p>
+
+          <h4>Stacking</h4>
+          <p>Instead of simple voting, <strong>stacking</strong> trains a meta-learner on top. Base models (RF, SVM, NN) each make predictions, and a simple model (logistic regression) learns the best way to combine them. This captures complementary strengths — one model might excel on linear patterns while another handles nonlinearities.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "More trees in a Random Forest will eventually overfit."</div>
+          <p><strong>✅ Reality:</strong> Random Forests are remarkably resistant to overfitting with more trees. The variance keeps decreasing (or plateaus) while bias stays constant. Adding trees past the plateau just wastes compute, but it won't hurt accuracy — unlike boosting, where too many rounds can overfit.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Ensembles are always better than single models."</div>
+          <p><strong>✅ Reality:</strong> If the base learners are already strong and highly correlated (e.g. all trained on the same data with the same features), ensembling provides little benefit. The power comes from <em>diversity</em> — different errors canceling out.</p>
+
+          <h4>Historical Context</h4>
+          <p>Leo Breiman introduced bagging in 1996 and Random Forests in 2001. Yoav Freund and Robert Schapire proposed AdaBoost in 1996 (winning the Gödel Prize in 2003). Jerome Friedman formalized Gradient Boosting in 2001. The modern era began with Tianqi Chen's XGBoost (2014), followed by Microsoft's LightGBM (2017) and Yandex's CatBoost (2017), which optimized speed, memory, and categorical feature handling.</p>
+        </div>
+      </details>
     `));
   },
 };

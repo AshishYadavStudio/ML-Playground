@@ -26,6 +26,18 @@ export default {
   render(root) {
     root.appendChild(html(`
       <p>You can now write working Python. This lesson adds the tools that make code <em>elegant</em> — the idioms that fill every real ML codebase, so you can read (and write) like a native.</p>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Comprehensions — loops as expressions:</strong> <code>[expr for x in items if cond]</code> creates a new list by filtering and transforming in a single readable line. The same pattern works for sets (<code>{}</code>), dicts (<code>{k: v for ...}</code>), and generators (<code>()</code>).</li>
+          <li><strong>Classes — bundling data with behavior:</strong> <code>class Model:</code> groups related data (attributes) and functions (methods) into one unit. <code>__init__</code> runs at creation; <code>self</code> refers to the current instance. Inheritance lets you reuse and override — every PyTorch model inherits from <code>nn.Module</code>.</li>
+          <li><strong>Exceptions — structured error handling:</strong> <code>try/except/finally</code> catches errors without crashing. <code>raise</code> signals problems explicitly. This is how ML code handles bad data, missing files, and GPU errors gracefully.</li>
+          <li><strong>Generators — lazy evaluation:</strong> <code>yield</code> makes a function produce values one at a time, on demand, without storing the full sequence in memory. This is how you stream a 100 GB dataset through 8 GB of RAM.</li>
+          <li><strong>Decorators — functions that wrap functions:</strong> <code>@decorator</code> transforms a function at definition time — adding timing, caching, or gradient control. You'll meet <code>@property</code>, <code>@torch.no_grad()</code>, and <code>@app.route()</code> everywhere in production ML.</li>
+        </ol>
+      </div>
+
       <h3>List comprehensions: loops in one line</h3>
       <p>The most Pythonic construct of all. <code>[expression for x in items if condition]</code> builds a new list in a single readable line. Assemble one live:</p>
     `));
@@ -201,6 +213,32 @@ slow()
       </table>
       <div class="callout callout-tip"><div class="callout-title">🎓 You now read Python natively</div>
       Comprehensions, classes, context managers, generators, decorators — open any real ML repository (scikit-learn, nanoGPT) and every construct you see is one of these. Nothing in professional Python code is foreign to you anymore. Next stop: <strong>NumPy</strong>, where Python meets serious math.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — dunder methods, descriptors, and metaclasses</summary>
+        <div class="deep-dive-body">
+          <h4>Dunder (Magic) Methods</h4>
+          <p>Python's double-underscore methods let your classes integrate with the language itself:</p>
+          <div class="formula">__init__ (constructor) · __repr__ (debug string) · __len__ (len()) · __getitem__ (indexing)
+__add__ (+ operator) · __iter__ (for loops) · __call__ (make instances callable) · __enter__/__exit__ (with blocks)</div>
+          <p>PyTorch's <code>nn.Module</code> uses <code>__call__</code> to wrap <code>forward()</code> with hooks and gradient tracking. Datasets use <code>__len__</code> and <code>__getitem__</code> for DataLoader integration. When you write <code>model(x)</code>, you're calling <code>model.__call__(x)</code> which calls <code>model.forward(x)</code>.</p>
+
+          <h4>Context Managers</h4>
+          <p>The <code>with</code> statement ensures cleanup happens even if an error occurs. The pattern: <code>__enter__</code> runs at the start, <code>__exit__</code> runs at the end (even during exceptions). You've seen <code>with open(file)</code> — in ML, you'll see <code>with torch.no_grad():</code> (disable gradient tracking for inference) and <code>with torch.cuda.amp.autocast():</code> (mixed precision training).</p>
+
+          <h4>The Descriptor Protocol</h4>
+          <p><code>@property</code> turns a method into an attribute — <code>model.num_params</code> instead of <code>model.num_params()</code>. Under the hood, it uses Python's descriptor protocol: objects with <code>__get__</code>, <code>__set__</code>, or <code>__delete__</code> methods control attribute access on the class they belong to. This is how PyTorch's <code>nn.Parameter</code> registers tensors for gradient tracking when you assign them as attributes.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "List comprehensions are just a shortcut for loops."</div>
+          <p><strong>✅ Reality:</strong> Comprehensions are actually <em>faster</em> than equivalent for-loops because Python optimizes them internally (the loop runs in C, not in the interpreter). They're also more readable once you're fluent — a single line that says "transform these items" is clearer than four lines of loop setup. But nested comprehensions (<code>[[... for ...] for ...]</code>) quickly become unreadable — use regular loops when nesting goes deeper than two levels.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "You need to understand metaclasses to use Python effectively."</div>
+          <p><strong>✅ Reality:</strong> Metaclasses (classes that create classes) are Python's deepest abstraction. In 10+ years of ML code, you'll almost never write one. They power framework internals — Django's ORM, SQLAlchemy, some PyTorch registry patterns — but as a user, you just inherit from the base class and everything works.</p>
+
+          <h4>Historical Context</h4>
+          <p>List comprehensions were added in Python 2.0 (2000), inspired by Haskell. Generator expressions came in 2.4 (2004). Decorators (@syntax) arrived in 2.4 via PEP 318. The <code>with</code> statement was added in 2.5 (2006). Type hints (PEP 484) arrived in 3.5 (2015). Each addition made Python more expressive without sacrificing readability — the core design principle Guido van Rossum maintained throughout: "There should be one — and preferably only one — obvious way to do it."</p>
+        </div>
+      </details>
     `));
   },
 };

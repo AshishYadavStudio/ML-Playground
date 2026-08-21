@@ -21,6 +21,16 @@ export default {
         <li><strong>Update:</strong> move each centroid to the average of the points assigned to it.</li>
       </ol>
       <div class="formula">minimize &nbsp; Σ ‖xᵢ − c(xᵢ)‖² &nbsp;&nbsp; — total squared distance from points to their assigned centroid ("inertia")</div>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Choose k:</strong> Decide how many clusters you want (you must specify this upfront).</li>
+          <li><strong>Initialize centroids:</strong> Place k centroids randomly in the feature space (or use the smarter k-means++ initialization).</li>
+          <li><strong>Assign step:</strong> For every data point, measure its distance to each centroid and assign it to the nearest one. Points are now colored by cluster.</li>
+          <li><strong>Update step:</strong> Move each centroid to the mean position of all points assigned to it. The centroid "slides" to the center of its group.</li>
+          <li><strong>Repeat until convergence:</strong> Alternate assign and update. Inertia (total squared distance) decreases every step and is guaranteed to converge — though possibly to a local minimum, not the global best.</li>
+        </ol>
+      </div>
       <h3>Try it: run the dance manually</h3>
       <p>Press <strong>Assign</strong> and <strong>Update</strong> alternately (or Auto-run). <strong>Click the canvas to add your own points</strong> and see the clusters adapt. Re-randomize the centroids to discover that K-Means can settle into different answers depending on where it starts!</p>
     `));
@@ -194,6 +204,36 @@ export default {
       </div>
       <div class="callout callout-tip"><div class="callout-title">💡 Where you've met K-Means today</div>
       Image compression (cluster pixel colors, keep only k of them), customer segmentation, organizing photo libraries, and initializing more sophisticated models.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — convergence, initialization, and limitations</summary>
+        <div class="deep-dive-body">
+          <h4>The Objective Function</h4>
+          <p>K-Means minimizes the <strong>within-cluster sum of squares</strong> (WCSS, or "inertia"):</p>
+          <div class="formula">J = Σₖ Σ_{x∈Cₖ} ‖x − μₖ‖²</div>
+          <p>Each assign step minimizes J with fixed centroids (every point goes to its nearest centroid). Each update step minimizes J with fixed assignments (the mean is the unique minimizer of sum-of-squares). Since J decreases in both steps and is bounded below by zero, convergence is guaranteed — but only to a <em>local</em> minimum.</p>
+
+          <h4>K-Means++ Initialization</h4>
+          <p>Random initialization can produce terrible local minima (two centroids in one cluster, none in another). K-Means++ fixes this:</p>
+          <ol>
+            <li>Pick the first centroid uniformly at random from the data.</li>
+            <li>For each subsequent centroid, pick a data point with probability proportional to its squared distance from the nearest existing centroid.</li>
+          </ol>
+          <p>This spreads the initial centroids apart and gives an O(log k)-competitive approximation to the optimal solution.</p>
+
+          <h4>The Elbow Method</h4>
+          <p>Plot inertia vs k. As k increases, inertia always decreases (more clusters = less distance). But at some k, adding more clusters gives diminishing returns — the "elbow" in the curve. This is a heuristic, not a proof, but it works well for well-separated clusters. The silhouette score provides a more principled alternative.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "K-Means finds the true clusters in the data."</div>
+          <p><strong>✅ Reality:</strong> K-Means always returns exactly k clusters, even if the data has no natural grouping at all. It also assumes clusters are roughly spherical and equally sized — elongated, overlapping, or unequal-sized clusters will be carved up incorrectly. The algorithm imposes structure; it doesn't discover it.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "K-Means works well in high dimensions."</div>
+          <p><strong>✅ Reality:</strong> In high-dimensional spaces, Euclidean distance becomes less meaningful (the "curse of dimensionality"). All pairwise distances converge to similar values, making nearest-centroid assignment unreliable. Apply PCA or use embeddings to reduce dimensionality first.</p>
+
+          <h4>Historical Context</h4>
+          <p>The algorithm was independently discovered by Hugo Steinhaus (1957), Stuart Lloyd (1957, published 1982), and Edward Forgy (1965). Lloyd's version — the assign/update alternation — is what everyone uses today. The name "K-Means" was coined by James MacQueen in 1967. K-Means++ was proposed by David Arthur and Sergei Vassilvitskii in 2007, and is now the default initialization in scikit-learn.</p>
+        </div>
+      </details>
     `));
   },
 };

@@ -11,6 +11,17 @@ export default {
   render(root) {
     root.appendChild(html(`
       <p>Single variables hold one value; real programs juggle thousands. Python ships four workhorse <strong>collections</strong> — and choosing the right one is half of writing clean code.</p>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Lists are dynamic arrays:</strong> Under the hood, a Python list is a contiguous block of <em>pointers</em> (not values) — an array of references to objects stored elsewhere in memory. Appending is O(1) amortized because Python over-allocates, growing the underlying array by ~12.5% each time it fills.</li>
+          <li><strong>Dicts are hash tables:</strong> When you write <code>d["key"] = value</code>, Python hashes the key to compute an index into an internal array. Lookups, insertions, and deletions are all O(1) on average. Since Python 3.7, dicts preserve insertion order by using a compact two-table layout.</li>
+          <li><strong>Sets are dicts without values:</strong> A set is implemented as a hash table where only keys are stored (no associated values). This is why <code>"dog" in my_set</code> is O(1) — it's a hash lookup, not a linear scan.</li>
+          <li><strong>Tuples are fixed-size arrays:</strong> A tuple is a single immutable block of pointers allocated once. Because they can't change, Python can optimize their memory layout and even cache small tuples for reuse.</li>
+        </ol>
+      </div>
+
       <h3>Lists — ordered &amp; changeable</h3>
     `));
 
@@ -149,6 +160,28 @@ print(tags & {"dog", "fish"}) # set intersection`,
       <code>b = a</code> does <b>not</b> copy a list — both names point at the <em>same</em> list, so <code>b.append(9)</code> changes <code>a</code> too! To actually copy: <code>b = a.copy()</code> (or <code>a[:]</code>). This bug bites every single Python beginner exactly once.</div>
       <div class="callout callout-tip"><div class="callout-title">💡 The ML connection</div>
       A dataset is a <em>list</em> of examples; each example a <em>dict</em> of features; vocabulary lookups are <em>dicts</em>; deduplication uses <em>sets</em>; functions return <em>tuples</em>. Every ML script is these four containers all the way down.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — time complexity, comprehensions, and choosing the right container</summary>
+        <div class="deep-dive-body">
+          <h4>Time complexity matters at scale</h4>
+          <p>With 100 items, any collection feels instant. With 10 million items (a medium dataset), the wrong choice is the difference between milliseconds and minutes:</p>
+          <p><code>"cat" in my_list</code> scans every element — O(n). <code>"cat" in my_set</code> hashes and looks up — O(1). If you're checking membership inside a loop over n items against a collection of m items, list gives O(n*m) while set gives O(n). For a vocabulary of 50,000 words checked against a million tokens, that's 50 billion operations vs 1 million.</p>
+
+          <h4>When to use which</h4>
+          <p><strong>List</strong> when order matters and you'll iterate sequentially (training samples, loss history). <strong>Dict</strong> when you need fast key-based lookup (word-to-index mappings, hyperparameter configs). <strong>Set</strong> when you need fast membership testing or deduplication (stopwords, seen IDs). <strong>Tuple</strong> when the data is fixed and should not be modified (function return values like <code>(mean, std)</code>, dict keys that are composite).</p>
+
+          <h4>Comprehension performance</h4>
+          <p>List comprehensions (<code>[x**2 for x in data]</code>) are faster than equivalent for-loops with <code>.append()</code> — typically 20-30% faster — because the comprehension runs as a single optimized bytecode block. Dict comprehensions (<code>{k: v for k, v in pairs}</code>) and set comprehensions (<code>{x for x in items}</code>) have the same advantage. Generator expressions (<code>sum(x**2 for x in data)</code>) go further: they produce values one at a time, so memory stays constant regardless of data size.</p>
+
+          <h4>Common Pitfalls</h4>
+          <div class="misconception"><strong>❌ Pitfall:</strong> Building a list with <code>+=</code> in a loop: <code>result += [item]</code></div>
+          <p><strong>✅ Better approach:</strong> Use <code>result.append(item)</code> or a list comprehension. <code>+=</code> on lists creates a new list object each time, causing O(n^2) total copying. <code>.append()</code> is O(1) amortized.</p>
+
+          <h4>Nested collections: the real pattern</h4>
+          <p>Real ML code nests these structures constantly. A batch of tokenized sentences is a <em>list of lists of ints</em>. A model config is a <em>dict of dicts</em>. Understanding how Python resolves <code>config["optimizer"]["lr"]</code> — first dict lookup, then second dict lookup — is key to reading framework code fluently.</p>
+        </div>
+      </details>
     `));
   },
 };

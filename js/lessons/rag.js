@@ -62,6 +62,17 @@ export default {
         <div class="card"><div class="card-icon">💬</div><h4>Step 3 — Generate</h4><p>The LLM writes its answer grounded in the retrieved text, and can cite specific sources.</p></div>
       </div>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Index your documents (offline):</strong> Split your knowledge base into chunks (e.g. 512 tokens each). Run each chunk through an embedding model to get a dense vector. Store vectors + text in a vector database (Pinecone, Weaviate, pgvector).</li>
+          <li><strong>Embed the query:</strong> When a user asks a question, run it through the same embedding model to get a query vector.</li>
+          <li><strong>Retrieve top-k:</strong> Find the k chunks whose vectors are closest to the query vector (cosine similarity or dot product). These are the most semantically relevant passages.</li>
+          <li><strong>Augment the prompt:</strong> Stuff the retrieved chunks into the LLM's prompt as context, with instructions like "Answer using only the following sources."</li>
+          <li><strong>Generate a grounded answer:</strong> The LLM reads the retrieved context and writes an answer that cites specific sources. If no relevant chunks are found, it can say "I don't know" instead of hallucinating.</li>
+        </ol>
+      </div>
+
       <h3>Try it: a customer-support bot with a 12-document knowledge base</h3>
       <p>Pick a question. The system retrieves the top-3 chunks from a tiny knowledge base of policy snippets, then a (simulated) LLM composes an answer using only those. Toggle "No retrieval" to see what the same LLM would say without any of your data — the classic hallucination gap.</p>
     `));
@@ -201,6 +212,37 @@ export default {
 
       <div class="callout callout-info"><div class="callout-title">📌 What "the LLM" actually does here</div>
       In our simulated demo the answer text is scripted based on which chunks were retrieved. In a real system, that final "compose an answer from these chunks" step is a normal LLM call — the retrieved text just becomes part of the prompt. All the machine learning is upstream: the embedding model that maps text → vector, and the vector DB that finds nearest neighbors fast.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — embeddings, chunking, and reranking</summary>
+        <div class="deep-dive-body">
+          <h4>Vector Similarity</h4>
+          <p>The core operation in RAG is finding which document chunks are closest to the query in embedding space. The two standard metrics:</p>
+          <div class="formula">cosine(q, d) = (q · d) / (‖q‖ · ‖d‖) &nbsp;&nbsp;&nbsp; dot(q, d) = q · d</div>
+          <p>Cosine similarity ignores magnitude (only direction matters). Dot product rewards both alignment and magnitude. Most embedding models are trained so that cosine similarity correlates with semantic relatedness. Approximate nearest neighbor (ANN) algorithms like HNSW make this search sub-linear even over millions of chunks.</p>
+
+          <h4>Chunking Strategies</h4>
+          <p>How you split documents into chunks dramatically affects retrieval quality:</p>
+          <ul>
+            <li><strong>Fixed-size:</strong> 256–512 tokens per chunk. Simple but can split mid-sentence or mid-concept.</li>
+            <li><strong>Overlapping:</strong> Same size but with 50–100 token overlaps. Reduces boundary problems.</li>
+            <li><strong>Semantic:</strong> Split at paragraph or section boundaries. Preserves coherent ideas.</li>
+            <li><strong>Hierarchical:</strong> Small chunks for retrieval (precise matching), but expand to parent chunks for context (the LLM sees more surrounding text).</li>
+          </ul>
+
+          <h4>Reranking</h4>
+          <p>Initial retrieval (bi-encoder) is fast but approximate — it encodes query and document independently. A <strong>cross-encoder reranker</strong> takes (query, document) as a single input and scores relevance more accurately. The pipeline: retrieve top-20 with the fast bi-encoder, then rerank to top-3 with the slow cross-encoder. This two-stage approach gets the best of both speed and accuracy.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "RAG eliminates hallucination."</div>
+          <p><strong>✅ Reality:</strong> RAG reduces hallucination by grounding answers in retrieved text, but doesn't eliminate it. The LLM can still misinterpret retrieved chunks, combine them incorrectly, or fill gaps with fabricated details. And if retrieval returns irrelevant chunks, the LLM will confidently answer from wrong context. Retrieval quality is the bottleneck.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "You just need to embed documents and you're done."</div>
+          <p><strong>✅ Reality:</strong> A production RAG system involves chunking strategy, embedding model selection, hybrid search (keyword + semantic), reranking, prompt engineering, evaluation pipelines, and handling edge cases like multi-hop questions. The "embed and search" core is maybe 20% of the work.</p>
+
+          <h4>Historical Context</h4>
+          <p>Information retrieval predates neural networks by decades — TF-IDF and BM25 have been powering search since the 1970s. The neural retrieval revolution began with dense passage retrieval (Karpukhin et al., 2020). The RAG paper (Lewis et al., 2020) showed that combining retrieval with generation outperforms either alone. The explosion of vector databases (Pinecone 2021, Weaviate, Chroma, pgvector) followed the ChatGPT moment in late 2022, as every company raced to connect LLMs to their proprietary data.</p>
+        </div>
+      </details>
     `));
   },
 };

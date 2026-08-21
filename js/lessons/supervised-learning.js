@@ -21,6 +21,17 @@ export default {
       </ul>
       <p>Supervised problems split into two jobs depending on what kind of answer you're predicting:</p>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Pair inputs with answers:</strong> Each training example is a pair (x, y) — features x and the correct label or value y that a human (or process) has provided.</li>
+          <li><strong>Define a model:</strong> Choose a function family f(x; θ) with tunable parameters θ — for example, a line (linear regression), a logistic curve (logistic regression), or a deep neural network.</li>
+          <li><strong>Pick a loss function:</strong> Measure how far f(x) is from y. Classification typically uses cross-entropy loss; regression uses mean squared error (MSE).</li>
+          <li><strong>Optimize:</strong> Adjust θ to minimize the total loss across all training examples, usually via gradient descent — computing how each parameter should change and updating them iteratively.</li>
+          <li><strong>Predict on new data:</strong> Once trained, feed new, unseen inputs into f(x; θ) to get predictions — a class label or a numeric value — without needing the answers.</li>
+        </ol>
+      </div>
+
       <h3>Try it: classification vs regression</h3>
       <p>Toggle the two modes and <strong>move your mouse over the plot</strong> to drop a new example — the model predicts its answer from the labeled training data.</p>
     `));
@@ -161,6 +172,29 @@ export default {
 
       <div class="callout callout-tip"><div class="callout-title">💡 You've already done this</div>
       Every model you train elsewhere on this site — the neural network playground, logistic regression, decision trees — is supervised. This lesson is the umbrella they all live under.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Loss Functions & the Hypothesis Space</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>Supervised learning searches for a function f that maps inputs x to outputs y. The quality of a candidate function is measured by a <strong>loss function</strong>:</p>
+          <div class="formula">Mean Squared Error (regression): &nbsp; L = (1/n) Σ (yᵢ − f(xᵢ))²</div>
+          <div class="formula">Cross-Entropy (classification): &nbsp; L = −(1/n) Σ [ yᵢ log(f(xᵢ)) + (1−yᵢ) log(1−f(xᵢ)) ]</div>
+          <p>MSE penalizes large errors quadratically — an error of 10 costs 100× more than an error of 1. Cross-entropy measures how well predicted probabilities match true 0/1 labels, going to infinity when a confident prediction is wrong.</p>
+
+          <h4>Intuition</h4>
+          <p>The <strong>hypothesis space</strong> is the set of all functions your chosen model can represent. A linear model's hypothesis space is all possible lines (or hyperplanes); a decision tree's is all possible axis-aligned partitions. Picking a model means picking which hypothesis space to search. Too small a space (e.g., a straight line for curved data) and you underfit — the best hypothesis in your space is still bad. Too large a space (e.g., a degree-100 polynomial) and you overfit — you find a hypothesis that memorizes training noise. The bias-variance tradeoff is the art of choosing a hypothesis space that's "just right."</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> A model with 100% training accuracy is a great model.</div>
+          <p><strong>✅ Reality:</strong> Perfect training accuracy often signals <strong>overfitting</strong> — the model has memorized the training data, including its noise, and will perform poorly on new data. What matters is the gap between training and test performance. A model with 92% training accuracy and 90% test accuracy is usually better than one with 100% training and 75% test accuracy.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> You should always minimize loss as much as possible.</div>
+          <p><strong>✅ Reality:</strong> Pushing loss to zero on the training set typically means overfitting. Regularization techniques (L1, L2, dropout, early stopping) intentionally prevent the loss from reaching zero, trading a slightly worse training score for much better generalization.</p>
+
+          <h4>Historical Context</h4>
+          <p>The foundations of supervised learning go back to Adrien-Marie Legendre's method of least squares (1805), originally used to fit astronomical orbits. Fisher's Linear Discriminant (1936) introduced classification. The Perceptron (Rosenblatt, 1958) was the first trainable neural classifier but was limited to linearly separable data — a limitation dramatically highlighted by Minsky and Papert in 1969, leading to the first AI winter. The backpropagation algorithm (popularized by Rumelhart, Hinton & Williams, 1986) unlocked multi-layer networks and remains the engine behind modern deep learning.</p>
+        </div>
+      </details>
     `));
   },
 };

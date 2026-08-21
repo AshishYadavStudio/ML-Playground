@@ -17,6 +17,18 @@ export default {
       <p>A single train/test split gives you <em>one</em> number. That number depends on which points happened to land in the test set — a lucky split flatters the model, an unlucky one damns it. <strong>Cross-validation</strong> fixes this by running the split many times and averaging.</p>
       <div class="formula">K-fold CV: split data into K equal folds → for each fold, train on K−1 and test on that one → average the K scores</div>
       <p>You get two things: an honest performance estimate, and — from the spread of the K scores — a sense of how <em>reliable</em> that estimate is.</p>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Shuffle and partition the data:</strong> Randomly divide your dataset into K equally-sized subsets called "folds." With 100 samples and K=5, each fold contains 20 samples.</li>
+          <li><strong>Hold out one fold as the test set:</strong> In each round, designate one fold as the test set and combine the remaining K-1 folds into the training set.</li>
+          <li><strong>Train and evaluate:</strong> Fit the model from scratch on the training folds, then measure its performance (accuracy, MSE, etc.) on the held-out fold.</li>
+          <li><strong>Rotate and repeat:</strong> Move to the next fold as the test set and repeat. After K rounds, every data point has been tested exactly once.</li>
+          <li><strong>Aggregate the scores:</strong> Report the mean of the K scores as your performance estimate and the standard deviation as a measure of reliability. A large std signals that your model's quality depends heavily on which data it sees.</li>
+        </ol>
+      </div>
+
       <h3>Watch K-fold happen</h3>
       <p>Each row below is one CV round: green = training data, orange = held-out test fold. Change K, press <em>Run CV</em>, and watch the scores appear. Notice how the individual folds disagree — that spread is why one train/test split alone can badly mislead you.</p>
     `));
@@ -197,6 +209,40 @@ export default {
 
       <div class="callout callout-tip"><div class="callout-title">💡 Rule of thumb</div>
       Small dataset (&lt;1k rows): use 10-fold CV — the extra passes are cheap and the estimate gets much more reliable. Medium (10k–1M): 5-fold. Huge (millions): a single held-out set is usually fine because sample noise is already small.</div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Stratification, leave-one-out, and nested CV theory</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>The K-fold CV estimator of generalization error is:</p>
+          <div class="formula">CV(K) = (1/K) Σ_{k=1}^{K} L(f_{-k}, D_k)</div>
+          <p>where f_{-k} is the model trained on all data except fold k, D_k is fold k, and L is the loss function. This estimator is approximately unbiased for the expected error of a model trained on (K-1)/K of the data — slightly pessimistic compared to the full-data model since each fold's model sees less data.</p>
+          <p>The variance of the CV estimator is harder to pin down. The K fold-level scores are <strong>not independent</strong> — each pair of folds shares most of their training data. Bengio and Grandvalet (2004) showed there is no universal unbiased estimator of the variance of K-fold CV. In practice, the standard deviation of the K scores divided by sqrt(K) underestimates uncertainty, so report the raw standard deviation rather than a standard error.</p>
+
+          <h4>Stratified K-Fold</h4>
+          <p>In classification with imbalanced classes (e.g., 95% negative, 5% positive), a random split might leave some folds with zero positive examples. <strong>Stratified K-fold</strong> ensures each fold has approximately the same class distribution as the full dataset. This reduces variance in the CV estimate and prevents training folds from having a distorted view of the class balance.</p>
+          <p>For regression problems, stratification can be approximated by binning the target variable into quantiles and stratifying on those bins.</p>
+
+          <h4>Leave-One-Out Cross-Validation (LOOCV)</h4>
+          <p>LOOCV is K-fold CV with K = n (one sample per fold). Each model trains on n-1 points and is tested on the one left out. It is nearly unbiased (the training set is almost the full dataset), but has two drawbacks: (1) it requires n full model trainings — expensive unless the model has a shortcut (linear regression has one: the PRESS statistic), and (2) because each pair of training sets differs by only 2 points, the n models are highly correlated, leading to high-variance estimates. In practice, 5- or 10-fold usually gives a better bias-variance trade-off for the estimator itself.</p>
+
+          <h4>Nested Cross-Validation</h4>
+          <p>When you use CV to both select hyperparameters and estimate performance, the outer score is optimistically biased — you peeked at the test folds through your hyperparameter choices. <strong>Nested CV</strong> fixes this with two loops:</p>
+          <div class="formula">Outer loop (K_out folds): for each outer fold → Inner loop (K_in folds on the outer training set): tune hyperparameters → Retrain with best hyperparameters on full outer training set → Evaluate on outer test fold</div>
+          <p>The outer scores are now honest: the test data in each outer fold was never used for any decision. The total cost is K_out × K_in × (number of hyperparameter settings) model fits, which is expensive but gives a trustworthy estimate.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Leave-one-out CV always gives the best estimate because it uses the most training data."</div>
+          <p><strong>✅ Reality:</strong> LOOCV is nearly unbiased but has the highest variance among K-fold estimators because all n training sets are almost identical (they overlap in n-2 points). The high correlation between fold scores means the average is unstable. For most practical purposes, 10-fold CV with stratification gives a better bias-variance trade-off for the estimator.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Cross-validation makes your model better."</div>
+          <p><strong>✅ Reality:</strong> CV does not improve the model — it gives you a more honest <em>measurement</em> of how good (or bad) the model already is. It is an evaluation tool, not a training algorithm. It does enable better model selection (choosing between candidate models), which indirectly leads to better final models, but CV itself does not change any model's parameters.</p>
+
+          <h4>Historical Context</h4>
+          <p>Cross-validation was introduced by Seymour Geisser and the concept of the "predictive sample reuse" method appeared in his work from the 1970s. The modern K-fold procedure was developed by Mervyn Stone (1974) and refined by Stone (1977). The landmark paper by Ron Kohavi (1995), "A Study of Cross-Validation and Bootstrap for Accuracy Estimation and Model Selection," provided the empirical evidence that 10-fold stratified CV offers the best practical balance — a recommendation that remains standard today, over 25 years later.</p>
+        </div>
+      </details>
     `));
   },
 };

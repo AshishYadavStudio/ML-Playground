@@ -21,6 +21,17 @@ export default {
         <li>The bottleneck vector <code>z</code> is a learned <strong>compression</strong> of x. It's the same idea as PCA — but with nonlinear encoders and decoders, so it can capture far richer structure.</li>
       </ul>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Encoder compresses:</strong> The input x (e.g., a 2-D point or a 784-pixel image) is passed through one or more neural network layers that progressively reduce dimensionality, producing a small latent vector z. This forces the network to learn which features of the input actually matter.</li>
+          <li><strong>Bottleneck constrains:</strong> The latent code z lives in a much lower-dimensional space than the input (e.g., 2-D input squeezed to 1-D). This information bottleneck is the entire point — it prevents the network from simply memorizing inputs and forces it to learn a compressed representation.</li>
+          <li><strong>Decoder reconstructs:</strong> The decoder takes z and tries to reconstruct the original input x, producing x-hat. It mirrors the encoder architecture but in reverse — expanding from the small latent space back to the full input dimension.</li>
+          <li><strong>Loss measures fidelity:</strong> The reconstruction loss (typically mean squared error ||x - x-hat||²) measures how much information was lost during compression. Training minimizes this loss, pushing the encoder to preserve the most important features.</li>
+          <li><strong>Latent space emerges:</strong> After training, the bottleneck layer contains a learned coordinate system where similar inputs are nearby. This latent space can be used for visualization, generation (sample new z values and decode them), or as features for downstream tasks.</li>
+        </ol>
+      </div>
+
       <h3>Try it: squeeze data through a bottleneck</h3>
       <p>Below is a 2-D dataset shaped like a curve. Our autoencoder is a tiny <code>2 → k → 2</code> network. Change <b>k</b> — the bottleneck size — and watch reconstruction quality.</p>
     `));
@@ -269,6 +280,41 @@ export default {
 
       <div class="callout callout-info"><div class="callout-title">📌 Connecting the dots</div>
       An autoencoder ≈ nonlinear PCA (from the PCA lesson) trained by gradient descent (from the Gradient Descent lesson). Its bottleneck code is a learned <em>embedding</em> (from the Embeddings lesson). VAEs bridge it to <em>generative</em> models (next in Advanced). This is why the same handful of ideas keep resurfacing — deep learning is mostly recombination.</div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Bottleneck Theory, VAEs, and Latent Spaces</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>A standard autoencoder minimizes reconstruction error over the training set:</p>
+          <div class="formula">min<sub>θ,φ</sub> &nbsp; Σᵢ ‖xᵢ − D<sub>θ</sub>(E<sub>φ</sub>(xᵢ))‖²</div>
+          <p>where E<sub>φ</sub> is the encoder and D<sub>θ</sub> is the decoder. When both are linear (no activations) and the loss is MSE, the optimal encoder/decoder recover exactly the top-k principal components — the autoencoder reduces to PCA. Nonlinear encoder/decoder functions can capture manifold structure that PCA misses entirely.</p>
+
+          <h4>The Variational Autoencoder (VAE)</h4>
+          <p>A VAE (Kingma & Welling, 2013) replaces the deterministic bottleneck z = E(x) with a probabilistic one. The encoder outputs a mean μ and variance σ² for each latent dimension, and z is <em>sampled</em> from N(μ, σ²). The loss has two terms:</p>
+          <div class="formula">L<sub>VAE</sub> = ‖x − D(z)‖² + KL(q(z|x) ‖ p(z))</div>
+          <p>The first term is reconstruction quality. The second term — <strong>KL divergence</strong> — measures how much the encoder's distribution q(z|x) differs from the prior p(z) = N(0, I). It acts as a regularizer, pushing the latent space toward a smooth, continuous Gaussian. This is what makes sampling possible: you can draw z ~ N(0, I) and decode it into a plausible new data point.</p>
+
+          <h4>KL Divergence Explained</h4>
+          <p>For Gaussians, the KL term has a closed form:</p>
+          <div class="formula">KL(N(μ, σ²) ‖ N(0, 1)) = ½ Σⱼ (μⱼ² + σⱼ² − ln(σⱼ²) − 1)</div>
+          <p>This penalizes the encoder for making μ far from 0 (spreading clusters apart) or making σ far from 1 (collapsing uncertainty). The tension between reconstruction (be precise) and KL (be standard Gaussian) creates a smooth, interpolable latent space — the key property that separates VAEs from regular autoencoders.</p>
+
+          <h4>Intuition</h4>
+          <p>Think of the encoder as a librarian who must file every book onto a single shelf (the bottleneck). With a regular autoencoder, the librarian can use any filing system — including arbitrary, discontinuous codes. With a VAE, the librarian is told: "your filing positions must form a smooth bell curve, and nearby positions should have similar books." This constraint means you can point to any position on the shelf and get a sensible book — even positions between existing books. That's why VAEs can generate new data by sampling.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "A wider bottleneck always gives better reconstruction."</div>
+          <p><strong>✅ Reality:</strong> When the bottleneck is as wide as the input, the autoencoder can learn the identity function — perfect reconstruction but zero useful learning. The bottleneck must be <em>narrower</em> than the intrinsic dimensionality of the data to force meaningful compression. Over-complete autoencoders (wider than input) can still learn useful features if paired with sparsity penalties or denoising objectives, but the capacity constraint must come from somewhere.</p>
+
+          <div class="misconception"><strong>❌ Misconception:</strong> "VAEs generate blurry images because the model is bad."</div>
+          <p><strong>✅ Reality:</strong> VAE blurriness comes from the MSE reconstruction loss, which averages over uncertainty and produces the mean of all plausible outputs. This is a <em>loss function</em> problem, not an architecture problem. Using perceptual losses, adversarial losses (VAE-GAN hybrids), or operating in a learned latent space (as Stable Diffusion does — its "VAE" produces crisp images because the diffusion model handles the stochastic generation) eliminates the blur.</p>
+
+          <h4>Historical Context</h4>
+          <p>Autoencoders date back to Rumelhart, Hinton & Williams (1986), where they were used to discover compact representations. Sparse autoencoders (Olshausen & Field, 1996) learned visual features resembling those in the brain's visual cortex. The VAE was introduced simultaneously by Kingma & Welling (2013) and Rezende, Mohamed & Wierstra (2014). Denoising autoencoders (Vincent et al., 2008) became the basis for masked language modeling in BERT. Modern applications include Stable Diffusion's latent-space compression (Rombach et al., 2022) and mechanistic interpretability via sparse autoencoders (Bricken et al., 2023) used to understand what individual neurons in large language models represent.</p>
+        </div>
+      </details>
     `));
   },
 };

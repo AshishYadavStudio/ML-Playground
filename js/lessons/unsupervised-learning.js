@@ -18,6 +18,17 @@ export default {
       <div class="formula">given only x₁, x₂, x₃, … (no answers) &nbsp;→&nbsp; discover groups, patterns, or anomalies</div>
       <p>Three main jobs: <strong>clustering</strong> (group similar things), <strong>dimensionality reduction</strong> (simplify without losing the essence), and <strong>anomaly detection</strong> (spot what doesn't fit).</p>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Start with raw, unlabeled data:</strong> You have observations (data points) but no categories, no "right answers" — just numbers describing each example.</li>
+          <li><strong>Choose a structure to look for:</strong> Decide what kind of pattern you want: groups (clustering), a simpler representation (dimensionality reduction), or outliers (anomaly detection).</li>
+          <li><strong>Define a similarity or distance measure:</strong> The algorithm needs a way to say "these two points are alike." Common choices: Euclidean distance, cosine similarity, or correlation.</li>
+          <li><strong>Run the algorithm:</strong> The algorithm iteratively reorganizes the data — assigning points to clusters, projecting onto lower dimensions, or scoring outlierness — optimizing an internal objective (like minimizing within-cluster distances).</li>
+          <li><strong>Interpret the results:</strong> Unlike supervised learning, there is no automatic accuracy score. A human must inspect the discovered structure and judge whether it reveals something useful about the data.</li>
+        </ol>
+      </div>
+
       <h3>1 · Clustering: find the groups</h3>
       <p>Below are data points with <strong>no labels</strong> — all grey, no categories given. Press <em>Discover</em> and watch the algorithm find natural groupings entirely on its own.</p>
     `));
@@ -184,6 +195,32 @@ export default {
       With no labels there's no simple "accuracy". Are 3 clusters better than 4? It depends on your goal — unsupervised results need human judgment to interpret, unlike supervised learning's clean test score.</div>
       <div class="callout callout-tip"><div class="callout-title">💡 Why it's the future's fuel</div>
       The internet is a near-infinite ocean of <em>unlabeled</em> text and images. Modern AI (including the LLMs lesson) is largely <strong>self-supervised</strong> — a clever twist where the data labels itself ("predict the next word") — unlocking that ocean without human annotators.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Clustering vs. Dimensionality Reduction</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p><strong>K-Means clustering</strong> minimizes the total within-cluster sum of squared distances:</p>
+          <div class="formula">J = Σ<sub>k=1..K</sub> Σ<sub>x∈Cₖ</sub> ‖x − μₖ‖²</div>
+          <p>where μₖ is the centroid (mean) of cluster Cₖ. The algorithm alternates between assigning each point to the nearest centroid and recomputing centroids — guaranteed to converge but only to a local minimum, which is why different random initializations give different results.</p>
+          <p><strong>PCA (Principal Component Analysis)</strong> finds the directions of maximum variance. It solves for the eigenvectors of the covariance matrix:</p>
+          <div class="formula">Σ = (1/n) X<sup>T</sup>X &nbsp;&nbsp;→&nbsp;&nbsp; eigendecomposition: Σv = λv</div>
+          <p>The eigenvector with the largest eigenvalue λ is the first principal component — the direction along which data varies most. Projecting onto the top-k eigenvectors gives the best k-dimensional summary in the least-squares sense.</p>
+
+          <h4>Intuition</h4>
+          <p><strong>Clustering</strong> asks "which points belong together?" — it partitions data into groups. <strong>Dimensionality reduction</strong> asks "what are the important axes?" — it re-describes each point using fewer numbers. They solve fundamentally different problems but are often used together: reduce 100 dimensions to 2 with PCA, then cluster in that 2D space, then visualize the clusters on a scatter plot.</p>
+          <p>A helpful analogy: clustering is like sorting a pile of mixed coins into stacks by denomination. Dimensionality reduction is like describing each coin using just "size" instead of listing size, weight, thickness, and edge pattern — you lose some detail but keep the most informative summary.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> K-Means always finds the "true" clusters in the data.</div>
+          <p><strong>✅ Reality:</strong> K-Means assumes clusters are roughly spherical and equal-sized. It will force the data into exactly K groups even if the true structure has fewer, more, or irregularly shaped clusters. Algorithms like DBSCAN can find arbitrarily-shaped clusters and don't require you to specify K in advance.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> PCA removes the "unimportant" features.</div>
+          <p><strong>✅ Reality:</strong> PCA doesn't drop original features — it creates new synthetic features (principal components) that are linear combinations of all the originals. The first PC might be "0.6 * height + 0.8 * weight," mixing multiple features. Also, maximum variance doesn't always mean maximum usefulness — a high-variance direction could be noise, while a low-variance direction could be the signal you care about.</p>
+
+          <h4>Historical Context</h4>
+          <p>K-Means was independently discovered by Hugo Steinhaus (1956) and Stuart Lloyd (1957, published 1982). PCA was invented by Karl Pearson in 1901 and independently by Harold Hotelling in 1933. The t-SNE algorithm (van der Maaten & Hinton, 2008) revolutionized high-dimensional visualization by preserving local neighborhoods, and UMAP (McInnes et al., 2018) improved on it with better global structure preservation and speed. These tools are now standard in single-cell genomics, NLP, and computer vision for exploring what models have learned.</p>
+        </div>
+      </details>
     `));
   },
 };

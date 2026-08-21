@@ -17,6 +17,16 @@ export default {
       <p>Many lines can separate two classes — which one should you pick? The SVM's answer: the one with the <strong>widest possible margin</strong>, the thickest "street" you can draw between the classes. A wide margin means new points near the boundary are less likely to be misclassified.</p>
       <div class="formula">maximize margin &nbsp;⇔&nbsp; minimize ‖w‖² &nbsp; subject to &nbsp; yᵢ(w·xᵢ + b) ≥ 1 &nbsp; for every point</div>
       <p>The remarkable part: the final boundary depends <strong>only on the few points touching the street's edges</strong> — the <em>support vectors</em>. Every other point could be deleted without changing anything.</p>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Find a separating hyperplane:</strong> Look for a flat boundary (a line in 2D, a plane in 3D) that correctly classifies all training points into two classes.</li>
+          <li><strong>Maximize the margin:</strong> Among all valid separating hyperplanes, choose the one with the widest "street" (margin) between the two classes. This is the one that minimizes ||w||² subject to every point being on the correct side.</li>
+          <li><strong>Identify support vectors:</strong> Only the training points that sit exactly on the margin edges matter — these are the support vectors. All other points can be removed without changing the boundary.</li>
+          <li><strong>Allow soft-margin violations:</strong> When data is not perfectly separable, the C parameter controls the trade-off: high C enforces a hard margin (few violations tolerated), low C allows a wider street at the cost of some misclassifications.</li>
+          <li><strong>Apply the kernel trick (optional):</strong> If no linear boundary works, implicitly map the data into a higher-dimensional space where a linear separator exists — using a kernel function that computes dot products in that space without ever materializing the coordinates.</li>
+        </ol>
+      </div>
       <h3>Try it: drag the points</h3>
       <p>The boundary retrains live as you drag. Notice that dragging an interior point does <em>nothing</em>, while dragging a highlighted support vector reshapes the whole street. Lower <strong>C</strong> to let the model tolerate points inside the margin (a "soft margin") — more stability, less purity.</p>
     `));
@@ -248,6 +258,38 @@ export default {
       </table>
       <div class="callout callout-tip"><div class="callout-title">💡 SVMs in perspective</div>
       Before deep learning took over, kernel SVMs were the state of the art for a decade (they read handwritten zip codes for the US Postal Service). Today they remain excellent for small-to-medium datasets with well-engineered features — and the margin idea lives on everywhere, from margin-based losses in deep nets to RLHF reward models.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — margin math and the kernel trick</summary>
+        <div class="deep-dive-body">
+          <h4>The Optimization Problem</h4>
+          <p>The hard-margin SVM solves a constrained optimization:</p>
+          <div class="formula">minimize ½‖w‖² &nbsp;&nbsp; subject to &nbsp; yᵢ(w·xᵢ + b) ≥ 1 &nbsp; ∀i</div>
+          <p>The margin width is 2/‖w‖, so minimizing ‖w‖² maximizes the margin. The constraint says every point must be on the correct side of the margin.</p>
+
+          <h4>Soft Margin and the C Parameter</h4>
+          <p>When data isn't perfectly separable, the soft-margin formulation introduces slack variables ξᵢ:</p>
+          <div class="formula">minimize ½‖w‖² + C · Σ ξᵢ &nbsp;&nbsp; subject to &nbsp; yᵢ(w·xᵢ + b) ≥ 1 − ξᵢ, &nbsp; ξᵢ ≥ 0</div>
+          <p><strong>C is the penalty for violations.</strong> Large C → narrow margin, few violations (may overfit). Small C → wide margin, more violations tolerated (may underfit). This is the bias-variance knob of SVMs.</p>
+
+          <h4>The Kernel Trick — Formally</h4>
+          <p>The dual formulation shows that the solution depends only on dot products x_i · x_j between data points. A kernel function K(xᵢ, xⱼ) computes the dot product in a higher-dimensional space <em>without ever computing the transformed coordinates</em>:</p>
+          <div class="formula">K(x, z) = φ(x) · φ(z) &nbsp;&nbsp; — &nbsp; e.g. RBF: K(x, z) = exp(−γ‖x−z‖²)</div>
+          <p>The RBF kernel implicitly maps to an <em>infinite-dimensional</em> space — yet the computation is just one exponential per pair. This is why SVMs can learn arbitrarily complex boundaries with a single hyperparameter (γ).</p>
+
+          <h4>Intuition</h4>
+          <p>Think of the margin as a "safety zone." A classifier that barely separates the classes (razor-thin margin) will misclassify the slightest perturbation. A wide-margin classifier is robust — new points would need to move far to cross the boundary. The support vectors are the "hardest" examples, the ones closest to the other class. Everything else is redundant — which is why SVMs are memory-efficient at prediction time.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "SVMs don't produce probabilities, only hard classifications."</div>
+          <p><strong>✅ Reality:</strong> While the raw SVM output is a signed distance from the boundary, Platt scaling (fitting a sigmoid to the SVM scores on a validation set) converts these distances into calibrated probabilities. scikit-learn's <code>SVC(probability=True)</code> does this automatically.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "SVMs are obsolete now that we have deep learning."</div>
+          <p><strong>✅ Reality:</strong> For small datasets (hundreds to low thousands of samples), SVMs with good kernels often outperform deep neural networks, which need much more data to learn effectively. SVMs also have strong theoretical guarantees (generalization bounds via VC dimension and margin theory) that neural networks lack.</p>
+
+          <h4>Historical Context</h4>
+          <p>Vladimir Vapnik and Alexei Chervonenkis developed the theoretical foundations (VC theory) in the 1960s–70s. The modern SVM was formulated by Vapnik and Corinna Cortes in 1995. Bernhard Boser, Isabelle Guyon, and Vapnik introduced the kernel trick to SVMs in 1992. Throughout the 2000s, SVMs were the dominant method for image classification, handwriting recognition, and bioinformatics — until deep learning overtook them around 2012 with AlexNet.</p>
+        </div>
+      </details>
     `));
   },
 };

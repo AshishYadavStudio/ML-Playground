@@ -38,6 +38,17 @@ export default {
         <li><strong>Policy:</strong> the learned strategy — which action to take in each state.</li>
       </ul>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Observe the current state:</strong> The agent looks at where it is in the environment — in a grid world, that's its cell; in a game, that's the screen pixels or board position.</li>
+          <li><strong>Choose an action:</strong> Using its current policy (strategy), the agent picks an action. Early on, it mostly explores randomly; later, it exploits what it has learned.</li>
+          <li><strong>Receive feedback:</strong> The environment responds with a reward signal (positive for good outcomes, negative for bad) and transitions to a new state.</li>
+          <li><strong>Update the value estimates:</strong> The agent revises its estimate of how good that action was in that state, blending the immediate reward with the estimated future value of the new state.</li>
+          <li><strong>Repeat over many episodes:</strong> By cycling through thousands of trial-and-error episodes, value estimates propagate backward from reward states, and the agent's policy converges toward optimal behavior.</li>
+        </ol>
+      </div>
+
       <h3>Watch an agent learn</h3>
       <p>The agent starts knowing <em>nothing</em>. Press <strong>Train</strong> and watch it explore by trial and error — the arrows (its learned policy) and the colored value map sharpen as it discovers the route to the goal. Then press <strong>Watch agent</strong> to see it run the route it learned.</p>
     `));
@@ -244,6 +255,33 @@ export default {
 
       <div class="callout callout-info"><div class="callout-title">📌 The three paradigms, together</div>
       <strong>Supervised</strong>: learn from labeled answers. <strong>Unsupervised</strong>: find structure with no answers. <strong>Reinforcement</strong>: learn from rewards through trial and error. Modern systems blend all three — an LLM is pretrained self-supervised, then aligned with RL. You now have the full map of how machines learn.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Markov Decision Processes & Exploration vs. Exploitation</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>RL problems are formalized as <strong>Markov Decision Processes (MDPs)</strong>, defined by the tuple (S, A, P, R, γ):</p>
+          <div class="formula">S = set of states, &nbsp; A = set of actions, &nbsp; P(s'|s,a) = transition probability, &nbsp; R(s,a) = reward, &nbsp; γ ∈ [0,1) = discount factor</div>
+          <p>The <strong>Markov property</strong> says the future depends only on the current state, not on how you got there. The goal is to find a policy π(a|s) that maximizes the expected cumulative discounted reward:</p>
+          <div class="formula">V<sup>π</sup>(s) = E<sub>π</sub> [ Σ<sub>t=0..∞</sub> γ<sup>t</sup> R(sₜ, aₜ) | s₀ = s ]</div>
+          <p>The <strong>Bellman equation</strong> — the recursive backbone of RL — decomposes this value:</p>
+          <div class="formula">Q*(s,a) = R(s,a) + γ Σ<sub>s'</sub> P(s'|s,a) max<sub>a'</sub> Q*(s',a')</div>
+          <p>Q-learning approximates Q* without knowing P by sampling transitions and updating with the rule you saw in the demo: Q(s,a) ← Q(s,a) + α[r + γ max Q(s',a') − Q(s,a)].</p>
+
+          <h4>Intuition</h4>
+          <p>Think of the discount factor γ as the agent's "patience." With γ close to 1, the agent cares about long-term rewards and will take a detour now for a bigger payoff later. With γ close to 0, it's myopic — it grabs the nearest reward and ignores the future. In the grid demo, γ = 0.92 means the agent plans roughly 12 steps ahead (since 0.92^12 ≈ 0.37, rewards beyond that are heavily discounted).</p>
+          <p>The explore-exploit dilemma is like choosing a restaurant: do you go to your favorite place (exploit) or try the new spot around the corner (explore)? Explore too little and you might never find a better restaurant. Explore too much and you waste dinners on bad meals. The epsilon-greedy strategy — explore with probability ε, exploit otherwise — is the simplest solution, and decaying ε over time mirrors how you'd explore more when you're new in town and less once you know the area well.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> RL agents learn like humans through understanding and reasoning.</div>
+          <p><strong>✅ Reality:</strong> RL agents learn through massive repetition of trial and error — often millions of episodes. They have no "understanding" of why a strategy works; they just store which actions led to high rewards. An AlphaGo agent plays millions of games against itself; a human grandmaster learns from a few thousand. RL is powerful but extremely sample-inefficient compared to human learning.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> Q-learning always finds the optimal policy.</div>
+          <p><strong>✅ Reality:</strong> Tabular Q-learning converges to the optimal policy only given infinite exploration (every state-action pair visited infinitely often) and a decaying learning rate. In practice, with large or continuous state spaces, we use function approximation (e.g., deep Q-networks), which can diverge, oscillate, or get stuck in poor local optima. Stability tricks like experience replay and target networks (DQN, Mnih et al. 2015) are essential but don't guarantee optimality.</p>
+
+          <h4>Historical Context</h4>
+          <p>RL's roots trace to animal psychology — Edward Thorndike's "Law of Effect" (1898) stated that actions followed by reward are strengthened. Richard Bellman developed dynamic programming and the Bellman equation in the 1950s. Chris Watkins introduced Q-learning in his 1989 PhD thesis. The field exploded in 2013 when DeepMind's DQN learned to play Atari games from raw pixels, and again in 2016 when AlphaGo defeated world champion Lee Sedol. Today, RLHF (Reinforcement Learning from Human Feedback) is the technique that aligns large language models like ChatGPT and Claude to follow instructions and be helpful.</p>
+        </div>
+      </details>
     `));
   },
 };

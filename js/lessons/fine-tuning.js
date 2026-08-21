@@ -22,6 +22,17 @@ export default {
       </div>
       <p>These aren't rivals — real systems stack them. This lesson zooms in on fine-tuning: full vs LoRA vs QLoRA.</p>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Start with a pretrained model:</strong> Take a foundation model (e.g. Llama 7B) that already knows grammar, facts, and reasoning from pretraining on trillions of tokens. All this knowledge lives in billions of weight parameters.</li>
+          <li><strong>Prepare your dataset:</strong> Collect (prompt, completion) pairs in your target format — customer support conversations, legal documents, code in your style. Quality matters far more than quantity: 1,000 excellent examples often beat 100,000 noisy ones.</li>
+          <li><strong>Choose your strategy:</strong> Full fine-tuning updates every weight (expensive, powerful). LoRA freezes the base and trains tiny low-rank adapter matrices (cheap, nearly as good). QLoRA adds 4-bit quantization of the base to cut memory further.</li>
+          <li><strong>Train:</strong> Run gradient descent on your data, updating only the trainable parameters. Monitor validation loss to avoid overfitting (catastrophic forgetting). Typically 1–5 epochs is enough.</li>
+          <li><strong>Deploy:</strong> For LoRA, you can merge the adapter into the base weights for zero overhead at inference, or hot-swap different adapters for different tasks using the same base model.</li>
+        </ol>
+      </div>
+
       <h3>Full fine-tuning vs LoRA — a parameter cost comparison</h3>
       <p>Below is a real 7B-parameter transformer's cost breakdown. Pick a fine-tuning strategy and a LoRA rank, and see how many parameters you actually train and how much GPU memory it takes.</p>
     `));
@@ -175,6 +186,32 @@ export default {
 
       <div class="callout callout-tip"><div class="callout-title">💡 When to reach for which</div>
       Need up-to-the-minute facts? <strong>RAG</strong>. Need a specific style, format, or narrow-domain expertise? <strong>LoRA/QLoRA fine-tune</strong>. Need both? <strong>Fine-tune the style, retrieve the facts.</strong> Skip fine-tuning entirely if a few good in-context examples do the job — it's often the fastest to production.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — LoRA math, quantization, and forgetting</summary>
+        <div class="deep-dive-body">
+          <h4>The LoRA Decomposition</h4>
+          <p>For a pretrained weight matrix W ∈ ℝ^(d×k), LoRA adds a low-rank update:</p>
+          <div class="formula">W' = W + ΔW = W + B·A &nbsp;&nbsp; where A ∈ ℝ^(r×k), B ∈ ℝ^(d×r), r ≪ min(d,k)</div>
+          <p>A is initialized with random Gaussian values and B is initialized to zero, so ΔW = 0 at the start of training (the model begins exactly where pretraining left off). Only A and B receive gradients. For a typical transformer layer with d = 4096 and r = 8, LoRA adds 2 × 8 × 4096 = 65,536 parameters per matrix — versus 4096² = 16.7M for the full matrix. That's 0.4%.</p>
+
+          <h4>QLoRA: Quantization + LoRA</h4>
+          <p>QLoRA (Dettmers et al., 2023) quantizes the frozen base weights to 4-bit NormalFloat (NF4) — a data type optimized for the roughly Gaussian distribution of neural network weights. During the forward pass, 4-bit weights are dequantized to bf16 on the fly. Gradients flow only through the bf16 LoRA adapters. The result: a 65B-parameter model fits in ~33 GB (vs ~130 GB in bf16), making fine-tuning possible on a single 48 GB GPU.</p>
+          <div class="formula">Memory: full bf16 = 2N bytes &nbsp;|&nbsp; LoRA bf16 = 2N + 2rdk bytes &nbsp;|&nbsp; QLoRA = 0.5N + 2rdk bytes</div>
+
+          <h4>Catastrophic Forgetting</h4>
+          <p>When fine-tuning on narrow data, the model overwrites general knowledge — it "forgets" how to do math or follow safety guidelines. Defenses include: (1) LoRA at low rank inherently limits how far the model can drift; (2) mixing 5–10% of general-purpose data into each training batch; (3) using a learning rate 10–100× lower than pretraining; (4) early stopping based on validation loss on a held-out general benchmark.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Fine-tuning teaches the model new facts."</div>
+          <p><strong>✅ Reality:</strong> Fine-tuning primarily teaches the model a new <em>format, style, or behavior</em> — not new knowledge. Factual knowledge is absorbed during pretraining on trillions of tokens. Trying to fine-tune facts in with a few hundred examples doesn't reliably embed them — use RAG for dynamic knowledge instead.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "More training data always helps."</div>
+          <p><strong>✅ Reality:</strong> Data quality dominates. Fine-tuning on 500 carefully curated examples often outperforms 50,000 noisy ones. Duplicates, contradictions, and low-quality completions degrade the model. The LIMA paper (2023) showed that just 1,000 high-quality examples can produce strong instruction-following.</p>
+
+          <h4>Historical Context</h4>
+          <p>Transfer learning via fine-tuning was popularized by ULMFiT (Howard & Ruder, 2018) and BERT (Devlin, 2018) — pretrain once, fine-tune cheaply for each task. Adapter layers (Houlsby et al., 2019) introduced the idea of freezing the base and adding small trainable modules. LoRA (Hu et al., 2021) simplified this to low-rank matrix pairs. QLoRA (Dettmers et al., 2023) added quantization, democratizing fine-tuning of 65B+ models. Today, LoRA is the default fine-tuning method for open-source LLMs.</p>
+        </div>
+      </details>
     `));
   },
 };

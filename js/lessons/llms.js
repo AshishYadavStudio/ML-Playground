@@ -129,6 +129,17 @@ export default {
       <strong>Given all the text so far, predict the next token.</strong> That's it. Play this game trillions of times on internet-scale text, and to keep winning, the model is forced to absorb grammar, facts, style, code, and reasoning — because all of them help predict what comes next.</div>
       <p>This lesson walks the full journey of your message through an LLM, with working demos at each step.</p>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Tokenize:</strong> Your input text is split into tokens — subword pieces from a fixed vocabulary of ~100K entries learned via byte-pair encoding. Common words stay whole; rare words shatter into pieces.</li>
+          <li><strong>Embed:</strong> Each token is mapped to a high-dimensional vector (the embedding). Positional encodings are added so the model knows the order of tokens.</li>
+          <li><strong>Transform:</strong> The embeddings flow through dozens of transformer blocks. Each block applies self-attention (every token gathers context from every earlier token) followed by a feed-forward network. After ~100 layers, the model has built a rich contextual representation.</li>
+          <li><strong>Predict:</strong> The final layer outputs a probability distribution over the entire vocabulary for the next token. Temperature controls the sharpness: low → deterministic, high → creative.</li>
+          <li><strong>Sample and repeat:</strong> One token is sampled from the distribution, appended to the context, and the whole process repeats — autoregressively — until the model emits a stop token or hits the context limit.</li>
+        </ol>
+      </div>
+
       <h3>Step 1 · Text becomes tokens</h3>
       <p>Models don't see letters or words — they see <strong>tokens</strong>: frequent chunks of characters from a fixed vocabulary (~100,000 entries, learned by counting which character pairs co-occur most — <em>byte-pair encoding</em>). Common words are one token; rare words get split into pieces. <strong>Type below</strong> and watch a miniature tokenizer segment your text live:</p>
     `));
@@ -309,6 +320,33 @@ export default {
 
       <div class="callout callout-tip"><div class="callout-title">🎓 The complete picture</div>
       You now hold the entire chain: <strong>data → features → gradient descent → neural nets → backprop → attention → embeddings → next-token prediction → RLHF</strong>. Every "AI breakthrough" headline you read is a variation somewhere along this chain — and you can now place it. That's what expert-level understanding looks like.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — tokenization, scaling laws, and RLHF</summary>
+        <div class="deep-dive-body">
+          <h4>Byte-Pair Encoding (BPE)</h4>
+          <p>The tokenizer's vocabulary is built by a compression algorithm: start with individual bytes, then repeatedly merge the most frequent pair of adjacent tokens into a new token. After ~100K merges, you get a vocabulary where common words like "the" are single tokens, while rare words like "defenestration" split into "def" + "en" + "est" + "ration". The key insight: this balances vocabulary size against sequence length — a larger vocab means shorter sequences but a bigger embedding table.</p>
+          <div class="formula">BPE: merge(most_frequent_pair) → new_token, repeat 100K times</div>
+
+          <h4>Temperature and Sampling</h4>
+          <p>The raw model outputs logits z for each vocabulary token. Temperature T reshapes the distribution:</p>
+          <div class="formula">P(token_i) = exp(zᵢ / T) / Σⱼ exp(zⱼ / T)</div>
+          <p>T → 0 makes the distribution spike on the top token (greedy, deterministic). T → ∞ flattens toward uniform random. T = 1 uses the model's natural calibration. Top-k sampling restricts to the k most likely tokens; top-p (nucleus) sampling keeps the smallest set whose cumulative probability exceeds p — both prevent the model from sampling extremely unlikely garbage.</p>
+
+          <h4>Scaling Laws</h4>
+          <p>Kaplan et al. (2020) and Hoffmann et al. (2022, "Chinchilla") showed that LLM loss follows a smooth power law in three variables: model parameters N, training tokens D, and compute budget C. The practical consequence: given a fixed compute budget, there's an optimal ratio of model size to data size. Chinchilla showed that most models before 2022 were undertrained — they needed more data relative to their size.</p>
+          <div class="formula">L(N, D) ≈ (N₀/N)^α + (D₀/D)^β + L_irreducible</div>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "LLMs understand what they're saying."</div>
+          <p><strong>✅ Reality:</strong> LLMs predict the next token by pattern-matching against statistical regularities in training data. Whether this constitutes "understanding" is a deep philosophical question, but operationally, the model has no world model, no beliefs, and no intent. It produces fluent text that is often correct because correct text was statistically dominant in training — not because it verified the facts.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Bigger models are always better."</div>
+          <p><strong>✅ Reality:</strong> Scaling laws show that model size, data, and compute must scale together. A 70B model trained on too little data underperforms a 7B model trained on the right amount. Chinchilla (70B parameters, 1.4T tokens) outperformed Gopher (280B parameters, 300B tokens). The ratio matters more than the absolute size.</p>
+
+          <h4>Historical Context</h4>
+          <p>Statistical language models date to Claude Shannon (1948). Neural LMs emerged with Bengio et al. (2003). The transformer (Vaswani, 2017) made attention practical at scale. GPT (Radford, 2018) showed that unsupervised pretraining + fine-tuning works. GPT-2 (2019) demonstrated zero-shot capabilities. GPT-3 (2020, 175B) revealed in-context learning. InstructGPT (2022) introduced RLHF. ChatGPT (Nov 2022) brought it to the public. Claude introduced Constitutional AI — self-critique against written principles — as an alternative to pure human-feedback ranking.</p>
+        </div>
+      </details>
     `));
   },
 };

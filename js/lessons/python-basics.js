@@ -108,6 +108,18 @@ export default {
   render(root) {
     root.appendChild(html(`
       <p>Python is the native language of machine learning — every major framework (PyTorch, TensorFlow, scikit-learn) speaks it. The good news: you need surprisingly little Python to start doing ML. These four mini-programs cover 80% of what you'll read in real ML code.</p>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Read top to bottom:</strong> Python executes your script line by line, top to bottom. When it hits a <code>def</code>, it memorizes the function but doesn't run it yet. When it hits a function call, it jumps into that function's body.</li>
+          <li><strong>Variables are name tags:</strong> <code>x = 42</code> sticks the label "x" onto the value 42. Reassigning (<code>x = 99</code>) moves the tag. Python figures out types automatically — no declarations needed.</li>
+          <li><strong>Indentation is structure:</strong> Blocks (loops, if/else, functions) are defined by indentation (4 spaces), not braces. If your code is indented wrong, it won't run — or worse, it'll run but do the wrong thing.</li>
+          <li><strong>Everything is an object:</strong> Numbers, strings, lists, functions, even classes — everything in Python is an object with methods you can call. <code>"hello".upper()</code>, <code>[1,2,3].append(4)</code>.</li>
+          <li><strong>Errors are normal:</strong> Python raises exceptions when something goes wrong. Reading tracebacks bottom-up (last line = the actual error, lines above = the call chain) is the #1 debugging skill.</li>
+        </ol>
+      </div>
+
       <h3>Step through real code</h3>
       <p>Press <strong>Step</strong> to execute one line at a time. The highlighted line is <em>about to run's just run</em>; watch the variables panel and console update, and read the explanation under the code.</p>
     `));
@@ -236,6 +248,39 @@ export default {
       Python uses indentation (4 spaces) instead of braces to define blocks — the visual structure <em>is</em> the logic. It's why Python reads almost like pseudocode, and why ML researchers, who prototype constantly, adopted it en masse.</div>
       <div class="callout callout-info"><div class="callout-title">📌 Next step</div>
       Plain Python loops are too slow for math on millions of numbers. The next lesson shows the fix that makes Python viable for ML at all: <strong>NumPy</strong>.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — debugging, common bugs, and Python internals</summary>
+        <div class="deep-dive-body">
+          <h4>Reading Tracebacks</h4>
+          <p>When Python crashes, it prints a traceback — read it <strong>bottom-up</strong>:</p>
+          <div class="formula">Last line: the actual error (TypeError, NameError, IndexError…)
+Lines above: the chain of function calls that led there
+Top line: where your script started the chain</div>
+          <p>The most common beginner errors: <code>NameError</code> (typo in a variable name), <code>TypeError</code> (wrong type, like adding a string and int), <code>IndexError</code> (list index out of range), and <code>IndentationError</code> (inconsistent spaces/tabs).</p>
+
+          <h4>The Top 5 Beginner Bugs</h4>
+          <ol>
+            <li><strong>Off-by-one:</strong> <code>range(5)</code> gives 0,1,2,3,4 — not 1,2,3,4,5. Python counts from 0 and the end is exclusive.</li>
+            <li><strong>Mutating while iterating:</strong> <code>for x in mylist: mylist.remove(x)</code> skips elements. Build a new list instead.</li>
+            <li><strong>Integer division:</strong> <code>5 / 2</code> is 2.5 in Python 3 (float division). Use <code>5 // 2</code> for integer division (2).</li>
+            <li><strong>Assignment vs comparison:</strong> <code>=</code> assigns, <code>==</code> compares. <code>if x = 5:</code> is a SyntaxError (Python catches this, unlike C).</li>
+            <li><strong>Mutable defaults:</strong> <code>def f(items=[]):</code> shares ONE list across all calls. Use <code>None</code> and create inside.</li>
+          </ol>
+
+          <h4>Dynamic Typing: Strength and Trap</h4>
+          <p>Python doesn't require type declarations — <code>x</code> can be an int, then a string, then a list. This makes prototyping fast but creates subtle bugs: a function that expects a list silently breaks when passed a string (both are iterable!). Modern Python uses <strong>type hints</strong> (<code>def f(x: int) -> float:</code>) as documentation that tools like mypy can check — but they're not enforced at runtime.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Python is slow, so it's bad for ML."</div>
+          <p><strong>✅ Reality:</strong> Python itself is slow for tight loops (~100× slower than C). But ML code spends 99% of its time inside NumPy, PyTorch, and TensorFlow — which are written in C/C++/CUDA. Python is the orchestration layer: it tells the fast libraries what to do. The actual math runs at near-native speed.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "You need to master Python before starting ML."</div>
+          <p><strong>✅ Reality:</strong> You need variables, lists, dicts, for loops, functions, and imports. That's it for getting started. Classes, decorators, and generators become important later, but you can train your first model with just the basics from this lesson.</p>
+
+          <h4>Historical Context</h4>
+          <p>Guido van Rossum created Python in 1991, prioritizing readability over clever syntax. The name comes from Monty Python, not the snake. Python 2 vs 3 split the community for over a decade (Python 2 ended in 2020). Python became the ML lingua franca because NumPy (2006) made fast math accessible, and scikit-learn (2010) standardized the API. Today, Python is the #1 most-used language on GitHub.</p>
+        </div>
+      </details>
     `));
   },
 };

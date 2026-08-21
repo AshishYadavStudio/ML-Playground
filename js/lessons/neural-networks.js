@@ -21,6 +21,17 @@ export default {
         <li><strong>Width</strong> = neurons per layer. <strong>Depth</strong> = number of layers ("deep" learning = many layers).</li>
         <li>The <em>universal approximation theorem</em>: even one hidden layer can approximate any continuous function — given enough neurons. Depth just does it exponentially more efficiently.</li>
       </ul>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Initialize weights:</strong> Every connection between neurons gets a small random weight. These weights are the "knobs" the network will tune during training.</li>
+          <li><strong>Forward pass:</strong> An input flows through the network layer by layer. At each neuron, the weighted sum of incoming values is computed (w·x + b), then squeezed through a nonlinear activation function like tanh or ReLU.</li>
+          <li><strong>Compute loss:</strong> The network's output is compared to the true label using a loss function (e.g., cross-entropy). This single number measures how wrong the prediction is.</li>
+          <li><strong>Backward pass (backprop):</strong> The gradient of the loss with respect to every weight is computed by applying the chain rule backward through the layers — this tells each weight which direction to move.</li>
+          <li><strong>Update weights:</strong> Each weight is nudged opposite to its gradient by a small step (the learning rate). Repeat from step 2 with a new batch of data points until the loss is small.</li>
+        </ol>
+      </div>
+
       <h3>The playground</h3>
       <p>Everything below runs live in your browser. Start with <strong>moons</strong> and the default network. Then try the <strong>spiral</strong> — first with 1 small layer (watch it struggle), then with 2–3 layers of 8 (watch it succeed). This is the "aha" moment of deep learning.</p>
     `));
@@ -145,6 +156,34 @@ export default {
       </ol>
       <div class="callout callout-info"><div class="callout-title">📌 Scale perspective</div>
       The network you just trained has a few hundred parameters. GPT-class language models use the <em>same recipe</em> — forward, loss, backprop, update — with hundreds of billions of parameters and internet-scale data. The core loop you just watched <em>is</em> deep learning.</div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Universal Approximation and Network Design</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>The <strong>Universal Approximation Theorem</strong> (Cybenko 1989, Hornik 1991) states that a feed-forward network with a single hidden layer containing a finite number of neurons can approximate any continuous function on a compact subset of R<sup>n</sup>, given a non-constant, bounded, and continuous activation function.</p>
+          <div class="formula">For any continuous f: [0,1]<sup>n</sup> → R and any ε > 0, there exists N neurons such that: |F(x) − f(x)| < ε for all x ∈ [0,1]<sup>n</sup>, where F(x) = Σᵢ αᵢ σ(wᵢ·x + bᵢ)</div>
+          <p>However, this is an <em>existence</em> result — it says the network exists, not that gradient descent will find it. And the required width N can be exponentially large. Depth provides exponential compression: a function that needs 2<sup>n</sup> neurons in one layer may need only O(n) neurons spread across O(n) layers.</p>
+
+          <h4>Intuition</h4>
+          <p>Think of each neuron as a "crease" in a sheet of paper. One hidden layer can fold the paper in many places but only along parallel lines. Adding layers lets the network fold the <em>already-folded</em> paper — composing folds creates exponentially more complex shapes with far fewer total creases. This is why a 3-layer network with 8 neurons per layer can solve the spiral, but a 1-layer network with 16 neurons cannot.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "More layers always means better performance."</div>
+          <p><strong>✅ Reality:</strong> Deeper networks are harder to train due to vanishing/exploding gradients and optimization difficulties. Without techniques like residual connections, batch normalization, and careful initialization, networks beyond ~20 layers often perform <em>worse</em> than shallower ones. The breakthrough of ResNets (2015) was showing that skip connections let gradients flow through 100+ layers.</p>
+
+          <div class="misconception"><strong>❌ Misconception:</strong> "Neural networks find the globally optimal solution."</div>
+          <p><strong>✅ Reality:</strong> The loss landscape of a neural network is non-convex with many local minima and saddle points. SGD does not guarantee convergence to the global minimum. In practice, the many local minima in large networks tend to have similar loss values (a phenomenon studied by Choromanska et al., 2015), so finding any of them works well enough.</p>
+
+          <h4>Weight Initialization Matters</h4>
+          <p>If weights start too large, activations saturate and gradients vanish. Too small, and signals shrink to zero across layers. <strong>Xavier initialization</strong> (Glorot & Bengio, 2010) sets weights from a distribution with variance 2/(n_in + n_out). <strong>He initialization</strong> (He et al., 2015) uses variance 2/n_in, which is better suited for ReLU activations. These simple choices made training deep networks practical.</p>
+
+          <h4>Historical Context</h4>
+          <p>The perceptron (Rosenblatt, 1958) could only learn linear boundaries. Minsky and Papert's 1969 book proved this limitation (XOR is unsolvable), triggering the first "AI winter." Backpropagation through multi-layer networks was popularized by Rumelhart, Hinton, and Williams in 1986, but deep networks remained impractical until ~2006 when Hinton showed layer-wise pretraining could work, and ~2012 when AlexNet demonstrated that deep CNNs trained end-to-end with ReLU, dropout, and GPUs could dominate image recognition.</p>
+        </div>
+      </details>
     `));
   },
 };

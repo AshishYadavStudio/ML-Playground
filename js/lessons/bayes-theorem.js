@@ -20,6 +20,17 @@ export default {
         <li><strong>Posterior P(H | E):</strong> your updated belief now that you've seen the evidence.</li>
       </ul>
 
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Start with a prior belief:</strong> Before seeing any evidence, estimate how likely the hypothesis is. For a rare disease affecting 1% of people, your prior P(H) = 0.01.</li>
+          <li><strong>Observe evidence:</strong> You receive a piece of data — a positive test result, a flagged email, a suspicious transaction. This is your evidence E.</li>
+          <li><strong>Evaluate the likelihood:</strong> Ask "if the hypothesis were true, how probable is this evidence?" That is P(E|H). A 99%-sensitive test gives P(+|disease) = 0.99.</li>
+          <li><strong>Account for false alarms:</strong> Also ask "if the hypothesis were false, how probable is this evidence?" — that is P(E|not H). This is where most intuition fails: even a small false-alarm rate applied to a huge healthy population produces many positives.</li>
+          <li><strong>Compute the posterior:</strong> Combine everything via Bayes' formula: P(H|E) = P(E|H) · P(H) / P(E). The denominator P(E) is the total probability of seeing the evidence under all hypotheses, ensuring the answer is a proper probability.</li>
+        </ol>
+      </div>
+
       <h3>The medical test paradox</h3>
       <p>A rare disease affects 1% of the population. A test is 99% accurate. You test positive. What's the probability you actually have the disease? Most people say "99%." The right answer is closer to <strong>50%</strong> — and the picture below shows exactly why.</p>
     `));
@@ -151,6 +162,35 @@ export default {
 
       <div class="callout callout-tip"><div class="callout-title">💡 The base rate is everything</div>
       Screening for a 1-in-100,000 disease with a 99% accurate test flags 1000 healthy people for every real case caught. Same math explains why "AI can detect X with 95% accuracy" headlines about rare events are usually much less useful than they sound — the false-positive tsunami swamps the true signal.</div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Bayesian inference, odds form, and the base rate fallacy</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>Bayes' theorem is derived directly from the definition of conditional probability. Since P(A and B) = P(A|B) · P(B) = P(B|A) · P(A), dividing both sides by P(B) gives:</p>
+          <div class="formula">P(A|B) = P(B|A) · P(A) / P(B)</div>
+          <p>The denominator P(B) — the marginal likelihood — is often expanded using the law of total probability:</p>
+          <div class="formula">P(E) = P(E|H) · P(H) + P(E|not H) · P(not H)</div>
+          <p>An equivalent and often more intuitive formulation uses <strong>odds</strong>. Define the prior odds as O(H) = P(H)/P(not H) and the <strong>likelihood ratio</strong> (or Bayes factor) as LR = P(E|H)/P(E|not H). Then:</p>
+          <div class="formula">Posterior odds = Prior odds × Likelihood ratio &nbsp;&nbsp; → &nbsp;&nbsp; O(H|E) = O(H) · LR</div>
+          <p>This form makes sequential updating trivial: each new independent piece of evidence just multiplies the running odds by its own likelihood ratio.</p>
+
+          <h4>Intuition</h4>
+          <p>Think of Bayes' theorem as a conversation between your prior knowledge and the new evidence. The prior encodes "how common is this in the population?" while the likelihood ratio encodes "how much more does this evidence point toward the hypothesis than away from it?" A test with a likelihood ratio of 100 (very discriminating) can overwhelm a low prior, but a test with LR = 10 barely budges a 1-in-10,000 prior — you go from 1:10,000 to 1:1,000, still far from certain.</p>
+          <p>The medical test paradox works because people anchor on the test's accuracy (99%) and forget to account for the enormous base of healthy people who can produce false positives. In a population of 10,000 with 1% prevalence, 100 are sick and 9,900 are healthy. The test catches 99 sick people and falsely flags 99 healthy people — so about half of all positives are false alarms.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "A 99% accurate test means a positive result is 99% reliable."</div>
+          <p><strong>✅ Reality:</strong> Test accuracy (sensitivity/specificity) and predictive value (posterior probability) are fundamentally different quantities. The predictive value depends critically on the base rate (prevalence). With a rare condition, even an excellent test produces mostly false positives.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Bayesian reasoning is subjective because the prior is a guess, so it's less rigorous than frequentist methods."</div>
+          <p><strong>✅ Reality:</strong> The prior is explicit, auditable, and gets washed out by enough data. With sufficient evidence, Bayesian and frequentist approaches converge. The advantage of making assumptions explicit is that you can examine and challenge them — unlike hidden assumptions in frequentist procedures.</p>
+
+          <h4>Historical Context</h4>
+          <p>The theorem is named after Reverend Thomas Bayes (1701-1761), an English Presbyterian minister and amateur mathematician. His essay "An Essay towards solving a Problem in the Doctrine of Chances" was published posthumously in 1763 by his friend Richard Price. Pierre-Simon Laplace independently rediscovered and generalized the result in 1774, developing much of what we now call Bayesian inference. For most of the 20th century, Bayesian methods were controversial in statistics — the frequentist school dominated. The computational revolution (especially Markov Chain Monte Carlo methods in the 1990s) made Bayesian inference practical for complex models and led to its resurgence across machine learning, genetics, and astrophysics.</p>
+        </div>
+      </details>
     `));
   },
 };

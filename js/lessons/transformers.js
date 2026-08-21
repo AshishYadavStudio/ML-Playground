@@ -79,6 +79,17 @@ export default {
       </ul>
       <div class="formula">Attention(Q, K, V) = softmax( QKᵀ / √d ) · V</div>
       <p>Each token's query is dotted against every key → similarity scores → softmax turns them into weights summing to 1 → the token's new representation is the <strong>weighted average of all values</strong>. Every token updates in parallel: no recurrence, perfect for GPUs.</p>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Project each token into Q, K, V:</strong> Every token's embedding is multiplied by three learned weight matrices to produce a Query vector ("what am I looking for?"), a Key vector ("what do I contain?"), and a Value vector ("what information do I carry?").</li>
+          <li><strong>Compute attention scores:</strong> Each token's Query is dot-producted with every token's Key. The result is a matrix of raw compatibility scores — high scores mean "these two tokens are relevant to each other."</li>
+          <li><strong>Scale and softmax:</strong> Scores are divided by √d<sub>k</sub> (the key dimension) to prevent extreme values from dominating, then softmax converts each row into a probability distribution that sums to 1.</li>
+          <li><strong>Weighted sum of Values:</strong> Each token's new representation is the weighted average of all Value vectors, using the attention weights from step 3. Tokens with high attention weight contribute more to the output — this is how context flows between words.</li>
+          <li><strong>Repeat across heads and layers:</strong> Multiple attention "heads" run in parallel (each with its own Q/K/V matrices), capturing different types of relationships. Their outputs are concatenated and projected, then passed through a feed-forward network. This entire block is stacked 12–96+ times deep.</li>
+        </ol>
+      </div>
+
       <h3>Explore: what attention actually learns</h3>
       <p><strong>Hover any word</strong> (or any matrix row) to see where that word "looks." Then switch to the flipped sentence — one changed word (<em>round</em> → <em>strong</em>) completely redirects where <em>"it"</em> attends. This is context-dependent understanding, the thing no fixed dictionary could ever do.</p>
     `));
@@ -237,6 +248,38 @@ export default {
       Every token attends to every other: cost grows as n² with sequence length. Doubling context = 4× compute. Whole research fields (FlashAttention, sliding windows, state-space models) exist to soften this.</div>
       <div class="callout callout-tip"><div class="callout-title">💡 One architecture to rule them all</div>
       Transformers now dominate language (GPT, Claude), vision (ViT), audio (Whisper), protein folding (AlphaFold), and robotics. Learning this one architecture is the single highest-leverage investment in modern ML.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Scaled Dot-Product Attention, Positional Encoding & Why Transformers Won</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>Given a sequence of <em>n</em> tokens with embedding dimension <em>d<sub>model</sub></em>, the self-attention mechanism computes:</p>
+          <div class="formula">Attention(Q, K, V) = softmax(QK<sup>T</sup> / √d<sub>k</sub>) · V</div>
+          <p>Where <em>Q = XW<sub>Q</sub></em>, <em>K = XW<sub>K</sub></em>, <em>V = XW<sub>V</sub></em> are linear projections of the input <em>X</em>, and <em>d<sub>k</sub></em> is the dimension of each key vector. The scaling factor <code>1/√d<sub>k</sub></code> is critical: without it, for large <em>d<sub>k</sub></em>, the dot products grow in magnitude, pushing softmax into regions where gradients are vanishingly small. With the scaling, the variance of <code>q·k</code> stays approximately 1 regardless of dimension.</p>
+
+          <h4>Multi-Head Attention</h4>
+          <p>Rather than a single attention function, the model runs <em>h</em> parallel "heads," each with its own smaller projection matrices (<em>d<sub>k</sub> = d<sub>model</sub>/h</em>). The heads' outputs are concatenated and projected:</p>
+          <div class="formula">MultiHead(Q, K, V) = Concat(head<sub>1</sub>, ..., head<sub>h</sub>) · W<sub>O</sub><br>where head<sub>i</sub> = Attention(QW<sub>Q</sub><sup>i</sup>, KW<sub>K</sub><sup>i</sup>, VW<sub>V</sub><sup>i</sup>)</div>
+          <p>Different heads learn different relationship types: one might track syntactic dependencies, another semantic similarity, another positional proximity. This multi-view approach is more expressive than a single large attention at the same computational cost.</p>
+
+          <h4>Positional Encoding</h4>
+          <p>Self-attention is permutation-equivariant — it treats "dog bites man" identically to "man bites dog." Position must be injected explicitly. The original transformer uses sinusoidal encoding:</p>
+          <div class="formula">PE(pos, 2i) = sin(pos / 10000<sup>2i/d</sup>)<br>PE(pos, 2i+1) = cos(pos / 10000<sup>2i/d</sup>)</div>
+          <p>Each dimension oscillates at a different frequency, giving the model a unique "fingerprint" for each position. Modern models (GPT, LLaMA) typically use <em>learned</em> positional embeddings or <em>rotary positional embeddings</em> (RoPE), which encode relative position by rotating Q and K vectors — enabling better generalization to sequence lengths unseen during training.</p>
+
+          <h4>Intuition</h4>
+          <p>Imagine a conference room where everyone can hear everyone else simultaneously. Each person (token) writes a question on a card (Query), posts a name tag (Key), and prepares a briefing document (Value). To update their understanding, each person checks every name tag against their question, pays attention proportional to the match, and reads a weighted mix of everyone's briefings. This happens in parallel for all participants — no waiting, no bottleneck. That is why transformers are so GPU-friendly.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Attention lets the model look at the entire sequence equally."</div>
+          <p><strong>✅ Reality:</strong> Attention is <em>selective</em> by design. The softmax concentrates weight on a few relevant tokens and suppresses the rest. Trained transformer heads are remarkably sparse — most attention weight lands on just 3–5 tokens out of thousands. The power lies not in looking everywhere, but in learning <em>where</em> to look.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Transformers understand language like humans do."</div>
+          <p><strong>✅ Reality:</strong> Transformers are pattern-matching machines optimized to predict likely continuations. They capture statistical regularities (including some that resemble reasoning) but lack grounded world models, persistent memory, and embodied experience. Whether this constitutes "understanding" is an open philosophical and scientific question.</p>
+
+          <h4>Historical Context</h4>
+          <p>Attention was first introduced for neural machine translation by Bahdanau et al. (2014) as an add-on to RNNs, allowing the decoder to "look back" at relevant encoder states. The revolutionary step came in Vaswani et al.'s "Attention Is All You Need" (2017), which removed recurrence entirely and built the entire architecture on attention alone. Initially applied only to translation, the transformer was quickly adopted for language modeling (GPT, 2018), bidirectional understanding (BERT, 2018), and then vision (ViT, 2020), speech (Whisper, 2022), protein folding (AlphaFold 2, 2020), and multimodal models (GPT-4, Claude, Gemini). The O(n²) cost of full attention remains the main limitation, driving research into efficient variants: sparse attention, FlashAttention (hardware-aware tiling), sliding-window approaches, and state-space alternatives like Mamba.</p>
+        </div>
+      </details>
     `));
   },
 };

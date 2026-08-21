@@ -15,6 +15,16 @@ export default {
   render(root) {
     root.appendChild(html(`
       <p>Everything so far <em>discriminates</em>: given input, predict a label or number. <strong>Generative models</strong> flip the goal — learn the data's underlying distribution well enough to <strong>create new samples from it</strong>. Faces that don't exist, images from text, this decade's biggest AI story. Three landmark ideas, in order:</p>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Learn the distribution:</strong> A generative model studies training data (images, text, audio) and learns the probability distribution P(data) — what "typical" data looks like.</li>
+          <li><strong>Map to a latent space:</strong> The model compresses complex data into a compact code (latent vector z). Similar data points map to nearby codes, creating a smooth, navigable landscape.</li>
+          <li><strong>Sample from the latent space:</strong> To generate new data, sample a random point z from the latent space and run it through the decoder/generator.</li>
+          <li><strong>Decode to data space:</strong> The decoder transforms the compact code back into full data — an image, a sound, a sentence — creating something that looks like it could have been in the training set, but wasn't.</li>
+          <li><strong>Condition on prompts (optional):</strong> Modern models accept extra inputs (text prompts, class labels) that steer generation toward specific outputs — "a cat wearing a hat."</li>
+        </ol>
+      </div>
     `));
 
     // ================= Demo 1: Autoencoder latent space =================
@@ -282,6 +292,33 @@ export default {
       </table>
       <div class="callout callout-info"><div class="callout-title">📌 How text-to-image actually works</div>
       Stable Diffusion combines all three lessons on this page: a <strong>VAE</strong> compresses images into a latent space; <strong>diffusion</strong> runs in that latent space (cheaper than pixel space); and a <strong>text encoder</strong> (a transformer!) steers each denoising step toward your prompt via cross-attention. Modern AI systems are compositions of these building blocks.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — the math of generation</summary>
+        <div class="deep-dive-body">
+          <h4>GAN Objective — The Minimax Game</h4>
+          <p>The GAN training objective is a two-player game:</p>
+          <div class="formula">min_G max_D &nbsp; E[log D(x)] + E[log(1 − D(G(z)))]</div>
+          <p>The discriminator D maximizes its ability to distinguish real from fake. The generator G minimizes the discriminator's success. At the Nash equilibrium, D(x) = 0.5 everywhere — the fakes are indistinguishable from real data.</p>
+
+          <h4>VAE — The ELBO</h4>
+          <p>Variational Autoencoders maximize the Evidence Lower BOund:</p>
+          <div class="formula">ELBO = E_q[log p(x|z)] − KL(q(z|x) || p(z))</div>
+          <p>The first term is reconstruction quality (make the output look like the input). The second term forces the encoder's distribution q(z|x) to stay close to a simple prior p(z) (usually a standard Gaussian). This KL penalty is what makes the latent space smooth and interpolable — without it, the space has gaps where the decoder produces garbage.</p>
+
+          <h4>Mode Collapse</h4>
+          <p>GANs' biggest failure mode: the generator discovers one realistic output that fools the discriminator and keeps producing only that. The training oscillates — G finds an exploit, D adapts, G finds another. Tricks to mitigate it include minibatch discrimination, spectral normalization, and Wasserstein loss (WGAN).</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Generative models memorize and copy training images."</div>
+          <p><strong>✅ Reality:</strong> The model learns statistical patterns, not individual images. A diffusion model trained on millions of faces learns "face-ness" — the spatial structure of eyes, noses, skin textures — and recombines these patterns into novel faces. Exact memorization does happen occasionally (especially with duplicated training data), which is an active research concern.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Diffusion models replaced GANs because GANs produce worse quality."</div>
+          <p><strong>✅ Reality:</strong> GANs can produce stunning quality (StyleGAN faces are sharp). Diffusion won because it's <em>easier to train</em> (no adversarial instability), offers better <em>mode coverage</em> (generates more diverse outputs), and scales predictably. The trade-off is speed — GANs generate in one pass, diffusion needs many denoising steps.</p>
+
+          <h4>Historical Context</h4>
+          <p>Autoencoders date to Rumelhart et al. (1986). VAEs were introduced by Kingma and Welling (2013). GANs were proposed by Ian Goodfellow in 2014 (the idea came to him at a bar). Diffusion models have roots in non-equilibrium thermodynamics (Sohl-Dickstein et al., 2015), but became practical with DDPM (Ho, Jain, Abbeel, 2020). Latent diffusion (Rombach et al., 2022) enabled Stable Diffusion, which democratized image generation.</p>
+        </div>
+      </details>
     `));
   },
 };

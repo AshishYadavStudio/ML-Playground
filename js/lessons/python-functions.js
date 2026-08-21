@@ -35,6 +35,17 @@ export default {
   render(root) {
     root.appendChild(html(`
       <p>A <strong>function</strong> packages logic behind a name: inputs go in (<em>parameters</em>), a result comes out (<em>return</em>). They're how programs stay readable at 10 lines and survivable at 10,000.</p>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Define with <code>def</code>:</strong> <code>def name(params):</code> creates a function. The body (indented code) doesn't run yet — Python just memorizes it for later.</li>
+          <li><strong>Call it:</strong> Writing <code>name(args)</code> creates a new <em>frame</em> — a private workspace of local variables. Arguments are matched to parameters by position or name.</li>
+          <li><strong>Execute the body:</strong> Python runs the indented code top to bottom. Any variables created here are local — they exist only inside this call and vanish when the function returns.</li>
+          <li><strong>Return a value:</strong> <code>return value</code> exits the function immediately and sends the result back to the caller. If there's no return statement, the function returns <code>None</code>.</li>
+          <li><strong>Pop the frame:</strong> The local workspace is destroyed. If the function called another function (recursion!), those inner frames stack up and pop off in order — the call stack.</li>
+        </ol>
+      </div>
     `));
 
     root.appendChild(pyCode(
@@ -171,6 +182,36 @@ print(top)`,
       </table>
       <div class="callout callout-warn"><div class="callout-title">⚠️ The mutable default trap</div>
       Never write <code>def f(items=[])</code> — that ONE list is shared across every call and grows forever. Use <code>def f(items=None)</code> then <code>if items is None: items = []</code> inside. This is the most famous Python gotcha of all.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — closures, decorators, and the LEGB rule</summary>
+        <div class="deep-dive-body">
+          <h4>The LEGB Scope Rule</h4>
+          <p>When Python sees a variable name, it searches four scopes in order:</p>
+          <div class="formula">L (Local) → E (Enclosing function) → G (Global/module) → B (Built-in)</div>
+          <p>Local variables shadow outer ones. The <code>global</code> keyword lets a function write to module scope; <code>nonlocal</code> lets an inner function write to its enclosing function's scope. In practice, you rarely need either — prefer returning values over mutating outer state.</p>
+
+          <h4>Closures</h4>
+          <p>A <strong>closure</strong> is a function that remembers variables from its enclosing scope even after that scope has finished. This is how decorators, callbacks, and factory functions work:</p>
+          <div class="formula">def make_multiplier(factor):
+    def multiply(x):
+        return x * factor   # "factor" is captured from enclosing scope
+    return multiply
+double = make_multiplier(2)   # double remembers factor=2 forever</div>
+
+          <h4>*args and **kwargs Internals</h4>
+          <p><code>*args</code> collects extra positional arguments into a tuple. <code>**kwargs</code> collects extra keyword arguments into a dict. Together they let a function accept literally any combination of arguments — which is how decorators wrap functions without knowing their signatures, and how <code>super().__init__(**kwargs)</code> chains constructors in PyTorch modules.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Lambda functions are faster than regular functions."</div>
+          <p><strong>✅ Reality:</strong> Lambdas compile to the exact same bytecode as an equivalent <code>def</code>. They're syntactic sugar for one-expression functions, not an optimization. Use them for short throwaway callbacks (<code>sorted(items, key=lambda x: x[1])</code>); use <code>def</code> for anything that needs a name, a docstring, or multiple statements.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Recursion is always elegant and efficient."</div>
+          <p><strong>✅ Reality:</strong> Python has a default recursion limit of 1,000 frames (no tail-call optimization). Deep recursion causes <code>RecursionError</code>. For most problems, an iterative approach with an explicit stack is both safer and faster in Python. Use recursion when the structure is naturally recursive (trees, parsers) and depth is bounded.</p>
+
+          <h4>Historical Context</h4>
+          <p>Functions as first-class objects — passable as arguments, returnable as values — came to Python from Lisp via Guido van Rossum's design philosophy. Lambda was added in Python 1.0 (1994) but intentionally restricted to single expressions to discourage complex anonymous functions. Decorators (@syntax) were added in Python 2.4 (2004) via PEP 318, inspired by Java annotations. The <code>*args/**kwargs</code> convention became the backbone of Python's flexible function signatures and is why ML libraries can offer 30-parameter constructors that remain usable.</p>
+        </div>
+      </details>
     `));
   },
 };

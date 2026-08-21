@@ -40,6 +40,17 @@ print(type(age), age)`,
       { title: 'variables.py', output: "<class 'int'> 26" }));
 
     root.appendChild(html(`
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Objects are created in memory:</strong> When you write <code>25</code>, Python creates an <em>int object</em> on the heap — a C struct containing the value, a type pointer, and a reference count.</li>
+          <li><strong>Names are bound to objects:</strong> <code>age = 25</code> doesn't put 25 "inside" a box called age. It creates a <em>name</em> in the current namespace that <em>points</em> to the int object. The name is the label, not the container.</li>
+          <li><strong>Reassignment rebinds the name:</strong> <code>age = 26</code> creates a new int object (26) and points the name <code>age</code> at it. The old object (25) loses a reference and may be garbage-collected.</li>
+          <li><strong>Type lives on the object, not the name:</strong> The variable <code>x</code> can point to an int now and a string later — the name has no type, only the object does. This is what "dynamically typed" means.</li>
+          <li><strong>Reference counting manages memory:</strong> Each object tracks how many names point to it. When the count drops to zero, CPython immediately frees the memory — no manual <code>free()</code> needed.</li>
+        </ol>
+      </div>
+
       <p>Python is <strong>dynamically typed</strong>: you never declare types — the value itself carries its type, and <code>type(x)</code> reveals it. Test your intuition below:</p>
     `));
 
@@ -113,6 +124,28 @@ print(float("3.5"), str(99), int(3.99), bool(0), bool("hi"))
       </table>
       <div class="callout callout-warn"><div class="callout-title">⚠️ The float surprise</div>
       <code>0.1 + 0.2 == 0.3</code> is <b>False</b> (it's 0.30000000000000004). Floats are binary approximations. Never compare floats with <code>==</code>; use <code>abs(a - b) &lt; 1e-9</code> — and in ML, where <em>everything</em> is floats, this is why two "identical" training runs can differ in the last decimal places.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Python's memory model and identity vs equality</summary>
+        <div class="deep-dive-body">
+          <h4>Identity vs equality: <code>is</code> vs <code>==</code></h4>
+          <p><code>==</code> checks whether two objects have the same <em>value</em>. <code>is</code> checks whether they are the <em>same object in memory</em> (same address). These are fundamentally different questions:</p>
+          <p><code>a = [1, 2]; b = [1, 2]</code> — here <code>a == b</code> is <code>True</code> (same contents) but <code>a is b</code> is <code>False</code> (two different list objects). However, <code>a = b = [1, 2]</code> makes both names point to the same list, so <code>a is b</code> is <code>True</code>. Use <code>is</code> only for <code>None</code> checks (<code>if x is None</code>) — everywhere else, use <code>==</code>.</p>
+
+          <h4>Mutability: the real dividing line</h4>
+          <p><strong>Immutable types</strong> (int, float, str, tuple, frozenset) cannot be changed after creation. <code>x = x + 1</code> doesn't modify the int — it creates a new one. <strong>Mutable types</strong> (list, dict, set) can be modified in place: <code>lst.append(4)</code> changes the existing list object. This is why passing a list to a function and modifying it inside affects the caller's list too — both names point to the same mutable object.</p>
+
+          <h4>Integer caching (small-integer optimization)</h4>
+          <p>CPython pre-creates int objects for -5 through 256 and reuses them. So <code>a = 100; b = 100; a is b</code> is <code>True</code> — both point to the same cached object. But <code>a = 1000; b = 1000; a is b</code> may be <code>False</code> because large integers are created fresh. This is an implementation detail you should never rely on — always use <code>==</code> for value comparison.</p>
+
+          <h4>Common Pitfalls</h4>
+          <div class="misconception"><strong>❌ Pitfall:</strong> Using <code>is</code> to compare numbers or strings: <code>if score is 100:</code></div>
+          <p><strong>✅ Better approach:</strong> Always use <code>==</code> for value comparison. <code>is</code> happens to work for small integers due to caching, then breaks mysteriously for larger values. Reserve <code>is</code> for <code>None</code>, <code>True</code>, and <code>False</code>.</p>
+
+          <h4>Variables in ML contexts</h4>
+          <p>Understanding the name-to-object model matters for ML: when you write <code>X_train = X[:8000]</code>, NumPy slicing creates a <em>view</em>, not a copy — modifying <code>X_train</code> modifies <code>X</code>. When you write <code>model_backup = model</code>, both names point to the same neural network — training one trains both. Explicit copying (<code>.copy()</code>, <code>copy.deepcopy()</code>) is the safety net.</p>
+        </div>
+      </details>
     `));
   },
 };

@@ -15,6 +15,16 @@ export default {
     root.appendChild(html(`
       <p>K-Nearest Neighbors (KNN) is machine learning at its most honest: to classify a new point, <strong>find the k closest training examples and let them vote</strong>. That's the whole algorithm. There is no training phase — the "model" <em>is</em> the dataset.</p>
       <div class="formula">prediction(x) = majority label among the k points nearest to x</div>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Store the training data:</strong> There is no explicit training phase — the entire dataset is memorized as-is. This makes KNN a "lazy learner."</li>
+          <li><strong>Receive a new query point:</strong> When a new, unlabeled data point arrives, compute its distance to every single training example (typically Euclidean distance).</li>
+          <li><strong>Sort and select neighbors:</strong> Rank all training points by distance and pick the k closest ones — these are the "neighbors" that get a vote.</li>
+          <li><strong>Count the votes:</strong> Among the k neighbors, whichever class label appears most often wins. Ties can be broken randomly or by distance weighting.</li>
+          <li><strong>Output the prediction:</strong> Assign the majority class to the query point. For regression tasks, output the average of the neighbors' values instead.</li>
+        </ol>
+      </div>
       <h3>Try it: interrogate the neighborhood</h3>
       <p><strong>Drag the white mystery point</strong> anywhere. Lines connect it to its k nearest neighbors; the circle shows the neighborhood radius. Toggle the background map to see the full decision regions — then slide k and watch the map morph from jagged (k=1) to smooth (k=25).</p>
     `));
@@ -138,6 +148,33 @@ export default {
       In high-dimensional spaces, <em>everything is far from everything</em> — the ratio between the nearest and farthest neighbor distance approaches 1, and "nearest" stops meaning anything. KNN shines in low dimensions with meaningful distance metrics, e.g. on learned embeddings (see the Embeddings lesson).</div>
       <div class="callout callout-tip"><div class="callout-title">💡 Where you've met KNN today</div>
       "Customers who bought this also bought…", face-recognition lookup, image deduplication, and vector-database retrieval behind modern AI chat systems are all nearest-neighbor searches at heart.</div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Distance Metrics and the Curse of Dimensionality</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>KNN relies entirely on a distance function. The most common choices belong to the <strong>Minkowski family</strong>:</p>
+          <div class="formula">d(x, y) = (Σ |xᵢ − yᵢ|ᵖ)^(1/p)</div>
+          <p><strong>p = 2</strong> gives <strong>Euclidean distance</strong> — straight-line distance, the default. <strong>p = 1</strong> gives <strong>Manhattan distance</strong> — sum of absolute differences along each axis, like walking on a city grid. <strong>p → ∞</strong> gives <strong>Chebyshev distance</strong> — the maximum difference along any single axis. The choice of p changes the shape of the "neighborhood ball": circles for p=2, diamonds for p=1, squares for p=∞.</p>
+          <h4>The Curse of Dimensionality</h4>
+          <p>In high dimensions, distances become almost meaningless. Consider a unit hypercube in d dimensions. The volume of an inscribed hypersphere relative to the cube is:</p>
+          <div class="formula">V_sphere / V_cube = π^(d/2) / (2^d · Γ(d/2 + 1))</div>
+          <p>At d = 10 this ratio is about 0.25%; by d = 100 it is astronomically small. This means almost all data points end up in the "corners" far from the center, and the ratio of nearest-to-farthest neighbor distance approaches 1. When all points are roughly equidistant, the notion of "nearest neighbor" loses meaning.</p>
+          <h4>Weighted KNN</h4>
+          <p>Standard KNN gives every neighbor an equal vote. <strong>Distance-weighted KNN</strong> gives closer neighbors more influence by weighting each vote as 1/d(x, neighbor). This makes the boundary smoother and often improves accuracy, especially at larger k values.</p>
+          <h4>Intuition</h4>
+          <p>KNN embodies the simplest inductive assumption: "similar inputs produce similar outputs." It makes no assumption about the shape of the decision boundary — the boundary emerges organically from the data layout. This flexibility is its greatest strength and its greatest weakness: it can model any boundary shape, but it needs dense data to do so.</p>
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "KNN is too simple to be useful in practice."</div>
+          <p><strong>✅ Reality:</strong> KNN (and its approximate variants) powers billion-scale retrieval systems. Vector databases like Pinecone, Weaviate, and FAISS use approximate nearest-neighbor search to find relevant documents, images, and embeddings. The algorithm is simple; the engineering to make it fast at scale is where the sophistication lives.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "You should always use Euclidean distance."</div>
+          <p><strong>✅ Reality:</strong> Euclidean distance treats all features equally and is sensitive to scale. If one feature ranges from 0 to 1000 while another ranges from 0 to 1, the first feature dominates. Always <strong>normalize or standardize features</strong> before applying KNN, and consider domain-specific distance metrics (e.g., cosine similarity for text embeddings).</p>
+          <h4>Historical Context</h4>
+          <p>The nearest-neighbor rule was first analyzed by Evelyn Fix and Joseph Hodges in 1951 (unpublished until 1989). Cover and Hart proved in 1967 that as the dataset grows to infinity, 1-NN's error rate is at most twice the Bayes-optimal rate — a remarkable guarantee for such a simple algorithm. Today, approximate nearest-neighbor algorithms (locality-sensitive hashing, HNSW graphs) make KNN practical even on billions of high-dimensional vectors.</p>
+        </div>
+      </details>
     `));
   },
 };

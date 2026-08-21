@@ -38,6 +38,18 @@ export default {
     root.appendChild(html(`
       <p>Real-world data lives in tables — CSVs, spreadsheets, databases. <strong>pandas</strong> is Python's table toolkit, and data scientists spend more hours in it than in any ML library. Its core object is the <strong>DataFrame</strong>: rows of examples, named columns of features (exactly the X you feed into scikit-learn).</p>
       <div class="formula">import pandas as pd &nbsp;&nbsp;·&nbsp;&nbsp; df = pd.read_csv("data.csv") &nbsp;&nbsp;·&nbsp;&nbsp; df.head(), df.describe(), df.shape</div>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Load data into a DataFrame:</strong> <code>pd.read_csv("file.csv")</code> creates a DataFrame — a 2D table with labeled rows (index) and columns. Under the hood, each column is a NumPy array, so math is fast.</li>
+          <li><strong>Inspect before you model:</strong> <code>df.head()</code> shows the first 5 rows. <code>df.info()</code> shows column types and missing counts. <code>df.describe()</code> gives summary statistics. This 10-second ritual catches 90% of data problems.</li>
+          <li><strong>Select and filter:</strong> <code>df['age']</code> selects a column (returns a Series). <code>df[df['age'] > 30]</code> filters rows using a boolean mask — the most-used pandas operation. Use <code>&</code> (not <code>and</code>) to combine conditions, with parentheses around each.</li>
+          <li><strong>Group and aggregate:</strong> <code>df.groupby('city')['fare'].mean()</code> splits rows into groups, applies an aggregation to each, and combines the results. This is how you answer "average X per category Y" in one line.</li>
+          <li><strong>Handle missing data:</strong> Real data has holes (<code>NaN</code>). <code>df.isna().sum()</code> counts them. <code>df.fillna(value)</code> fills them. <code>df.dropna()</code> removes rows with holes. Always compute fill values from the training set only to avoid data leakage.</li>
+        </ol>
+      </div>
+
       <h3>Try it: boolean filtering</h3>
       <p>The most-used pandas move: <code>df[condition]</code> keeps only the rows where the condition is true. Pick a filter and watch which rows survive — the highlighted code is real pandas syntax.</p>
     `));
@@ -208,6 +220,39 @@ export default {
       </table>
       <div class="callout callout-tip"><div class="callout-title">💡 The feature-engineering connection</div>
       Every trick from the Data &amp; Features lesson — scaling, one-hot encoding, train/test splitting — is a pandas (or pandas + sklearn) one-liner. <code>pd.get_dummies(df['city'])</code> is one-hot encoding. This lesson is where theory becomes daily practice.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — .loc vs .iloc, SettingWithCopyWarning, and performance</summary>
+        <div class="deep-dive-body">
+          <h4>.loc vs .iloc</h4>
+          <p>The two ways to index a DataFrame:</p>
+          <div class="formula">.loc[row_label, col_label]  — by NAME (string index, column name)
+.iloc[row_int, col_int]    — by POSITION (integer index, 0-based)</div>
+          <p><code>df.loc[3]</code> gets the row with index label 3. <code>df.iloc[3]</code> gets the 4th row regardless of labels. After filtering or sorting, row labels are not contiguous — <code>.loc</code> and <code>.iloc</code> will return different rows. When in doubt, use <code>.iloc</code> for position-based access and <code>.loc</code> when you know the index labels.</p>
+
+          <h4>The SettingWithCopyWarning</h4>
+          <p>The most confusing pandas warning. It fires when you chain indexing:</p>
+          <div class="formula">df[df['age'] > 30]['fare'] = 99  ← might not actually modify df!</div>
+          <p>The problem: the first index (<code>df[df['age'] > 30]</code>) might return a copy, so assigning to <code>['fare']</code> modifies the copy, not the original. The fix: always use <code>.loc</code>:</p>
+          <div class="formula">df.loc[df['age'] > 30, 'fare'] = 99  ← guaranteed to modify df</div>
+
+          <h4>Performance Tips</h4>
+          <ul>
+            <li><strong>Avoid iterating rows:</strong> <code>for _, row in df.iterrows()</code> is 100–1000× slower than vectorized operations. If you need a loop, use <code>.apply()</code> or convert to NumPy first.</li>
+            <li><strong>Use categorical dtypes:</strong> <code>df['city'] = df['city'].astype('category')</code> can reduce memory 90% for string columns with few unique values (like city, country, status).</li>
+            <li><strong>Read only what you need:</strong> <code>pd.read_csv('big.csv', usecols=['col1','col2'])</code> avoids loading 50 unused columns into memory.</li>
+          </ul>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "pandas is for small data only."</div>
+          <p><strong>✅ Reality:</strong> pandas handles millions of rows comfortably (tens of GB with careful dtype choices). For truly large data (hundreds of GB+), use Polars (a faster DataFrame library) or Dask (lazy, distributed pandas). But most ML datasets fit in pandas — the bottleneck is usually the model, not the data loading.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "You should use <code>apply()</code> for everything."</div>
+          <p><strong>✅ Reality:</strong> <code>.apply()</code> calls a Python function per row — it's barely faster than a loop. Always look for a vectorized alternative first: <code>df['bmi'] = df['weight'] / (df['height'] ** 2)</code> is orders of magnitude faster than <code>df.apply(lambda row: row['weight'] / row['height']**2, axis=1)</code>.</p>
+
+          <h4>Historical Context</h4>
+          <p>Wes McKinney created pandas in 2008 at AQR Capital Management, a quantitative finance firm, because R's data.frame was great but Python needed its own. The name comes from "panel data" (an econometrics term), not the animal. pandas 1.0 (2020) stabilized the API after years of rapid evolution. The biggest design regret McKinney has discussed publicly is the copy/view ambiguity — which pandas 2.0 (2023) addressed with copy-on-write semantics.</p>
+        </div>
+      </details>
     `));
   },
 };

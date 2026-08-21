@@ -16,6 +16,18 @@ export default {
       <p>A neural network forward pass multiplies millions of numbers. A plain Python loop handles each one with interpreter overhead — checking types, boxing objects — thousands of times slower than raw math. <strong>NumPy</strong> stores numbers in packed C arrays and runs whole-array operations in compiled code:</p>
       <div class="formula">loop: &nbsp;for i in range(n): c[i] = a[i] * b[i] &nbsp;&nbsp;&nbsp;&nbsp;→&nbsp;&nbsp;&nbsp;&nbsp; vectorized: &nbsp;c = a * b</div>
       <p>Same result, one line, and it's the difference between training overnight and training in a minute. This style — <strong>vectorization</strong> — is the single most important habit in numerical Python.</p>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Contiguous memory:</strong> A NumPy array stores numbers in a single block of C memory — no Python objects, no pointers, no type-checking per element. This is why <code>np.array([1,2,3])</code> is fundamentally different from <code>[1, 2, 3]</code>.</li>
+          <li><strong>Whole-array operations:</strong> When you write <code>c = a * b</code>, NumPy dispatches to a compiled C loop that processes the entire array in one call — no Python interpreter overhead per element. This is vectorization.</li>
+          <li><strong>Broadcasting:</strong> When array shapes don't match exactly, NumPy stretches size-1 dimensions to fill the gap — without copying data. <code>(3,1) + (1,4)</code> produces a <code>(3,4)</code> result. The rule: compare shapes right-to-left; each pair must be equal or one must be 1.</li>
+          <li><strong>No copies unless needed:</strong> Slicing (<code>a[2:5]</code>) returns a <em>view</em> — a window into the same memory. Reshaping is also usually a view. This makes NumPy memory-efficient, but means modifying a slice modifies the original.</li>
+          <li><strong>The ecosystem sits on top:</strong> pandas DataFrames wrap NumPy arrays with labels. PyTorch tensors are NumPy arrays that track gradients and run on GPUs. scikit-learn takes NumPy arrays as input. Master NumPy and you've learned the grammar of all ML computation.</li>
+        </ol>
+      </div>
+
       <h3>Race it: loop vs vectorized</h3>
       <p>This actually runs in your browser right now — a plain element-by-element loop against a typed-array batch operation (the same trick NumPy uses), both multiplying 5 million numbers. Place your bets.</p>
     `));
@@ -245,6 +257,37 @@ export default {
       <strong>pandas</strong> wraps NumPy arrays with labeled rows/columns for data wrangling (<code>df.groupby</code>, <code>df.fillna</code>). <strong>PyTorch tensors</strong> are NumPy arrays that remember gradients and run on GPUs — <code>torch.tensor</code> code reads almost identically. Master NumPy and you've mastered the grammar of all of them.</div>
       <div class="callout callout-tip"><div class="callout-title">💡 The vectorization reflex</div>
       Whenever you catch yourself writing <code>for i in range(len(data))</code> around math — stop and look for the array operation. It exists 95% of the time, it's 10–1000× faster, and it's usually <em>more</em> readable.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — memory layout, broadcasting rules, and BLAS</summary>
+        <div class="deep-dive-body">
+          <h4>Memory Layout: C-order vs Fortran-order</h4>
+          <p>A 2D array's elements can be stored row-by-row (C-order, the default) or column-by-column (Fortran-order). This matters because CPUs read memory in cache lines — accessing elements that are contiguous in memory is much faster than jumping around. Operations along axis=1 (across columns) are fast in C-order; axis=0 (down rows) is fast in Fortran-order.</p>
+          <div class="formula">C-order (row-major): [[1,2,3],[4,5,6]] stored as [1,2,3,4,5,6]
+F-order (col-major): [[1,2,3],[4,5,6]] stored as [1,4,2,5,3,6]</div>
+
+          <h4>Broadcasting Rules (Formally)</h4>
+          <p>When operating on two arrays, NumPy compares shapes element-wise from the trailing dimensions:</p>
+          <ol>
+            <li>If dimensions are equal → OK</li>
+            <li>If one dimension is 1 → stretch it to match the other</li>
+            <li>If neither → ValueError</li>
+          </ol>
+          <p>A missing dimension (fewer axes) is treated as 1. So <code>(3,4) + (4,)</code> works: the 1D array is treated as <code>(1,4)</code>, then broadcast to <code>(3,4)</code>. This is how you can subtract a mean vector from every row: <code>X - X.mean(axis=0)</code> — the mean has shape <code>(d,)</code>, broadcast across all n rows.</p>
+
+          <h4>Views vs Copies</h4>
+          <p>Most NumPy operations that don't change the data return a <strong>view</strong> — a different-shaped window into the same memory. Slicing, reshaping, and transposing are views. Operations that shuffle or filter data (<code>np.sort()</code>, fancy indexing like <code>a[[0,2,4]]</code>) return copies. The test: <code>b = a[::2]; b[0] = 99</code> — if <code>a[0]</code> changed, it's a view.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "NumPy is slow because it's Python."</div>
+          <p><strong>✅ Reality:</strong> NumPy's inner loops are written in C (and link to optimized BLAS/LAPACK libraries like OpenBLAS or MKL for linear algebra). <code>X @ W</code> calls the same highly-optimized matrix multiplication routines used by Fortran scientific code. Python is just the dispatch layer — the actual math runs at near-native speed. The slowness comes only from Python-level loops over array elements.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Broadcasting copies the data to match shapes."</div>
+          <p><strong>✅ Reality:</strong> Broadcasting is a virtual stretch — NumPy adjusts the <em>strides</em> (the step size between elements) so it reads the same element repeatedly without allocating new memory. A <code>(1, 4)</code> array broadcast to <code>(1000, 4)</code> uses the same 4 elements of memory, not 4000.</p>
+
+          <h4>Historical Context</h4>
+          <p>NumPy was created by Travis Oliphant in 2005 by merging two competing array libraries (Numeric and numarray). Its design — typed contiguous arrays with vectorized operations — was inspired by MATLAB and APL. The decision to make Python's scientific stack free and open-source (vs MATLAB's license) is arguably why Python won the ML language war. SciPy (2001), pandas (2008), and scikit-learn (2010) were all built on top of NumPy's array interface.</p>
+        </div>
+      </details>
     `));
   },
 };

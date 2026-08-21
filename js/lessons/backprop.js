@@ -14,6 +14,17 @@ export default {
     root.appendChild(html(`
       <p>Backpropagation answers the only question training ever asks: <strong>"if I nudge this weight a tiny bit, how much does the loss change?"</strong> — for every weight at once, in a single backward sweep. It's just the chain rule from calculus, organized as message passing on the computation graph.</p>
       <div class="formula">∂L/∂w = ∂L/∂out · ∂out/∂w &nbsp;&nbsp; — gradients flow backward, multiplying local derivatives</div>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Build the computation graph:</strong> Every operation in the forward pass — multiplications, additions, activations — is recorded as a node in a directed graph. Each node knows how to compute its own local derivative.</li>
+          <li><strong>Forward pass:</strong> Push the input through the graph, computing and storing each intermediate value: z = w·x, then h = tanh(z), then the output and loss. These stored values are needed for the backward pass.</li>
+          <li><strong>Seed the gradient:</strong> Start at the loss node with dL/dL = 1. This is the "seed" that will propagate backward through the entire graph.</li>
+          <li><strong>Chain rule backward:</strong> At each node, multiply the incoming gradient by the local derivative and pass the result to the node's inputs. For example, at the tanh node: incoming gradient times (1 - h²). At a multiply node: incoming gradient times the <em>other</em> factor.</li>
+          <li><strong>Collect weight gradients:</strong> When the backward sweep reaches a weight, its accumulated gradient dL/dw tells the optimizer exactly how to adjust it. All gradients are computed in one sweep — the same cost as roughly two forward passes.</li>
+        </ol>
+      </div>
+
       <h3>Step through it: a 2-neuron network</h3>
       <p>Network: input <code>x</code> → hidden neuron <code>h = tanh(w₁·x)</code> → output <code>ŷ = w₂·h</code>, with loss <code>L = (ŷ − y)²</code>. Target: <code>y = 0.5</code>. Press <strong>Next step</strong> and watch values flow forward (blue), then gradients flow backward (pink).</p>
     `));
@@ -189,6 +200,37 @@ export default {
       <p>The naive alternative — nudge each weight, re-run the network, measure the change — costs one forward pass <em>per weight</em>. For a billion-parameter model that's a billion forward passes. Backprop gets every gradient in roughly the cost of <strong>two</strong> passes (one forward, one backward), which is the only reason training giant networks is possible at all.</p>
       <div class="callout callout-warn"><div class="callout-title">⚠️ Connecting the dots</div>
       Look at step ⑦: the gradient reaching w₁ got multiplied by (1 − h²) — the tanh derivative, at most 1 and usually much less. Stack 50 such layers and you're multiplying 50 small numbers: the <strong>vanishing gradient</strong> from the Activations lesson, now visible in the arithmetic. Residual connections (skip paths that add x back in) give gradients a derivative-1 highway around the squashes — that innovation is what made 100+ layer networks trainable.</div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Computational Graphs, Autodiff, and Gradient Flow</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>Backpropagation is the chain rule applied systematically on a computational graph. For a composite function L = f₃(f₂(f₁(x, w₁), w₂), w₃), the gradient with respect to w₁ is:</p>
+          <div class="formula">∂L/∂w₁ = (∂f₃/∂f₂) · (∂f₂/∂f₁) · (∂f₁/∂w₁)</div>
+          <p>Each factor is a <strong>Jacobian</strong> — a matrix of partial derivatives. For scalar loss and vector parameters, the product is computed right-to-left (reverse mode), touching each node once. The total cost is O(1) forward passes regardless of the number of parameters. Forward-mode autodiff computes one column of the Jacobian per pass, so for n parameters it costs O(n) — intractable for deep learning where n can be billions.</p>
+
+          <h4>Computational Graphs</h4>
+          <p>A computational graph is a directed acyclic graph (DAG) where each node represents an operation (+, ×, tanh, etc.) and edges carry values (forward) or gradients (backward). Modern frameworks like PyTorch build this graph dynamically ("define-by-run"): every Python operation on a tensor is recorded, and <code>loss.backward()</code> traverses the graph in reverse topological order. TensorFlow 1.x built the graph statically before execution; TensorFlow 2.x switched to eager/dynamic mode by default.</p>
+
+          <h4>Automatic Differentiation vs. Numerical/Symbolic</h4>
+          <p><strong>Numerical differentiation</strong> (finite differences: [f(x+h) - f(x)]/h) is easy to implement but suffers from floating-point errors and requires one forward pass per parameter. <strong>Symbolic differentiation</strong> (like Mathematica) produces exact formulas but they can grow exponentially large ("expression swell"). <strong>Automatic differentiation</strong> — what backprop implements — gets exact derivatives at the cost of only a constant factor overhead by decomposing the computation into elementary operations and applying the chain rule to each.</p>
+
+          <h4>Intuition</h4>
+          <p>Imagine a factory assembly line: raw materials (inputs) flow forward through stations (layers), each modifying the product. At the end, a quality inspector (loss function) rates the output. Backprop is the inspector sending a memo backward through the line: "Station 5, if you'd turned the dial 0.01 right, the product would have improved by 0.03." Each station only needs to know its own effect to relay the message. The entire factory gets personalized feedback in a single backward pass.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Backprop is a learning algorithm."</div>
+          <p><strong>✅ Reality:</strong> Backprop is a <em>gradient computation</em> algorithm. It tells you the direction of steepest ascent for each weight — nothing more. The learning algorithm is the optimizer (SGD, Adam, etc.) that decides how to <em>use</em> those gradients to update the weights. You could compute gradients by backprop and then use them for something entirely different, like sensitivity analysis.</p>
+
+          <div class="misconception"><strong>❌ Misconception:</strong> "Backprop is biologically plausible — the brain does something similar."</div>
+          <p><strong>✅ Reality:</strong> Biological neurons don't have a mechanism to send error signals backward through synapses with the exact weights used in the forward pass (the "weight transport problem"). How the brain solves credit assignment remains an open question. Proposals like feedback alignment, predictive coding, and local Hebbian rules approximate backprop's function but via different mechanisms.</p>
+
+          <h4>Historical Context</h4>
+          <p>The chain rule is centuries old, but its application to neural networks was independently discovered multiple times: Linnainmaa (1970) for automatic differentiation, Werbos (1974) for neural networks in his PhD thesis, and Rumelhart, Hinton & Williams (1986) in the paper that popularized it. The 1986 Nature paper "Learning representations by back-propagating errors" is arguably the most important paper in deep learning's history. Autodiff in modern frameworks descends from the Autograd library (Maclaurin et al., 2015), which showed that Python-level dynamic graph recording could be both elegant and efficient.</p>
+        </div>
+      </details>
     `));
   },
 };

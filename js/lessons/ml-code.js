@@ -66,6 +66,18 @@ export default {
   render(root) {
     root.appendChild(html(`
       <p>Here's a secret: after all the theory, real ML code is <strong>short</strong>. The two snippets below are genuinely what practitioners write — a full scikit-learn workflow and a complete PyTorch training loop. Every line maps to a lesson on this site.</p>
+
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Load and split:</strong> Read your data into a NumPy array or DataFrame. Immediately split into train and test sets (80/20) — the test set is locked away and never touched until final evaluation. This is the golden rule from the Cross-Validation lesson.</li>
+          <li><strong>Preprocess (fit on train only):</strong> Scale features, encode categories, handle missing values — but compute all statistics (mean, std, vocabulary) from the training set only. Apply the same transformation to test data. Any leakage here invalidates your results.</li>
+          <li><strong>Choose and train a model:</strong> scikit-learn: <code>model.fit(X_train, y_train)</code>. PyTorch: loop over batches, run forward pass, compute loss, backpropagate, update weights. The concepts are the same; the API verbosity differs.</li>
+          <li><strong>Predict and evaluate:</strong> <code>model.predict(X_test)</code> generates predictions on held-out data. Compare against true labels using appropriate metrics (accuracy, F1, RMSE). This number — computed on data the model never trained on — is your honest performance estimate.</li>
+          <li><strong>Iterate:</strong> If performance is poor, don't touch the test set. Instead, use cross-validation on the training set to tune hyperparameters, try different models, or engineer better features. Only evaluate on the test set once, at the very end.</li>
+        </ol>
+      </div>
+
       <h3>Walk the code</h3>
       <p>Press <strong>Step</strong> to walk through line by line. The pipeline diagram lights up to show which conceptual stage each line belongs to, and the note connects it back to the lesson where you learned it.</p>
     `));
@@ -206,6 +218,43 @@ export default {
       Every scikit-learn model — logistic regression, SVM, random forest, k-means — uses the identical three methods: <code>fit(X, y)</code> to train, <code>predict(X)</code> to infer, <code>score(X, y)</code> to evaluate. Swap <code>LogisticRegression()</code> for <code>RandomForestClassifier()</code> and nothing else changes. That's why you learned <em>concepts</em> here, not APIs: the API is trivial once the concepts are yours.</div>
       <div class="callout callout-info"><div class="callout-title">📌 Try it for real</div>
       Install Python, then <code>pip install scikit-learn torch jupyter</code>, open a notebook, and retype the snippets above against the <code>sklearn.datasets.make_moons()</code> dataset — the same moons you trained in the NN Playground.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — pipelines, model persistence, and common bugs</summary>
+        <div class="deep-dive-body">
+          <h4>scikit-learn Pipelines</h4>
+          <p>Instead of manually chaining preprocessing and model steps, wrap them in a Pipeline:</p>
+          <div class="formula">from sklearn.pipeline import Pipeline
+pipe = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', LogisticRegression())
+])
+pipe.fit(X_train, y_train)   # scaler.fit + model.fit
+pipe.predict(X_test)         # scaler.transform + model.predict</div>
+          <p>Pipelines guarantee that preprocessing is fit on training data only, even inside cross-validation. They also make deployment trivial — save one object, and it handles everything from raw input to prediction.</p>
+
+          <h4>Model Persistence</h4>
+          <p>Save trained models for production: scikit-learn uses <code>joblib.dump(model, 'model.pkl')</code>. PyTorch uses <code>torch.save(model.state_dict(), 'model.pt')</code> — always save the state_dict (weights only), not the whole model, because the class definition must be importable at load time. Never unpickle models from untrusted sources — pickle files can execute arbitrary code.</p>
+
+          <h4>The Top 5 ML Code Bugs</h4>
+          <ol>
+            <li><strong>Data leakage:</strong> Fitting the scaler on the full dataset before splitting. The test set's statistics leak into the training pipeline.</li>
+            <li><strong>Forgetting to zero gradients:</strong> PyTorch accumulates gradients by default. Missing <code>optimizer.zero_grad()</code> makes gradients grow every batch until the model diverges.</li>
+            <li><strong>Wrong loss function:</strong> Using MSE for classification or cross-entropy for regression. The loss must match the task.</li>
+            <li><strong>Shape mismatches:</strong> A <code>(batch, features)</code> matrix hitting a <code>(wrong_features, outputs)</code> weight matrix. Print shapes liberally during debugging.</li>
+            <li><strong>Evaluating on training data:</strong> Reporting accuracy on the same data the model was trained on. Always use held-out data.</li>
+          </ol>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "More complex models always perform better."</div>
+          <p><strong>✅ Reality:</strong> On tabular data, a well-tuned gradient-boosted tree (XGBoost, LightGBM) often beats deep learning. On small datasets, logistic regression with good features can beat a neural network. Complexity should be proportional to the signal in your data — not to your ambition.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "The model is the most important part of ML."</div>
+          <p><strong>✅ Reality:</strong> Practitioners spend 80% of their time on data — cleaning, labeling, feature engineering, handling imbalance. The model choice often matters less than the quality of the data going into it. Andrew Ng's "data-centric AI" movement formalizes this: improve the data, not the model.</p>
+
+          <h4>Historical Context</h4>
+          <p>scikit-learn was started by David Cournapeau as a Google Summer of Code project in 2007 and became the standard ML library by 2012. Its consistent <code>fit/predict/transform</code> API — inspired by earlier R packages — became the template that every subsequent ML library followed. PyTorch (2017) displaced TensorFlow as the research standard by offering eager execution (define-by-run) instead of static computation graphs. The Hugging Face Transformers library (2018) further simplified ML by making pretrained models a one-line download.</p>
+        </div>
+      </details>
     `));
   },
 };

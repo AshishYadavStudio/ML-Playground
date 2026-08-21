@@ -20,6 +20,17 @@ export default {
       </ul>
       <p>Modern optimizers fix these with two ideas — <strong>momentum</strong> (remember the direction you've been moving) and <strong>adaptive step sizes</strong> (divide by the typical gradient magnitude per parameter):</p>
       <div class="formula">Momentum: v ← β·v + ∇L; &nbsp; θ ← θ − η·v &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; Adam ≈ momentum ÷ √(running average of ∇L²) &nbsp; (per parameter)</div>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Compute the gradient:</strong> Backpropagation gives us ∇L — a vector pointing in the direction of steepest <em>increase</em> of the loss. Every optimizer starts from this same gradient; they differ in what they do next.</li>
+          <li><strong>SGD — the raw step:</strong> Subtract η·∇L from each weight. Simple, but the step size is identical for all parameters and there's no memory of past steps, so the path zigzags in narrow valleys.</li>
+          <li><strong>Add momentum:</strong> Maintain a velocity vector v that accumulates past gradients: v ← β·v + ∇L, then step by η·v. This smooths out oscillations and builds speed along consistent directions — like a heavy ball rolling downhill.</li>
+          <li><strong>Add adaptive scaling (RMSProp):</strong> Track the running average of each parameter's squared gradient. Divide the step by √(average), so parameters with consistently large gradients take smaller steps and those with small gradients take larger ones. This equalizes progress across dimensions.</li>
+          <li><strong>Combine both — Adam:</strong> Use momentum (first moment) <em>and</em> adaptive scaling (second moment) together, plus a bias correction for the early steps when the running averages haven't warmed up. This is why Adam usually converges fastest and is the default in modern deep learning.</li>
+        </ol>
+      </div>
+
       <h3>Watch the race</h3>
       <p>The contour map below is an elongated, curved valley (a mini "Rosenbrock"). All four optimizers start from the same point. <strong>Click anywhere to move the start.</strong> Watch SGD zigzag, momentum overshoot then power through, and Adam take a confident direct route.</p>
     `));
@@ -220,6 +231,41 @@ export default {
       </ul>
       <div class="callout callout-tip"><div class="callout-title">💡 Practical defaults</div>
       <code>AdamW</code> (Adam with properly decoupled weight decay) at η = 3e-4, warmup + cosine decay, is the "sensible default" that trains everything from ResNets to LLMs respectably. Tune from there.</div>
+    `));
+
+    root.appendChild(html(`
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — Momentum Math, Adam Internals, and Learning Rate Schedules</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>Each optimizer maintains different statistics of the gradient history and uses them to transform the raw gradient into an update step:</p>
+          <div class="formula"><b>SGD:</b> &nbsp; θ<sub>t+1</sub> = θ<sub>t</sub> − η · g<sub>t</sub></div>
+          <div class="formula"><b>Momentum:</b> &nbsp; v<sub>t</sub> = β · v<sub>t−1</sub> + g<sub>t</sub>, &nbsp; θ<sub>t+1</sub> = θ<sub>t</sub> − η · v<sub>t</sub> &nbsp; (β typically 0.9)</div>
+          <div class="formula"><b>RMSProp:</b> &nbsp; s<sub>t</sub> = ρ · s<sub>t−1</sub> + (1−ρ) · g<sub>t</sub>², &nbsp; θ<sub>t+1</sub> = θ<sub>t</sub> − η · g<sub>t</sub> / (√s<sub>t</sub> + ε)</div>
+          <div class="formula"><b>Adam:</b> &nbsp; m<sub>t</sub> = β₁ · m<sub>t−1</sub> + (1−β₁) · g<sub>t</sub>, &nbsp; v<sub>t</sub> = β₂ · v<sub>t−1</sub> + (1−β₂) · g<sub>t</sub>²</div>
+          <div class="formula">&nbsp; &nbsp; m̂<sub>t</sub> = m<sub>t</sub>/(1−β₁<sup>t</sup>), &nbsp; v̂<sub>t</sub> = v<sub>t</sub>/(1−β₂<sup>t</sup>), &nbsp; θ<sub>t+1</sub> = θ<sub>t</sub> − η · m̂<sub>t</sub>/(√v̂<sub>t</sub> + ε)</div>
+          <p>Adam's default hyperparameters (Kingma & Ba, 2014): β₁ = 0.9, β₂ = 0.999, ε = 10<sup>−8</sup>.</p>
+
+          <h4>Adam's Bias Correction — Why It Matters</h4>
+          <p>At step t=1, m₁ = 0.1·g₁ (with β₁=0.9). Without correction, Adam would think the average gradient is only 10% of the actual first gradient. The bias correction m̂₁ = m₁/(1 − 0.9¹) = m₁/0.1 = g₁ recovers the true estimate. As t grows, (1 − β<sup>t</sup>) → 1 and the correction vanishes. Without bias correction, the first few hundred steps take misleadingly small steps — especially problematic for β₂ = 0.999, where the correction is significant for ~1000 steps.</p>
+
+          <h4>AdamW vs. Adam + L2 Regularization</h4>
+          <p>Standard L2 regularization adds λ·‖θ‖² to the loss, so the gradient includes λ·θ. In Adam, this regularization gradient gets divided by the adaptive second moment — parameters with large gradients effectively get <em>less</em> regularization. <strong>AdamW</strong> (Loshchilov & Hutter, 2019) applies weight decay directly to the parameter update: θ ← θ − η·λ·θ, bypassing the adaptive scaling. This "decoupled" weight decay works as intended regardless of the gradient history and produces measurably better generalization.</p>
+
+          <h4>Intuition</h4>
+          <p>Imagine navigating a foggy mountain valley. <strong>SGD</strong> is like taking a step in whatever direction the ground slopes most right under your feet — if the valley is narrow, you bounce off the walls. <strong>Momentum</strong> is like rolling a ball: it accumulates velocity along the valley floor and dampens side-to-side bouncing. <strong>RMSProp</strong> is like wearing special shoes that take big steps in directions where the ground is flat and tiny steps where it's steep. <strong>Adam</strong> combines the ball and the shoes — momentum for direction, adaptive scaling for step size — which is why it usually finds the valley floor fastest.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Adam always converges to a better solution than SGD."</div>
+          <p><strong>✅ Reality:</strong> Adam converges <em>faster</em> to <em>a</em> solution, but SGD with momentum often finds solutions that <em>generalize better</em> on the test set. This was shown empirically by Wilson et al. (2017). The hypothesis is that Adam's per-parameter adaptivity lets it exploit sharp, narrow minima that don't generalize, while SGD's noise helps it settle in flatter minima. In practice, large-scale vision models often use SGD+momentum, while NLP and generative models prefer AdamW.</p>
+
+          <div class="misconception"><strong>❌ Misconception:</strong> "Learning rate warmup is just a training trick — it doesn't matter much."</div>
+          <p><strong>✅ Reality:</strong> Without warmup, the first few gradient steps can be catastrophically large (especially with Adam, where the second moment estimate is near-zero and gets bias-corrected to small values). For transformers, skipping warmup often causes training to diverge entirely. Warmup gives the optimizer time to build accurate gradient statistics before taking full-sized steps.</p>
+
+          <h4>Historical Context</h4>
+          <p>SGD has been used since Robbins & Monro (1951). Momentum was added by Polyak (1964). RMSProp was proposed by Geoff Hinton in an unpublished Coursera lecture (2012) — one of the most impactful ideas never formally published. Adam (Kingma & Ba, 2014) combined RMSProp with momentum and quickly became the default optimizer. The AdamW correction (2019) fixed a subtle interaction with weight decay that had been quietly hurting generalization for years. Recent alternatives like LAMB (for large-batch training) and Lion (Chen et al., 2023, discovered by program search) continue to push the frontier.</p>
+        </div>
+      </details>
     `));
   },
 };

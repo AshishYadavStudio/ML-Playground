@@ -32,6 +32,16 @@ export default {
       <p>Your inbox's spam filter has been doing machine learning since the 1990s. <strong>Naive Bayes</strong> flips the question around using Bayes' theorem: instead of "what's the probability this email is spam?", ask "how likely would these exact words be <em>if</em> it were spam vs. <em>if</em> it were normal?"</p>
       <div class="formula">P(spam | words) ∝ P(spam) · P(w₁|spam) · P(w₂|spam) · … &nbsp;&nbsp; ("naive" = assume words are independent)</div>
       <p>Training is just counting: what fraction of spam emails contain "free"? What fraction of normal emails do? The table below was "learned" that way from a toy corpus.</p>
+      <div class="how-it-works">
+        <h3>⚙️ How it works — step by step</h3>
+        <ol>
+          <li><strong>Start with a prior:</strong> Before reading a single word, estimate the base probability that any random email is spam (e.g. 40%). This is P(spam).</li>
+          <li><strong>Count word frequencies:</strong> From labeled training emails, compute how often each word appears in spam vs. normal mail. "free" appears in 60% of spam but only 5% of normal emails.</li>
+          <li><strong>Multiply the evidence:</strong> For a new email, take each word present and multiply P(word|spam) on one side, P(word|ham) on the other. Each word nudges the running score toward spam or ham.</li>
+          <li><strong>Apply Bayes' theorem:</strong> Combine the prior with all the word likelihoods to get the posterior: P(spam|words). The class with the higher posterior wins.</li>
+          <li><strong>Classify:</strong> If P(spam|words) > 0.5, flag the email as spam. Otherwise, it goes to the inbox.</li>
+        </ol>
+      </div>
       <h3>Try it: compose an email</h3>
       <p><strong>Click words to add them to the email.</strong> Each word multiplies both running scores — watch the verdict gauge swing as spammy and hammy words fight it out. Notice one strong word can be outvoted by several mild ones: evidence is multiplicative.</p>
     `));
@@ -165,6 +175,42 @@ export default {
       If a word never appeared in training spam, P(word|spam) = 0 and one multiplication nukes the whole product. The fix — <strong>Laplace smoothing</strong> — pretends every word was seen at least once (add 1 to all counts). Tiny trick, essential in practice.</div>
       <div class="callout callout-tip"><div class="callout-title">💡 Where Naive Bayes shines today</div>
       Spam and abuse filtering, language identification, quick text-classification baselines, and medical triage systems. When you have little data and need something working <em>this afternoon</em>, Naive Bayes is still a superb first move.</div>
+
+      <details class="deep-dive">
+        <summary>🔬 Deep Dive — the math and flavors of Naive Bayes</summary>
+        <div class="deep-dive-body">
+          <h4>Mathematical Foundation</h4>
+          <p>Bayes' theorem gives the exact posterior:</p>
+          <div class="formula">P(C|x₁,…,xₙ) = P(C) · ∏ P(xᵢ|C) / P(x₁,…,xₙ)</div>
+          <p>The denominator P(x₁,…,xₙ) is the same for all classes, so we only need the numerator to pick the winner. The "naive" assumption — features are conditionally independent given the class — lets us replace the intractable joint likelihood with a simple product of per-feature likelihoods.</p>
+          <p>In log space, multiplication becomes addition, which is numerically stable and fast:</p>
+          <div class="formula">log P(C|x) ∝ log P(C) + Σ log P(xᵢ|C)</div>
+
+          <h4>Three Flavors</h4>
+          <ul>
+            <li><strong>Multinomial NB:</strong> Features are word counts. The standard for text classification (spam, sentiment, topic). Each P(word|class) is estimated from word frequencies.</li>
+            <li><strong>Bernoulli NB:</strong> Features are binary (word present or absent). Better than multinomial when document length varies wildly.</li>
+            <li><strong>Gaussian NB:</strong> Features are continuous. Assumes each feature follows a normal distribution within each class: P(xᵢ|C) = N(μᵢ,C, σ²ᵢ,C). Quick baseline for numeric data.</li>
+          </ul>
+
+          <h4>Laplace Smoothing</h4>
+          <p>If a word never appeared in training spam, P(word|spam) = 0 and the entire product collapses to zero. <strong>Laplace smoothing</strong> (add-α) adds a small constant to every count:</p>
+          <div class="formula">P(wᵢ|C) = (count(wᵢ, C) + α) / (total words in C + α · |V|)</div>
+          <p>With α = 1 it's like pretending every word was seen at least once. Small trick, but essential — without it, one unseen word can override hundreds of strong signals.</p>
+
+          <h4>Intuition</h4>
+          <p>Think of Naive Bayes as a jury where each word is a juror who votes independently. "free" votes 12:1 for spam. "meeting" votes 1:9 for ham. Each vote multiplies the running odds. The final verdict is whichever side accumulated more multiplicative evidence. The independence assumption means jurors don't collude — obviously unrealistic, but the majority verdict is still usually correct.</p>
+
+          <h4>Common Misconceptions</h4>
+          <div class="misconception"><strong>❌ Misconception:</strong> "The probabilities Naive Bayes outputs are well-calibrated."</div>
+          <p><strong>✅ Reality:</strong> Because the independence assumption is violated, the raw probabilities are often too extreme (close to 0 or 1). The <em>ranking</em> is reliable — spam scores higher than ham — but the exact percentages shouldn't be taken literally. If you need calibrated probabilities, apply Platt scaling or isotonic regression on top.</p>
+          <div class="misconception"><strong>❌ Misconception:</strong> "Naive Bayes is too simple to compete with modern methods."</div>
+          <p><strong>✅ Reality:</strong> For text classification with limited training data, Naive Bayes routinely matches or beats logistic regression and even small neural networks. Its speed (training in one pass through the data) makes it the go-to baseline, and sometimes the baseline wins.</p>
+
+          <h4>Historical Context</h4>
+          <p>The first widely-deployed spam filter was Paul Graham's "A Plan for Spam" (2002), which used a simplified Naive Bayes approach. The statistical foundations go back to Thomas Bayes (1763) and Pierre-Simon Laplace, who developed Laplace smoothing in the 18th century. The "naive" conditional independence trick was first applied to text classification by Maron and Kuhns in 1960.</p>
+        </div>
+      </details>
     `));
   },
 };
