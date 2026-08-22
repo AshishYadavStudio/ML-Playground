@@ -19,11 +19,13 @@ almost entirely a personal network in Punjab (Chandigarh, Ludhiana, Mohali).
 
 ## 🚀 Phase 2 — Launch (one-shot, don't waste it)
 
+- [x] r/learnmachinelearning — posted 2026-08-22, "Try these interactive ML
+      lessons..." Reply fast to comments, watch GA4 for the spike + bounce point.
 - [ ] Show HN post — lead with Pyodide-in-browser + BYO-CSV sandbox
-- [ ] r/learnmachinelearning
-- [ ] r/Python
-- [ ] r/MachineLearning (check self-promo rules first)
-- [ ] Space posts ~1 day apart; get a fresh pair of eyes to click through cold first
+- [ ] r/Python (wait ~1 day, lead with Pyodide/WASM angle)
+- [ ] r/SideProject
+- [ ] r/MachineLearning (check self-promo rules first, riskier fit)
+- [ ] Space remaining posts ~1 day apart; don't post the identical text twice
 
 ## 📈 Phase 3 — Retention
 
