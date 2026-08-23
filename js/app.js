@@ -907,6 +907,26 @@ function renderHome() {
   contentEl.appendChild(hero);
   startHeroAnimation(heroCanvas);
 
+  // quick-start: first 3 lessons right after hero
+  const starters = SECTIONS[0].lessons.slice(0, 3);
+  const quickStart = h('div', { class: 'quick-start' }, [
+    h('div', { class: 'quick-start-head' }, [
+      h('span', { class: 'quick-start-badge' }, 'Start here'),
+      h('h3', {}, 'Pick a lesson and try it now'),
+      h('p', {}, 'Each one has a live demo you can play with in under 60 seconds.'),
+    ]),
+    h('div', { class: 'quick-start-grid' }, starters.map((l, i) => h('a', { class: 'quick-start-card', href: lessonUrl(l.id) }, [
+      h('div', { class: 'qs-emoji' }, l.emoji),
+      h('div', { class: 'qs-body' }, [
+        h('span', { class: 'qs-num' }, 'Lesson ' + (i + 1)),
+        h('h4', {}, l.title),
+        h('p', {}, l.blurb),
+      ]),
+      h('span', { class: 'qs-arrow' }, '→'),
+    ]))),
+  ]);
+  contentEl.appendChild(reveal(quickStart));
+
   // feature trio
   const features = h('div', { class: 'features' }, [
     h('div', { class: 'feature' }, [
@@ -923,12 +943,6 @@ function renderHome() {
     ]),
   ]);
   contentEl.appendChild(reveal(features));
-
-  // games highlight
-  contentEl.appendChild(reveal(buildGamesHighlight()));
-
-  // sandbox highlight (Pyodide + BYO CSV)
-  contentEl.appendChild(reveal(buildSandboxHighlight()));
 
   // curriculum
   const blocks = h('div', { class: 'home-sections' });
@@ -962,6 +976,11 @@ function renderHome() {
     ]));
   });
   contentEl.appendChild(blocks);
+
+  // games + sandbox highlights after curriculum (retention features, not first-visit priority)
+  contentEl.appendChild(reveal(buildGamesHighlight()));
+  contentEl.appendChild(reveal(buildSandboxHighlight()));
+
   contentEl.appendChild(buildFooter());
 }
 
