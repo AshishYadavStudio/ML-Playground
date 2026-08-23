@@ -520,6 +520,7 @@ function startHeroAnimation(canvas) {
   ro.observe(canvas.parentElement);
 
   // network layout: layered like a neural net, drifting gently
+  // constrained to left 65% so the right side stays clean on wide screens
   const layers = 6;
   const nodes = [];
   for (let l = 0; l < layers; l++) {
@@ -527,7 +528,7 @@ function startHeroAnimation(canvas) {
     for (let i = 0; i < count; i++) {
       nodes.push({
         l,
-        fx: 0.06 + l / (layers - 1) * 0.88,
+        fx: 0.04 + l / (layers - 1) * 0.58,
         fy: (i + 0.5 + (Math.random() - 0.5) * 0.3) / count,
         phase: Math.random() * Math.PI * 2,
         speed: 0.3 + Math.random() * 0.5,
